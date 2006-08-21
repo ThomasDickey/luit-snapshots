@@ -1,3 +1,5 @@
+/* $XTermId: charset.h,v 1.3 2006/08/20 20:38:47 tom Exp $ */
+
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -21,6 +23,11 @@ THE SOFTWARE.
 */
 /* $XFree86: xc/programs/luit/charset.h,v 1.4 2002/10/17 01:06:09 dawes Exp $ */
 
+#ifndef LUIT_CHARSET_H
+#define LUIT_CHARSET_H 1
+
+#include "other.h"
+
 #define T_FAILED 0
 #define T_94 1
 #define T_96 2
@@ -39,13 +46,13 @@ typedef struct _Charset {
     char *name;
     int type;
     unsigned char final;
-    unsigned int (*recode)(unsigned int, struct _Charset *self);
-    int (*reverse)(unsigned int, struct _Charset *self);
+    unsigned int (*recode) (unsigned int, struct _Charset * self);
+    int (*reverse) (unsigned int, struct _Charset * self);
     void *data;
-    int (*other_stack)(unsigned char c, OtherStatePtr aux);
+    int (*other_stack) (unsigned char c, OtherStatePtr aux);
     OtherState *other_aux;
-    unsigned int (*other_recode)(unsigned int c, OtherStatePtr aux);
-    unsigned int (*other_reverse)(unsigned int c, OtherStatePtr aux);
+    unsigned int (*other_recode) (unsigned int c, OtherStatePtr aux);
+    unsigned int (*other_reverse) (unsigned int c, OtherStatePtr aux);
     struct _Charset *next;
 } CharsetRec, *CharsetPtr;
 
@@ -62,10 +69,12 @@ typedef struct _LocaleCharset {
 
 CharsetPtr getUnknownCharset(int);
 CharsetPtr getCharset(unsigned char, int);
-CharsetPtr getCharsetByName(char*);
+CharsetPtr getCharsetByName(char *);
 void reportCharsets(void);
 int getLocaleState(char *locale, char *charset,
-                   int *gl_return, int *gr_return,
-                   CharsetPtr *g0_return, CharsetPtr *g1_return,
-                   CharsetPtr *g2_return, CharsetPtr *g3_return,
-                   CharsetPtr *other_return);
+		   int *gl_return, int *gr_return,
+		   CharsetPtr * g0_return, CharsetPtr * g1_return,
+		   CharsetPtr * g2_return, CharsetPtr * g3_return,
+		   CharsetPtr * other_return);
+
+#endif /* LUIT_CHARSET_H */

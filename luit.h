@@ -1,3 +1,5 @@
+/* $XTermId: luit.h,v 1.3 2006/08/20 20:38:47 tom Exp $ */
+
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -20,12 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifndef LUIT_LUIT_H
+#define LUIT_LUIT_H 1
+
 extern int iso2022;
 extern int verbose;
 extern int sevenbit;
 extern int ilog;
 extern int olog;
 
-void child(char*, char*, char**);
+void child(char *, char *, char **);
 void parent(int, int);
 
+#endif /* LUIT_LUIT_H */

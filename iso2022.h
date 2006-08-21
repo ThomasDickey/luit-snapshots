@@ -1,3 +1,5 @@
+/* $XTermId: iso2022.h,v 1.3 2006/08/20 20:38:47 tom Exp $ */
+
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -21,6 +23,11 @@ THE SOFTWARE.
 */
 /* $XFree86: xc/programs/luit/iso2022.h,v 1.5 2002/10/17 01:06:09 dawes Exp $ */
 
+#ifndef LUIT_ISO2022_H
+#define LUIT_ISO2022_H 1
+
+#include "charset.h"
+
 #define ESC 0x1B
 #define CSI 0x9B
 #define CSI_7 '['
@@ -37,7 +44,7 @@ THE SOFTWARE.
 #define LS3R_7 0x7C
 
 #define IS_FINAL_ESC(x) (((x) & 0xF0 ) != 0x20)
-#define IS_FINAL_CSI(x) (((x) & 0xF0 ) != 0x20 && (((x) & 0xF0 ) != 0x30)) 
+#define IS_FINAL_CSI(x) (((x) & 0xF0 ) != 0x20 && (((x) & 0xF0 ) != 0x30))
 
 #define P_NORMAL 0
 #define P_ESC 1
@@ -89,6 +96,8 @@ int initIso2022(char *, char *, Iso2022Ptr);
 int mergeIso2022(Iso2022Ptr, Iso2022Ptr);
 void reportIso2022(Iso2022Ptr);
 void terminate(Iso2022Ptr, int);
-void terminateEsc(Iso2022Ptr, int, unsigned char*, int);
-void copyIn(Iso2022Ptr, int, unsigned char*, int);
-void copyOut(Iso2022Ptr, int, unsigned char*, int);
+void terminateEsc(Iso2022Ptr, int, unsigned char *, int);
+void copyIn(Iso2022Ptr, int, unsigned char *, int);
+void copyOut(Iso2022Ptr, int, unsigned char *, int);
+
+#endif /* LUIT_ISO2022_H */
