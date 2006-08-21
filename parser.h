@@ -1,3 +1,5 @@
+/* $XTermId: parser.h,v 1.2 2006/08/20 18:07:37 tom Exp $ */
+
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -20,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifndef LUIT_PARSER_H
+#define LUIT_PARSER_H 1
+
 #ifndef LOCALE_ALIAS_FILE
 #define LOCALE_ALIAS_FILE "/usr/X11R6/lib/X11/locale/locale.alias"
 #endif
@@ -33,3 +38,5 @@ THE SOFTWARE.
 #define TOK_KEYWORD 2
 
 char *resolveLocale(char *locale);
+
+#endif /* LUIT_PARSER_H */

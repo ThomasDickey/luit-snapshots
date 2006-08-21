@@ -1,3 +1,5 @@
+/* $XTermId: other.h,v 1.4 2006/08/20 20:38:47 tom Exp $ */
+
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
 
@@ -20,6 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* $XFree86: xc/programs/luit/other.h,v 1.2 2004/01/27 02:30:30 dawes Exp $ */
+
+#ifndef LUIT_OTHER_H
+#define LUIT_OTHER_H 1
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifndef GCC_UNUSED
+#define GCC_UNUSED		/* ARGSUSED */
+#endif
+
+#include <X11/fonts/fontenc.h>
 
 typedef struct {
     FontMapPtr mapping;
@@ -47,15 +62,15 @@ typedef struct {
 } aux_hkscs;
 
 typedef struct {
-    FontMapPtr          cs0_mapping;    /* gb18030.2000-0 */
-    FontMapReversePtr   cs0_reverse;
+    FontMapPtr cs0_mapping;	/* gb18030.2000-0 */
+    FontMapReversePtr cs0_reverse;
 
-    FontMapPtr          cs1_mapping;    /* gb18030.2000-1 */
-    FontMapReversePtr   cs1_reverse;
+    FontMapPtr cs1_mapping;	/* gb18030.2000-1 */
+    FontMapReversePtr cs1_reverse;
 
-    int     linear;     /* set to '1' if stack_gb18030 linearized a 4bytes seq */
-    int     buf[3];
-    int     buf_ptr;
+    int linear;			/* set to '1' if stack_gb18030 linearized a 4bytes seq */
+    int buf[3];
+    int buf_ptr;
 } aux_gb18030;
 
 typedef union {
@@ -91,3 +106,4 @@ unsigned int mapping_gb18030(unsigned int, OtherStatePtr);
 unsigned int reverse_gb18030(unsigned int, OtherStatePtr);
 int stack_gb18030(unsigned char, OtherStatePtr);
 
+#endif /* LUIT_OTHER_H */

@@ -1,3 +1,5 @@
+/* $XTermId: sys.h,v 1.3 2006/08/20 20:38:48 tom Exp $ */
+
 /* $XFree86: xc/programs/luit/sys.h,v 1.3 2003/10/24 20:38:12 tsi Exp $ */
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -21,10 +23,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifndef LUIT_SYS_H
+#define LUIT_SYS_H 1
+
 int waitForOutput(int fd);
 int waitForInput(int fd1, int fd2);
 int setWindowSize(int sfd, int dfd);
-int installHandler(int signum, void (*handler)(int));
+int installHandler(int signum, void (*handler) (int));
 int copyTermios(int sfd, int dfd);
 int saveTermios(void);
 int restoreTermios(void);
@@ -33,3 +38,5 @@ char *my_basename(char *path);
 int allocatePty(int *pty_return, char **line_return);
 int openTty(char *line);
 int droppriv(void);
+
+#endif /* LUIT_SYS_H */
