@@ -1,4 +1,4 @@
-/* $XTermId: charset.h,v 1.3 2006/08/20 20:38:47 tom Exp $ */
+/* $XTermId: charset.h,v 1.4 2008/08/21 22:49:40 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -43,7 +43,7 @@ THE SOFTWARE.
 #define CHARSET_REGULAR(c) ((c)->type != T_128)
 
 typedef struct _Charset {
-    char *name;
+    const char *name;
     int type;
     unsigned char final;
     unsigned int (*recode) (unsigned int, struct _Charset * self);
@@ -57,21 +57,21 @@ typedef struct _Charset {
 } CharsetRec, *CharsetPtr;
 
 typedef struct _LocaleCharset {
-    char *name;
+    const char *name;
     int gl;
     int gr;
-    char *g0;
-    char *g1;
-    char *g2;
-    char *g3;
-    char *other;
+    const char *g0;
+    const char *g1;
+    const char *g2;
+    const char *g3;
+    const char *other;
 } LocaleCharsetRec, *LocaleCharsetPtr;
 
 CharsetPtr getUnknownCharset(int);
 CharsetPtr getCharset(unsigned char, int);
-CharsetPtr getCharsetByName(char *);
+CharsetPtr getCharsetByName(const char *);
 void reportCharsets(void);
-int getLocaleState(char *locale, char *charset,
+int getLocaleState(const char *locale, const char *charset,
 		   int *gl_return, int *gr_return,
 		   CharsetPtr * g0_return, CharsetPtr * g1_return,
 		   CharsetPtr * g2_return, CharsetPtr * g3_return,

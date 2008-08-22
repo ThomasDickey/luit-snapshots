@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.2 2006/08/20 19:27:57 tom Exp $ */
+/* $XTermId: sys.c,v 1.4 2008/08/21 23:31:26 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -329,8 +329,11 @@ allocatePty(int *pty_return, char **line_return)
 {
     char name[12], *line = NULL;
     int pty = -1;
-    char *name1 = "pqrstuvwxyzPQRST", *name2 = "0123456789abcdefghijklmnopqrstuv";
-    char *p1, *p2;
+    const char *name1 = "pqrstuvwxyzPQRST";
+    char buffer[80];
+    char *name2 = strcpy(buffer, "0123456789abcdefghijklmnopqrstuv");
+    const char *p1;
+    char *p2;
 
 #ifdef HAVE_GRANTPT
     char *temp_line;
@@ -463,10 +466,10 @@ droppriv(void)
 int
 droppriv(void)
 {
-    int uid = getuid();
-    int euid = geteuid();
-    int gid = getgid();
-    int egid = getegid();
+    uid_t uid = getuid();
+    uid_t euid = geteuid();
+    gid_t gid = getgid();
+    gid_t egid = getegid();
     int rc;
 
     if ((uid != euid || gid != egid) && euid != 0) {

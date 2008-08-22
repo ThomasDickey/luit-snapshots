@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.5 2006/08/20 19:22:11 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.12 2008/08/21 23:21:39 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -41,7 +41,7 @@ unsigned char buffered_input[BUFFERED_INPUT_SIZE];
 int buffered_input_count = 0;
 
 static void
-FatalError(char *f,...)
+FatalError(const char *f,...)
 {
     va_list args;
     va_start(args, f);
@@ -51,7 +51,7 @@ FatalError(char *f,...)
 }
 
 static void
-ErrorF(char *f,...)
+ErrorF(const char *f,...)
 {
     va_list args;
     va_start(args, f);
@@ -67,7 +67,7 @@ static void
 outbuf_flush(Iso2022Ptr is, int fd)
 {
     int rc;
-    int i = 0;
+    unsigned i = 0;
 
     if (olog >= 0)
 	write(olog, is->outbuf, is->outbuf_count);
@@ -75,7 +75,7 @@ outbuf_flush(Iso2022Ptr is, int fd)
     while (i < is->outbuf_count) {
 	rc = write(fd, is->outbuf + i, is->outbuf_count - i);
 	if (rc > 0) {
-	    i += rc;
+	    i += (unsigned) rc;
 	} else {
 	    if (rc < 0 && errno == EINTR)
 		continue;
@@ -90,7 +90,7 @@ outbuf_flush(Iso2022Ptr is, int fd)
 }
 
 static void
-outbufOne(Iso2022Ptr is, int fd, unsigned c)
+outbufOne(Iso2022Ptr is, int fd, unsigned char c)
 {
     OUTBUF_MAKE_FREE(is, fd, 1);
     is->outbuf[is->outbuf_count++] = c;
@@ -105,21 +105,21 @@ outbufUTF8(Iso2022Ptr is, int fd, unsigned c)
 
     if (c <= 0x7F) {
 	OUTBUF_MAKE_FREE(is, fd, 1);
-	is->outbuf[is->outbuf_count++] = c;
+	is->outbuf[is->outbuf_count++] = UChar(c);
     } else if (c <= 0x7FF) {
 	OUTBUF_MAKE_FREE(is, fd, 2);
-	is->outbuf[is->outbuf_count++] = 0xC0 | ((c >> 6) & 0x1F);
-	is->outbuf[is->outbuf_count++] = 0x80 | (c & 0x3F);
+	is->outbuf[is->outbuf_count++] = UChar(0xC0 | ((c >> 6) & 0x1F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | (c & 0x3F));
     } else {
 	OUTBUF_MAKE_FREE(is, fd, 3);
-	is->outbuf[is->outbuf_count++] = 0xE0 | ((c >> 12) & 0x0F);
-	is->outbuf[is->outbuf_count++] = 0x80 | ((c >> 6) & 0x3F);
-	is->outbuf[is->outbuf_count++] = 0x80 | (c & 0x3F);
+	is->outbuf[is->outbuf_count++] = UChar(0xE0 | ((c >> 12) & 0x0F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 6) & 0x3F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | (c & 0x3F));
     }
 }
 
 static void
-buffer(Iso2022Ptr is, char c)
+buffer(Iso2022Ptr is, unsigned char c)
 {
     if (is->buffered == NULL) {
 	is->buffered = malloc(10);
@@ -143,7 +143,7 @@ static void
 outbuf_buffered_carefully(Iso2022Ptr is, int fd)
 {
     /* This should never happen in practice */
-    int i = 0;
+    unsigned i = 0;
 
     while (i < is->buffered_count) {
 	OUTBUF_MAKE_FREE(is, fd, 1);
@@ -243,7 +243,7 @@ reportIso2022(Iso2022Ptr i)
 }
 
 int
-initIso2022(char *locale, char *charset, Iso2022Ptr i)
+initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
 {
     int gl = 0, gr = 2;
     CharsetPtr g0 = NULL, g1 = NULL, g2 = NULL, g3 = NULL, other = NULL;
@@ -416,43 +416,44 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 
 	if (codepoint >= 0) {
 	    int i;
+	    unsigned ucode = (unsigned) codepoint;
 	    unsigned char obuf[4];
 
 #define WRITE_1(i) do { \
-	    obuf[0] = (i); \
+	    obuf[0] = UChar(i); \
 	    write(fd, obuf, 1); \
 	} while(0)
 #define WRITE_2(i) do { \
-	    obuf[0] = ((i)>>8) & 0xFF; \
-	    obuf[1] = (i) & 0xFF; \
+	    obuf[0] = UChar(((i) >> 8) & 0xFF); \
+	    obuf[1] = UChar((i) & 0xFF); \
 	    write(fd, obuf, 2);\
 	} while(0)
 
 #define WRITE_3(i) do { \
-	    obuf[0] = ((i)>>16) & 0xFF; \
-	    obuf[1] = ((i)>>8) & 0xFF; \
-	    obuf[2] = (i) & 0xFF; \
+	    obuf[0] = UChar(((i) >> 16) & 0xFF); \
+	    obuf[1] = UChar(((i) >>  8) & 0xFF); \
+	    obuf[2] = UChar((i) & 0xFF); \
 	    write(fd, obuf, 3); \
 	} while(0)
 
 #define WRITE_4(i) do { \
-	    obuf[0] = ((i)>>24) & 0xFF; \
-	    obuf[1] = ((i)>>16) & 0xFF; \
-	    obuf[2] = ((i)>>8) & 0xFF; \
-	    obuf[3] = (i) & 0xFF; \
+	    obuf[0] = UChar(((i) >> 24) & 0xFF); \
+	    obuf[1] = UChar(((i) >> 16) & 0xFF); \
+	    obuf[2] = UChar(((i) >>  8) & 0xFF); \
+	    obuf[3] = UChar((i) & 0xFF); \
 	    write(fd, obuf, 4); \
        } while(0)
 
 #define WRITE_1_P_8bit(p, i) { \
-	    obuf[0] = (p); \
-	    obuf[1] = (i); \
+	    obuf[0] = UChar(p); \
+	    obuf[1] = UChar(i); \
 	    write(fd, obuf, 2); \
 	}
 
 #define WRITE_1_P_7bit(p, i) { \
 	    obuf[0] = ESC; \
-	    obuf[1] = (p) - 0x40; \
-	    obuf[2] = (i); \
+	    obuf[1] = UChar((p) - 0x40); \
+	    obuf[2] = UChar(i); \
 	    write(fd, obuf, 3); \
 	}
 
@@ -463,17 +464,17 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	} while(0)
 
 #define WRITE_2_P_8bit(p, i) { \
-	    obuf[0] = (p); \
-	    obuf[1] = ((i)>>8) & 0xFF; \
-	    obuf[2] = (i) & 0xFF; \
+	    obuf[0] = UChar(p); \
+	    obuf[1] = UChar(((i) >> 8) & 0xFF); \
+	    obuf[2] = UChar((i) & 0xFF); \
 	    write(fd, obuf, 3); \
 	}
 
 #define WRITE_2_P_7bit(p, i) { \
 	    obuf[0] = ESC; \
-	    obuf[1] = (p) - 0x40; \
-	    obuf[2] = ((i)>>8) & 0xFF; \
-	    obuf[3] = (i) & 0xFF; \
+	    obuf[1] = UChar((p) - 0x40); \
+	    obuf[2] = UChar(((i) >> 8) & 0xFF); \
+	    obuf[3] = UChar((i) & 0xFF); \
 	    write(fd, obuf, 4); \
 	}
 
@@ -485,29 +486,29 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	} while(0)
 
 #define WRITE_1_P_S(p,i,s) do { \
-	    obuf[0] = (p); \
-	    obuf[1] = (i) & 0xFF; \
-	    obuf[2] = (s); \
+	    obuf[0] = UChar(p); \
+	    obuf[1] = UChar((i) & 0xFF); \
+	    obuf[2] = UChar(s); \
 	    write(fd, obuf, 3); \
 	} while(0)
 
 #define WRITE_2_P_S(p,i,s) do { \
-	    obuf[0] = (p); \
-	    obuf[1] = (((i)>>8) & 0xFF); \
-	    obuf[2] = (i) & 0xFF; \
-	    obuf[3] = (s); \
+	    obuf[0] = UChar(p); \
+	    obuf[1] = UChar(((i) >> 8) & 0xFF); \
+	    obuf[2] = UChar((i) & 0xFF); \
+	    obuf[3] = UChar(s); \
 	    write(fd, obuf, 4); \
 	} while(0)
 
-	    if (codepoint < 0x20 ||
+	    if (ucode < 0x20 ||
 		(OTHER(is) == NULL && CHARSET_REGULAR(GR(is)) &&
-		 (codepoint >= 0x80 && codepoint < 0xA0))) {
-		WRITE_1(codepoint);
+		 (ucode >= 0x80 && ucode < 0xA0))) {
+		WRITE_1(ucode);
 		continue;
 	    }
 	    if (OTHER(is) != NULL) {
 		unsigned int c2;
-		c2 = OTHER(is)->other_reverse(codepoint, OTHER(is)->other_aux);
+		c2 = OTHER(is)->other_reverse(ucode, OTHER(is)->other_aux);
 		if (c2 >> 24)
 		    WRITE_4(c2);
 		else if (c2 >> 16)
@@ -518,7 +519,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		    WRITE_1(c2);
 		continue;
 	    }
-	    i = (GL(is)->reverse) (codepoint, GL(is));
+	    i = (GL(is)->reverse) (ucode, GL(is));
 	    if (i >= 0) {
 		switch (GL(is)->type) {
 		case T_94:
@@ -539,7 +540,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		continue;
 	    }
 	    if (is->inputFlags & IF_EIGHTBIT) {
-		i = GR(is)->reverse(codepoint, GR(is));
+		i = GR(is)->reverse(ucode, GR(is));
 		if (i >= 0) {
 		    switch (GR(is)->type) {
 		    case T_94:
@@ -562,7 +563,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		}
 	    }
 	    if (is->inputFlags & IF_SS) {
-		i = G2(is)->reverse(codepoint, G2(is));
+		i = G2(is)->reverse(ucode, G2(is));
 		if (i >= 0) {
 		    switch (GR(is)->type) {
 		    case T_94:
@@ -599,7 +600,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		}
 	    }
 	    if (is->inputFlags & IF_SS) {
-		i = G3(is)->reverse(codepoint, G3(is));
+		i = G3(is)->reverse(ucode, G3(is));
 		switch (GR(is)->type) {
 		case T_94:
 		case T_96:
@@ -634,7 +635,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		continue;
 	    }
 	    if (is->inputFlags & IF_LS) {
-		i = GR(is)->reverse(codepoint, GR(is));
+		i = GR(is)->reverse(ucode, GR(is));
 		if (i >= 0) {
 		    switch (GR(is)->type) {
 		    case T_94:
@@ -668,7 +669,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 }
 
 void
-copyOut(Iso2022Ptr is, int fd, unsigned char *buf, int count)
+copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 {
     unsigned char *s = buf;
 
@@ -686,8 +687,9 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		} else if (OTHER(is) != NULL) {
 		    int c = OTHER(is)->other_stack(*s, OTHER(is)->other_aux);
 		    if (c >= 0) {
+			unsigned ucode = (unsigned) c;
 			outbufUTF8(is, fd,
-				   OTHER(is)->other_recode(c, OTHER(is)->other_aux));
+				   OTHER(is)->other_recode(ucode, OTHER(is)->other_aux));
 			is->shiftState = S_NORMAL;
 		    }
 		    s++;
@@ -738,7 +740,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 			default:
 			    abort();
 			}
-			code = *s - 0x80;
+			code = UChar(*s - 0x80);
 		    }
 
 		    switch (charset->type) {
@@ -787,7 +789,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		    default:
 			abort();
 		    }
-		    ku_code = is->buffered_ku;
+		    ku_code = UChar(is->buffered_ku);
 		    if (*s < 0x80)
 			code = *s;
 		} else {
@@ -804,9 +806,9 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		    default:
 			abort();
 		    }
-		    ku_code = is->buffered_ku - 0x80;
+		    ku_code = UChar(is->buffered_ku - 0x80);
 		    if (*s >= 0x80)
-			code = *s - 0x80;
+			code = UChar(*s - 0x80);
 		}
 		switch (charset->type) {
 		case T_94:
@@ -846,9 +848,9 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		    /* Use *s, not code */
 		    if (((*s >= 0x21) && (*s <= 0x7E)) ||
 			((*s >= 0xA1) && (*s <= 0xFE))) {
+			unsigned ucode = (unsigned) ((ku_code << 8) | *s);
 			outbufUTF8(is, fd,
-				   charset->recode((ku_code << 8) | *s,
-						   charset));
+				   charset->recode(ucode, charset));
 			is->buffered_ku = -1;
 			is->shiftState = S_NORMAL;
 		    } else {
@@ -961,6 +963,7 @@ terminate(Iso2022Ptr is, int fd)
 	    return;
 	default:
 	    terminateEsc(is, fd, is->buffered + 1, is->buffered_count - 1);
+	    break;
 	}
 	return;
     default:
@@ -969,7 +972,7 @@ terminate(Iso2022Ptr is, int fd)
 }
 
 void
-terminateEsc(Iso2022Ptr is, int fd, unsigned char *s_start, int count)
+terminateEsc(Iso2022Ptr is, int fd, unsigned char *s_start, unsigned count)
 {
     CharsetPtr charset;
 

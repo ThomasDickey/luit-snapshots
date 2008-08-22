@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.4 2006/08/20 19:04:47 tom Exp $ */
+/* $XTermId: luit.c,v 1.7 2008/08/21 23:05:06 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -50,7 +50,7 @@ static int c2p_waitpipe[2];
 static Iso2022Ptr inputState = NULL, outputState = NULL;
 
 static char *child_argv0 = NULL;
-static char *locale_name = NULL;
+static const char *locale_name = NULL;
 int ilog = -1;
 int olog = -1;
 int verbose = 0;
@@ -64,7 +64,7 @@ static int convert(int, int);
 static int condom(int, char **);
 
 static void
-ErrorF(char *f,...)
+ErrorF(const char *f,...)
 {
     va_list args;
     va_start(args, f);
@@ -73,7 +73,7 @@ ErrorF(char *f,...)
 }
 
 static void
-FatalError(char *f,...)
+FatalError(const char *f,...)
 {
     va_list args;
     va_start(args, f);
@@ -295,8 +295,10 @@ parseOptions(int argc, char **argv)
 }
 
 static int
-parseArgs(int argc, char **argv, char *argv0,
-	  char **path_return, char ***argv_return)
+parseArgs(int argc, char **argv,
+	  char *argv0,
+	  char **path_return,
+	  char ***argv_return)
 {
     char *path = NULL;
     char **child_argv = NULL;
@@ -328,7 +330,7 @@ parseArgs(int argc, char **argv, char *argv0,
 	if (!path)
 	    goto bail;
 	strcpy(path, argv[0]);
-	child_argv = malloc((argc + 1) * sizeof(char *));
+	child_argv = malloc((unsigned) (argc + 1) * sizeof(char *));
 	if (!child_argv) {
 	    goto bail;
 	}
@@ -336,7 +338,7 @@ parseArgs(int argc, char **argv, char *argv0,
 	    child_argv[0] = argv0;
 	else
 	    child_argv[0] = my_basename(argv[0]);
-	memcpy(child_argv + 1, argv + 1, (argc - 1) * sizeof(char *));
+	memcpy(child_argv + 1, argv + 1, (unsigned) (argc - 1) * sizeof(char *));
 	child_argv[argc] = NULL;
     }
 
@@ -427,7 +429,7 @@ convert(int ifd, int ofd)
 	    }
 	    break;
 	}
-	copyOut(outputState, ofd, buf, i);
+	copyOut(outputState, ofd, buf, (unsigned) i);
     }
     return 0;
 }
@@ -525,7 +527,7 @@ condom(int argc, char **argv)
 }
 
 void
-child(char *line, char *path, char **argv)
+child(char *line, char *path, char *const argv[])
 {
     int tty;
     int pgrp;
@@ -599,7 +601,7 @@ parent(int pid GCC_UNUSED, int pty)
 		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
 		    break;
 		if (i > 0)
-		    copyOut(outputState, 0, buf, i);
+		    copyOut(outputState, 0, buf, (unsigned) i);
 	    }
 	    if (rc & 1) {
 		i = read(0, buf, BUFFER_SIZE);

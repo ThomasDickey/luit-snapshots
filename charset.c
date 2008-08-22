@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.3 2006/08/20 19:26:42 tom Exp $ */
+/* $XTermId: charset.c,v 1.7 2008/08/21 23:11:46 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -92,66 +92,71 @@ CharsetRec Unknown9696Charset =
 {"Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
 
 typedef struct _FontencCharset {
-    char *name;
+    const char *name;
     int type;
     unsigned char final;
-    char *xlfd;
-    int shift;
+    const char *xlfd;
+    unsigned shift;
     FontMapPtr mapping;
     FontMapReversePtr reverse;
 } FontencCharsetRec, *FontencCharsetPtr;
-
+/* *INDENT-OFF* */
 FontencCharsetRec fontencCharsets[] =
 {
-    {"ISO 646 (1973)", T_94, '@', "iso646.1973-0", 0x00, 0, 0},
-    {"ASCII", T_94, 'B', "iso8859-1", 0x00, 0, 0},
-    {"JIS X 0201:GL", T_94, 'J', "jisx0201.1976-0", 0x00, 0, 0},
-    {"JIS X 0201:GR", T_94, 'I', "jisx0201.1976-0", 0x80, 0, 0},
-    {"DEC Special", T_94, '0', "dec-special", 0x00, 0, 0},
-    {"DEC Technical", T_94, '>', "dec-dectech", 0x00, 0, 0},
+    {"ISO 646 (1973)", T_94,    '@', "iso646.1973-0",    0x00,   0, 0},
+    {"ASCII",          T_94,    'B', "iso8859-1",        0x00,   0, 0},
+    {"JIS X 0201:GL",  T_94,    'J', "jisx0201.1976-0",  0x00,   0, 0},
+    {"JIS X 0201:GR",  T_94,    'I', "jisx0201.1976-0",  0x80,   0, 0},
+    {"DEC Special",    T_94,    '0', "dec-special",      0x00,   0, 0},
+    {"DEC Technical",  T_94,    '>', "dec-dectech",      0x00,   0, 0},
 
-    {"ISO 8859-1", T_96, 'A', "iso8859-1", 0x80, 0, 0},
-    {"ISO 8859-2", T_96, 'B', "iso8859-2", 0x80, 0, 0},
-    {"ISO 8859-3", T_96, 'C', "iso8859-3", 0x80, 0, 0},
-    {"ISO 8859-4", T_96, 'D', "iso8859-4", 0x80, 0, 0},
-    {"ISO 8859-5", T_96, 'L', "iso8859-5", 0x80, 0, 0},
-    {"ISO 8859-6", T_96, 'G', "iso8859-6", 0x80, 0, 0},
-    {"ISO 8859-7", T_96, 'F', "iso8859-7", 0x80, 0, 0},
-    {"ISO 8859-8", T_96, 'H', "iso8859-8", 0x80, 0, 0},
-    {"ISO 8859-9", T_96, 'M', "iso8859-9", 0x80, 0, 0},
-    {"ISO 8859-10", T_96, 'V', "iso8859-10", 0x80, 0, 0},
-    {"ISO 8859-11", T_96, 'T', "iso8859-11", 0x80, 0, 0},
-    {"TIS 620", T_96, 'T', "iso8859-11", 0x80, 0, 0},
-    {"ISO 8859-13", T_96, 'Y', "iso8859-13", 0x80, 0, 0},
-    {"ISO 8859-14", T_96, '_', "iso8859-14", 0x80, 0, 0},
-    {"ISO 8859-15", T_96, 'b', "iso8859-15", 0x80, 0, 0},
-    {"ISO 8859-16", T_96, 'f', "iso8859-16", 0x80, 0, 0},
-    {"KOI8-E", T_96, '@', "koi8-e", 0x80, 0, 0},
-    {"TCVN", T_96, 'Z', "tcvn-0", 0x80, 0, 0},
+    {"ISO 8859-1",     T_96,    'A', "iso8859-1",        0x80,   0, 0},
+    {"ISO 8859-2",     T_96,    'B', "iso8859-2",        0x80,   0, 0},
+    {"ISO 8859-3",     T_96,    'C', "iso8859-3",        0x80,   0, 0},
+    {"ISO 8859-4",     T_96,    'D', "iso8859-4",        0x80,   0, 0},
+    {"ISO 8859-5",     T_96,    'L', "iso8859-5",        0x80,   0, 0},
+    {"ISO 8859-6",     T_96,    'G', "iso8859-6",        0x80,   0, 0},
+    {"ISO 8859-7",     T_96,    'F', "iso8859-7",        0x80,   0, 0},
+    {"ISO 8859-8",     T_96,    'H', "iso8859-8",        0x80,   0, 0},
+    {"ISO 8859-9",     T_96,    'M', "iso8859-9",        0x80,   0, 0},
+    {"ISO 8859-10",    T_96,    'V', "iso8859-10",       0x80,   0, 0},
+    {"ISO 8859-11",    T_96,    'T', "iso8859-11",       0x80,   0, 0},
+    {"TIS 620",        T_96,    'T', "iso8859-11",       0x80,   0, 0},
+    {"ISO 8859-13",    T_96,    'Y', "iso8859-13",       0x80,   0, 0},
+    {"ISO 8859-14",    T_96,    '_', "iso8859-14",       0x80,   0, 0},
+    {"ISO 8859-15",    T_96,    'b', "iso8859-15",       0x80,   0, 0},
+    {"ISO 8859-16",    T_96,    'f', "iso8859-16",       0x80,   0, 0},
+    {"KOI8-E",         T_96,    '@', "koi8-e",           0x80,   0, 0},
+    {"TCVN",           T_96,    'Z', "tcvn-0",           0x80,   0, 0},
 
-    {"GB 2312", T_9494, 'A', "gb2312.1980-0", 0x0000, 0, 0},
-    {"JIS X 0208", T_9494, 'B', "jisx0208.1990-0", 0x0000, 0, 0},
-    {"KSC 5601", T_9494, 'C', "ksc5601.1987-0", 0x0000, 0, 0},
-    {"JIS X 0212", T_9494, 'D', "jisx0212.1990-0", 0x0000, 0, 0},
+    {"GB 2312",        T_9494,  'A', "gb2312.1980-0",    0x0000, 0, 0},
+    {"JIS X 0208",     T_9494,  'B', "jisx0208.1990-0",  0x0000, 0, 0},
+    {"KSC 5601",       T_9494,  'C', "ksc5601.1987-0",   0x0000, 0, 0},
+    {"JIS X 0212",     T_9494,  'D', "jisx0212.1990-0",  0x0000, 0, 0},
 
-    {"GB 2312", T_9696, 'A', "gb2312.1980-0", 0x0000, 0, 0},
-    {"JIS X 0208", T_9696, 'B', "jisx0208.1990-0", 0x0000, 0, 0},
-    {"KSC 5601", T_9696, 'C', "ksc5601.1987-0", 0x0000, 0, 0},
-    {"JIS X 0212", T_9696, 'D', "jisx0212.1990-0", 0x0000, 0, 0},
+    {"GB 2312",        T_9696,  'A', "gb2312.1980-0",    0x0000, 0, 0},
+    {"JIS X 0208",     T_9696,  'B', "jisx0208.1990-0",  0x0000, 0, 0},
+    {"KSC 5601",       T_9696,  'C', "ksc5601.1987-0",   0x0000, 0, 0},
+    {"JIS X 0212",     T_9696,  'D', "jisx0212.1990-0",  0x0000, 0, 0},
 
-    {"KOI8-R", T_128, 0, "koi8-r", 0x80, 0, 0},
-    {"KOI8-U", T_128, 0, "koi8-u", 0x80, 0, 0},
-    {"KOI8-RU", T_128, 0, "koi8-ru", 0x80, 0, 0},
-    {"CP 1252", T_128, 0, "microsoft-cp1252", 0x80, 0, 0},
-    {"CP 1251", T_128, 0, "microsoft-cp1251", 0x80, 0, 0},
-    {"CP 1250", T_128, 0, "microsoft-cp1250", 0x80, 0, 0},
+    {"KOI8-R",         T_128,   0,   "koi8-r",           0x80,   0, 0},
+    {"KOI8-U",         T_128,   0,   "koi8-u",           0x80,   0, 0},
+    {"KOI8-RU",        T_128,   0,   "koi8-ru",          0x80,   0, 0},
+    {"CP 1252",        T_128,   0,   "microsoft-cp1252", 0x80,   0, 0},
+    {"CP 1251",        T_128,   0,   "microsoft-cp1251", 0x80,   0, 0},
+    {"CP 1250",        T_128,   0,   "microsoft-cp1250", 0x80,   0, 0},
 
-    {"Big 5", T_94192, 0, "big5.eten-0", 0x8000, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0}
+    {"CP 437",         T_128,   0,   "ibm-cp437",        0x80,   0, 0},
+    {"CP 850",         T_128,   0,   "ibm-cp850",        0x80,   0, 0},
+    {"CP 866",         T_128,   0,   "ibm-cp866",        0x80,   0, 0},
+
+    {"Big 5",          T_94192, 0,   "big5.eten-0",      0x8000, 0, 0},
+    {0,                0,       0,   0,                  0,      0, 0}
 };
+/* *INDENT-ON* */
 
 typedef struct _OtherCharset {
-    char *name;
+    const char *name;
     int (*init) (OtherStatePtr);
     unsigned int (*mapping) (unsigned int, OtherStatePtr);
     unsigned int (*reverse) (unsigned int, OtherStatePtr);
@@ -169,7 +174,7 @@ OtherCharsetRec otherCharsets[] =
 };
 
 static int
-compare(char *s, char *t)
+compare(const char *s, const char *t)
 {
     while (*s || *t) {
 	if (*s && (isspace(*s) || *s == '-' || *s == '_'))
@@ -197,7 +202,7 @@ static int
 FontencCharsetReverse(unsigned int i, CharsetPtr self)
 {
     FontencCharsetPtr fc = (FontencCharsetPtr) (self->data);
-    int n;
+    unsigned n;
 
     n = fc->reverse->reverse(i, fc->reverse->data);
     if (n == 0 || n < fc->shift)
@@ -210,23 +215,23 @@ FontencCharsetReverse(unsigned int i, CharsetPtr self)
     case T_94:
     case T_96:
 	if (IS_GL(n))
-	    return n;
+	    return (int) n;
 	else
 	    return -1;
     case T_128:
 	if (n < 0x80)
-	    return n;
+	    return (int) n;
 	else
 	    return -1;
     case T_9494:
     case T_9696:
 	if (IS_GL(n >> 8) && IS_GL(n & 0xFF))
-	    return n;
+	    return (int) n;
 	else
 	    return -1;
     case T_94192:
 	if (IS_GL(n >> 8) && IS_GL(n & 0x7F))
-	    return n;
+	    return (int) n;
 	else
 	    return -1;
     default:
@@ -238,7 +243,7 @@ FontencCharsetReverse(unsigned int i, CharsetPtr self)
 static CharsetPtr cachedCharsets = NULL;
 
 static CharsetPtr
-getCachedCharset(unsigned char final, int type, char *name)
+getCachedCharset(unsigned char final, int type, const char *name)
 {
     CharsetPtr c;
     for (c = cachedCharsets; c; c = c->next) {
@@ -258,7 +263,7 @@ cacheCharset(CharsetPtr c)
 }
 
 static CharsetPtr
-getFontencCharset(unsigned char final, int type, char *name)
+getFontencCharset(unsigned char final, int type, const char *name)
 {
     FontencCharsetPtr fc;
     CharsetPtr c;
@@ -308,7 +313,7 @@ getFontencCharset(unsigned char final, int type, char *name)
 }
 
 static CharsetPtr
-getOtherCharset(char *name)
+getOtherCharset(const char *name)
 {
     OtherCharsetPtr fc;
     CharsetPtr c;
@@ -386,7 +391,7 @@ getCharset(unsigned char final, int type)
 }
 
 CharsetPtr
-getCharsetByName(char *name)
+getCharsetByName(const char *name)
 {
     CharsetPtr c;
 
@@ -407,43 +412,44 @@ getCharsetByName(char *name)
 
     return getUnknownCharset(T_94);
 }
-
+/* *INDENT-OFF* */
 LocaleCharsetRec localeCharsets[] =
 {
-    {"C", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
-    {"POSIX", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
-    {"ISO8859-1", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
-    {"ISO8859-2", 0, 2, "ASCII", NULL, "ISO 8859-2", NULL, NULL},
-    {"ISO8859-3", 0, 2, "ASCII", NULL, "ISO 8859-3", NULL, NULL},
-    {"ISO8859-4", 0, 2, "ASCII", NULL, "ISO 8859-4", NULL, NULL},
-    {"ISO8859-5", 0, 2, "ASCII", NULL, "ISO 8859-5", NULL, NULL},
-    {"ISO8859-6", 0, 2, "ASCII", NULL, "ISO 8859-6", NULL, NULL},
-    {"ISO8859-7", 0, 2, "ASCII", NULL, "ISO 8859-7", NULL, NULL},
-    {"ISO8859-8", 0, 2, "ASCII", NULL, "ISO 8859-8", NULL, NULL},
-    {"ISO8859-9", 0, 2, "ASCII", NULL, "ISO 8859-9", NULL, NULL},
-    {"ISO8859-10", 0, 2, "ASCII", NULL, "ISO 8859-10", NULL, NULL},
-    {"ISO8859-11", 0, 2, "ASCII", NULL, "ISO 8859-11", NULL, NULL},
-    {"TIS620", 0, 2, "ASCII", NULL, "ISO 8859-11", NULL, NULL},
-    {"ISO8859-13", 0, 2, "ASCII", NULL, "ISO 8859-13", NULL, NULL},
-    {"ISO8859-14", 0, 2, "ASCII", NULL, "ISO 8859-14", NULL, NULL},
-    {"ISO8859-15", 0, 2, "ASCII", NULL, "ISO 8859-15", NULL, NULL},
-    {"ISO8859-16", 0, 2, "ASCII", NULL, "ISO 8859-16", NULL, NULL},
-    {"KOI8-R", 0, 2, "ASCII", NULL, "KOI8-R", NULL, NULL},
-    {"CP1251", 0, 2, "ASCII", NULL, "CP 1251", NULL, NULL},
-    {"TCVN", 0, 2, "ASCII", NULL, "TCVN", NULL, NULL},
-    {"eucCN", 0, 1, "ASCII", "GB 2312", NULL, NULL, NULL},
-    {"GB2312", 0, 1, "ASCII", "GB 2312", NULL, NULL, NULL},
-    {"eucJP", 0, 1, "ASCII", "JIS X 0208", "JIS X 0201:GR", "JIS X 0212", NULL},
-    {"eucKR", 0, 1, "ASCII", "KSC 5601", NULL, NULL, NULL},
-    {"eucCN", 0, 1, "ASCII", "GB 2312", NULL, NULL, NULL},
-    {"Big5", 0, 1, "ASCII", "Big 5", NULL, NULL, NULL},
-    {"gbk", 0, 1, NULL, NULL, NULL, NULL, "GBK"},
-    {"UTF-8", 0, 1, NULL, NULL, NULL, NULL, "UTF-8"},
-    {"SJIS", 0, 1, NULL, NULL, NULL, NULL, "SJIS"},
-    {"Big5-HKSCS", 0, 1, NULL, NULL, NULL, NULL, "BIG5-HKSCS"},
-    {"gb18030", 0, 1, NULL, NULL, NULL, NULL, "GB18030"},
-    {0, 0, 0, 0, 0, 0, 0, 0}
+    {"C",          0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
+    {"POSIX",      0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
+    {"ISO8859-1",  0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
+    {"ISO8859-2",  0, 2, "ASCII", NULL,         "ISO 8859-2",    NULL,         NULL},
+    {"ISO8859-3",  0, 2, "ASCII", NULL,         "ISO 8859-3",    NULL,         NULL},
+    {"ISO8859-4",  0, 2, "ASCII", NULL,         "ISO 8859-4",    NULL,         NULL},
+    {"ISO8859-5",  0, 2, "ASCII", NULL,         "ISO 8859-5",    NULL,         NULL},
+    {"ISO8859-6",  0, 2, "ASCII", NULL,         "ISO 8859-6",    NULL,         NULL},
+    {"ISO8859-7",  0, 2, "ASCII", NULL,         "ISO 8859-7",    NULL,         NULL},
+    {"ISO8859-8",  0, 2, "ASCII", NULL,         "ISO 8859-8",    NULL,         NULL},
+    {"ISO8859-9",  0, 2, "ASCII", NULL,         "ISO 8859-9",    NULL,         NULL},
+    {"ISO8859-10", 0, 2, "ASCII", NULL,         "ISO 8859-10",   NULL,         NULL},
+    {"ISO8859-11", 0, 2, "ASCII", NULL,         "ISO 8859-11",   NULL,         NULL},
+    {"TIS620",     0, 2, "ASCII", NULL,         "ISO 8859-11",   NULL,         NULL},
+    {"ISO8859-13", 0, 2, "ASCII", NULL,         "ISO 8859-13",   NULL,         NULL},
+    {"ISO8859-14", 0, 2, "ASCII", NULL,         "ISO 8859-14",   NULL,         NULL},
+    {"ISO8859-15", 0, 2, "ASCII", NULL,         "ISO 8859-15",   NULL,         NULL},
+    {"ISO8859-16", 0, 2, "ASCII", NULL,         "ISO 8859-16",   NULL,         NULL},
+    {"KOI8-R",     0, 2, "ASCII", NULL,         "KOI8-R",        NULL,         NULL},
+    {"CP1251",     0, 2, "ASCII", NULL,         "CP 1251",       NULL,         NULL},
+    {"TCVN",       0, 2, "ASCII", NULL,         "TCVN",          NULL,         NULL},
+    {"eucCN",      0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
+    {"GB2312",     0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
+    {"eucJP",      0, 1, "ASCII", "JIS X 0208", "JIS X 0201:GR", "JIS X 0212", NULL},
+    {"eucKR",      0, 1, "ASCII", "KSC 5601",   NULL,            NULL,         NULL},
+    {"eucCN",      0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
+    {"Big5",       0, 1, "ASCII", "Big 5",      NULL,            NULL,         NULL},
+    {"gbk",        0, 1, NULL,    NULL,         NULL,            NULL,         "GBK"},
+    {"UTF-8",      0, 1, NULL,    NULL,         NULL,            NULL,         "UTF-8"},
+    {"SJIS",       0, 1, NULL,    NULL,         NULL,            NULL,         "SJIS"},
+    {"Big5-HKSCS", 0, 1, NULL,    NULL,         NULL,            NULL,         "BIG5-HKSCS"},
+    {"gb18030",    0, 1, NULL,    NULL,         NULL,            NULL,         "GB18030"},
+    {0,            0, 0, 0,       0,            0,               0,            0}
 };
+/* *INDENT-ON* */
 
 void
 reportCharsets()
@@ -475,7 +481,8 @@ reportCharsets()
 }
 
 int
-getLocaleState(char *locale, char *charset,
+getLocaleState(const char *locale,
+	       const char *charset,
 	       int *gl_return, int *gr_return,
 	       CharsetPtr * g0_return, CharsetPtr * g1_return,
 	       CharsetPtr * g2_return, CharsetPtr * g3_return,

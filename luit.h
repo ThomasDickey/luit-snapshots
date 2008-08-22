@@ -1,4 +1,4 @@
-/* $XTermId: luit.h,v 1.3 2006/08/20 20:38:47 tom Exp $ */
+/* $XTermId: luit.h,v 1.4 2008/08/21 23:02:19 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -31,7 +31,7 @@ extern int sevenbit;
 extern int ilog;
 extern int olog;
 
-void child(char *, char *, char **);
+void child(char *, char *, char *const *);
 void parent(int, int);
 
 #endif /* LUIT_LUIT_H */
