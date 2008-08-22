@@ -1,4 +1,4 @@
-/* $XTermId: parser.h,v 1.2 2006/08/20 18:07:37 tom Exp $ */
+/* $XTermId: parser.h,v 1.3 2008/08/21 22:50:14 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -37,6 +37,6 @@ THE SOFTWARE.
 #define TOK_EQUALS 1
 #define TOK_KEYWORD 2
 
-char *resolveLocale(char *locale);
+char *resolveLocale(const char *locale);
 
 #endif /* LUIT_PARSER_H */

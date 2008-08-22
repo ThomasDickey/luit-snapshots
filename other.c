@@ -1,4 +1,4 @@
-/* $XTermId: other.c,v 1.3 2006/08/20 19:27:10 tom Exp $ */
+/* $XTermId: other.c,v 1.5 2008/08/21 23:30:54 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -229,8 +229,13 @@ mapping_sjis(unsigned int n, OtherStatePtr s)
 	return FontEncRecode(n, s->sjis.x0201mapping);
     s1 = ((n >> 8) & 0xFF);
     s2 = (n & 0xFF);
-    j1 = (s1 << 1) - (s1 <= 0x9F ? 0xE0 : 0x160) - (s2 < 0x9F ? 1 : 0);
-    j2 = s2 - 0x1F - (s2 >= 0x7F ? 1 : 0) - (s2 >= 0x9F ? 0x5E : 0);
+    j1 = (s1 << 1)
+	- (unsigned) (s1 <= 0x9F ? 0xE0 : 0x160)
+	- (unsigned) (s2 < 0x9F ? 1 : 0);
+    j2 = s2
+	- 0x1F
+	- (unsigned) (s2 >= 0x7F ? 1 : 0)
+	- (unsigned) (s2 >= 0x9F ? 0x5E : 0);
     return FontEncRecode((j1 << 8) + j2, s->sjis.x0208mapping);
 }
 
@@ -249,8 +254,10 @@ reverse_sjis(unsigned int n, OtherStatePtr s)
     j = s->sjis.x0208reverse->reverse(n, s->sjis.x0208reverse->data);
     j1 = ((j >> 8) & 0xFF);
     j2 = (j & 0xFF);
-    s1 = ((j1 - 1) >> 1) + ((j1 <= 0x5E) ? 0x71 : 0xB1);
-    s2 = j2 + ((j1 & 1) ? ((j2 < 0x60) ? 0x1F : 0x20) : 0x7E);
+    s1 = ((j1 - 1) >> 1)
+	+ (unsigned) ((j1 <= 0x5E) ? 0x71 : 0xB1);
+    s2 = j2
+	+ (unsigned) ((j1 & 1) ? ((j2 < 0x60) ? 0x1F : 0x20) : 0x7E);
     return (s1 << 8) + s2;
 }
 
@@ -409,13 +416,13 @@ reverse_gb18030(unsigned int n, OtherStatePtr s)
     if (r != 0) {
 	unsigned char bytes[4];
 
-	bytes[3] = 0x30 + r % 10;
+	bytes[3] = UChar(0x30 + r % 10);
 	r /= 10;
-	bytes[2] = 0x81 + r % 126;
+	bytes[2] = UChar(0x81 + r % 126);
 	r /= 126;
-	bytes[1] = 0x30 + r % 10;
+	bytes[1] = UChar(0x30 + r % 10);
 	r /= 10;
-	bytes[0] = 0x81 + r;
+	bytes[0] = UChar(0x81 + r);
 
 	r = (unsigned int) bytes[0] << 24;
 	r |= (unsigned int) bytes[1] << 16;

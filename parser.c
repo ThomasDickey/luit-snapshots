@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.2 2006/08/20 19:28:34 tom Exp $ */
+/* $XTermId: parser.c,v 1.4 2008/08/21 22:50:21 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -78,7 +78,7 @@ getString(FILE *f, int string_end, int *c_return)
 	    if (c == '\n')
 		continue;
 	}
-	keyword[i++] = c;
+	keyword[i++] = (char) c;
 	if (i >= MAX_KEYWORD_LENGTH)
 	    return TOK_ERROR;
 	c = getc(f);
@@ -119,7 +119,7 @@ getToken(FILE *f, int c, int parse_assignments, int *c_return)
 	    if (c == '\n')
 		continue;
 	}
-	keyword[i++] = c;
+	keyword[i++] = (char) c;
 	if (i >= MAX_KEYWORD_LENGTH)
 	    return TOK_ERROR;
 	c = getc(f);
@@ -147,7 +147,7 @@ parseTwoTokenLine(FILE *f, char *first, char *second)
     else if (tok == TOK_EOL)
 	goto again;
     else if (tok == TOK_KEYWORD) {
-	int len = strlen(keyword);
+	unsigned len = strlen(keyword);
 	if (keyword[len - 1] == ':')
 	    keyword[len - 1] = '\0';
 	strcpy(first, keyword);
@@ -168,7 +168,7 @@ parseTwoTokenLine(FILE *f, char *first, char *second)
 }
 
 char *
-resolveLocale(char *locale)
+resolveLocale(const char *locale)
 {
     FILE *f;
     char first[MAX_KEYWORD_LENGTH], second[MAX_KEYWORD_LENGTH];

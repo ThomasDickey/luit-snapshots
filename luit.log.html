@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 2006 by Thomas E. Dickey                                        *
+ * Copyright 2006,2008 by Thomas E. Dickey                                   *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.2 2006/08/20 20:36:04 tom Exp $
+  $XTermId: luit.log.html,v 1.9 2008/08/21 23:34:53 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -30,11 +30,39 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright 2006 by <A
+Copyright 2006,2008 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
+2008/8/21 -
+<ul>
+<li>use codepage change from luit 1.0.2
+<li>modify configure script so
+<code>--with-fontenc-cflags</code> and
+<code>--with-fontenc-libs</code> options with when <code>pkg-config</code>
+is not available.
+<li>fixes for configuring fontenc library without <code>pkg-config</code>.
+<li>fixes for gcc <code>-Wwrite-strings</code> warnings.
+<li>fixes for gcc <code>-Wconversion</code> warnings.
+<li>update configure script macros
+(CF_ANSI_CC_REQD,
+CF_CHECK_CACHE,
+CF_FIND_LIBRARY,
+CF_GCC_ATTRIBUTES,
+CF_GCC_WARNINGS,
+CF_IMAKE_CFLAGS,
+CF_MSG_LOG,
+CF_PATH_SYNTAX,
+CF_POSIX_SAVED_IDS,
+CF_SUBDIR_PATH,
+CF_TYPE_FD_SET,
+CF_VERBOSE,
+CF_WITH_PATH,
+CF_WITH_ZLIB,
+CF_XOPEN_SOURCE).
+<li>update configure utility scripts (config.guess, config.sub, install-sh, mkdirs.sh).
+</ul>
 2006/8/20 -
 <ul>
 <li>import snapshot from XFree86 (last change 2005/2/9).

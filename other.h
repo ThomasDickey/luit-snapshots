@@ -1,4 +1,4 @@
-/* $XTermId: other.h,v 1.4 2006/08/20 20:38:47 tom Exp $ */
+/* $XTermId: other.h,v 1.5 2008/08/21 00:08:01 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -35,6 +35,8 @@ THE SOFTWARE.
 #endif
 
 #include <X11/fonts/fontenc.h>
+
+#define UChar(n) ((unsigned char)(n))
 
 typedef struct {
     FontMapPtr mapping;
