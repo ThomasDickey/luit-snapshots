@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.7 2008/08/21 23:05:06 tom Exp $ */
+/* $XTermId: luit.c,v 1.9 2008/08/23 15:04:04 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -307,15 +307,13 @@ parseArgs(int argc, char **argv,
 	char *shell;
 	shell = getenv("SHELL");
 	if (shell) {
-	    path = malloc(strlen(shell) + 1);
+	    path = strmalloc(shell);
 	    if (!path)
 		goto bail;
-	    strcpy(path, shell);
 	} else {
-	    path = malloc(strlen("/bin/sh") + 1);
+	    path = strmalloc("/bin/sh");
 	    if (!path)
 		goto bail;
-	    strcpy(path, "/bin/sh");
 	}
 	child_argv = malloc(2 * sizeof(char *));
 	if (!child_argv)
@@ -326,10 +324,9 @@ parseArgs(int argc, char **argv,
 	    child_argv[0] = my_basename(path);
 	child_argv[1] = NULL;
     } else {
-	path = malloc(strlen(argv[0]) + 1);
+	path = strmalloc(argv[0]);
 	if (!path)
 	    goto bail;
-	strcpy(path, argv[0]);
 	child_argv = malloc((unsigned) (argc + 1) * sizeof(char *));
 	if (!child_argv) {
 	    goto bail;
@@ -360,6 +357,11 @@ main(int argc, char **argv)
     int rc;
     int i;
     char *l;
+
+#ifdef HAVE_PUTENV
+    if ((l = strmalloc("NCURSES_NO_UTF8_ACS=1")) != 0)
+	putenv(l);
+#endif
 
     l = setlocale(LC_ALL, "");
     if (!l)

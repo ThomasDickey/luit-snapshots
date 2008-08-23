@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.4 2006/08/20 20:31:16 tom Exp $
+## $XTermId: Makefile.in,v 1.5 2008/08/23 15:35:25 tom Exp $
 ##
-## Copyright 2006 by Thomas E. Dickey
+## Copyright 2006,2008 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -105,7 +105,7 @@ install-full :: luit$x $(BINDIR)
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/luit.man    $(MANDIR)/$(actual_luit).$(manext)  $(prefix)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/luit.man    $(MANDIR)/$(actual_luit).$(manext)  $(prefix) $(LOCALE_ALIAS)
 
 install ::
 	@echo 'Completed installation of executables and documentation.'

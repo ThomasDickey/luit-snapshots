@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.2 2006/08/20 20:32:56 tom Exp $
+.\" $XTermId: luit.man,v 1.4 2008/08/23 15:32:28 tom Exp $
 .\"
 .\"
 .\" $XFree86: xc/programs/luit/luit.man,v 1.9 2005/02/09 17:06:55 dawes Exp $
@@ -180,10 +180,7 @@ M-x set-terminal-coding-system RET iso-2022-8bit-ss2 RET
 .PP
 .SH FILES
 .TP
-.B __projectroot__/lib/X11/fonts/encodings/encodings.dir
-The system-wide encodings directory.
-.TP
-.B __projectroot__/lib/X11/locale/locale.alias
+.B __locale_alias__
 The file mapping locales to locale encodings.
 .SH SECURITY
 On systems with SVR4 (``Unix-98'') ptys (Linux version 2.2 and later,

@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.3 2006/08/20 20:38:48 tom Exp $ */
+/* $XTermId: sys.h,v 1.5 2008/08/23 15:01:35 tom Exp $ */
 
 /* $XFree86: xc/programs/luit/sys.h,v 1.3 2003/10/24 20:38:12 tsi Exp $ */
 /*
@@ -38,5 +38,11 @@ char *my_basename(char *path);
 int allocatePty(int *pty_return, char **line_return);
 int openTty(char *line);
 int droppriv(void);
+
+#ifdef HAVE_STRDUP
+#define strmalloc(value) strdup(value)
+#else
+char *strmalloc(const char *value);
+#endif
 
 #endif /* LUIT_SYS_H */

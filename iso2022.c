@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.12 2008/08/21 23:21:39 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.13 2008/08/23 15:45:47 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -215,16 +215,18 @@ destroyIso2022(Iso2022Ptr is)
 static int
 identifyCharset(Iso2022Ptr i, CharsetPtr * p)
 {
-    if (p == &G0(i))
+    if (p == &G0(i)) {
 	return 0;
-    else if (p == &G1(i))
+    } else if (p == &G1(i)) {
 	return 1;
-    else if (p == &G2(i))
+    } else if (p == &G2(i)) {
 	return 2;
-    else if (p == &G3(i))
+    } else if (p == &G3(i)) {
 	return 3;
-    else
+    } else {
 	abort();
+	/* NOTREACHED */
+    }
 }
 
 void
@@ -536,6 +538,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		    break;
 		default:
 		    abort();
+		    /* NOTREACHED */
 		}
 		continue;
 	    }
@@ -558,6 +561,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 			break;
 		    default:
 			abort();
+			/* NOTREACHED */
 		    }
 		    continue;
 		}
@@ -595,6 +599,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 			break;
 		    default:
 			abort();
+			/* NOTREACHED */
 		    }
 		    continue;
 		}
@@ -631,6 +636,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		    break;
 		default:
 		    abort();
+		    /* NOTREACHED */
 		}
 		continue;
 	    }
@@ -652,6 +658,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 			break;
 		    default:
 			abort();
+			/* NOTREACHED */
 		    }
 		    continue;
 		}
@@ -724,6 +731,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 			    break;
 			default:
 			    abort();
+			    /* NOTREACHED */
 			}
 			code = *s;
 		    } else {
@@ -739,6 +747,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 			    break;
 			default:
 			    abort();
+			    /* NOTREACHED */
 			}
 			code = UChar(*s - 0x80);
 		    }
@@ -788,6 +797,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 			break;
 		    default:
 			abort();
+			/* NOTREACHED */
 		    }
 		    ku_code = UChar(is->buffered_ku);
 		    if (*s < 0x80)
@@ -805,6 +815,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 			break;
 		    default:
 			abort();
+			/* NOTREACHED */
 		    }
 		    ku_code = UChar(is->buffered_ku - 0x80);
 		    if (*s >= 0x80)
@@ -815,6 +826,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		case T_96:
 		case T_128:
 		    abort();
+		    /* NOTREACHED */
 		    break;
 		case T_9494:
 		    if (code >= 0x21 && code <= 0x7E) {
@@ -862,6 +874,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		    break;
 		default:
 		    abort();
+		    /* NOTREACHED */
 		}
 	    }
 	    break;
@@ -889,6 +902,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 	    break;
 	default:
 	    abort();
+	    /* NOTREACHED */
 	}
     }
     outbuf_flush(is, fd);

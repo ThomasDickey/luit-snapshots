@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.4 2008/08/21 22:50:21 tom Exp $ */
+/* $XTermId: parser.c,v 1.5 2008/08/23 14:55:02 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <string.h>
 
 #include "parser.h"
+#include "sys.h"
 
 static char keyword[MAX_KEYWORD_LENGTH];
 
@@ -184,19 +185,17 @@ resolveLocale(const char *locale)
 	if (rc < -1)
 	    goto bail;
 	if (!strcmp(first, locale)) {
-	    resolved = malloc(strlen(second) + 1);
+	    resolved = strmalloc(second);
 	    if (resolved == NULL)
 		goto bail;
-	    strcpy(resolved, second);
 	    break;
 	}
     } while (rc >= 0);
 
     if (resolved == NULL) {
-	resolved = malloc(strlen(locale) + 1);
+	resolved = strmalloc(locale);
 	if (resolved == NULL)
 	    goto bail;
-	strcpy(resolved, locale);
     }
 
     fclose(f);

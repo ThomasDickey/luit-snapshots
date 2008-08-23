@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.9 2008/08/21 23:34:53 tom Exp $
+  $XTermId: luit.log.html,v 1.12 2008/08/23 15:27:35 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -35,6 +35,15 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
+2008/8/23 -
+<ul>
+<li>update <code>minstall.sh</code> from xterm to fix possible scripting
+dependency upon locale.
+<li>set ncurses' <code>NCURSES_NO_UTF8_ACS</code> environment variable
+to simplify use of line-drawing characters in <code>luit</code>.
+<li>improve default value for <code>locale.alias</code> pathname
+by checking in the more common X11 locations.
+</ul>
 2008/8/21 -
 <ul>
 <li>use codepage change from luit 1.0.2

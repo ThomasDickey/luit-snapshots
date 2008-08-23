@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.7 2008/08/21 23:11:46 tom Exp $ */
+/* $XTermId: charset.c,v 1.9 2008/08/23 15:45:30 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -71,6 +71,7 @@ IdentityReverse(unsigned int n, CharsetPtr self)
 	    return -1;
     default:
 	abort();
+	/* NOTREACHED */
     }
 #undef IS_GL
 }
@@ -236,6 +237,7 @@ FontencCharsetReverse(unsigned int i, CharsetPtr self)
 	    return -1;
     default:
 	abort();
+	/* NOTREACHED */
     }
 #undef IS_GL
 }
@@ -452,7 +454,7 @@ LocaleCharsetRec localeCharsets[] =
 /* *INDENT-ON* */
 
 void
-reportCharsets()
+reportCharsets(void)
 {
     LocaleCharsetPtr p;
     FontencCharsetPtr q;
