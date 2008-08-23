@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.9 2008/08/21 20:02:07 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.10 2008/08/23 14:17:48 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -432,13 +432,14 @@ AC_TRY_LINK([#include <stdio.h>],[printf("Hello world");],,
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_ERRNO version: 9 updated: 2001/12/30 18:03:23
+dnl CF_CHECK_ERRNO version: 10 updated: 2008/08/22 16:33:22
 dnl --------------
 dnl Check for data that is usually declared in <stdio.h> or <errno.h>, e.g.,
 dnl the 'errno' variable.  Define a DECL_xxx symbol if we must declare it
 dnl ourselves.
 dnl
 dnl $1 = the name to check
+dnl $2 = the assumed type
 AC_DEFUN([CF_CHECK_ERRNO],
 [
 AC_CACHE_CHECK(if external $1 is declared, cf_cv_dcl_$1,[
@@ -449,7 +450,7 @@ AC_CACHE_CHECK(if external $1 is declared, cf_cv_dcl_$1,[
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h> ],
-    [long x = (long) $1],
+    ifelse($2,,int,$2) x = (ifelse($2,,int,$2)) $1,
     [cf_cv_dcl_$1=yes],
     [cf_cv_dcl_$1=no])
 ])
@@ -460,7 +461,7 @@ if test "$cf_cv_dcl_$1" = no ; then
 fi
 
 # It's possible (for near-UNIX clones) that the data doesn't exist
-CF_CHECK_EXTERN_DATA($1,int)
+CF_CHECK_EXTERN_DATA($1,ifelse($2,,int,$2))
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_CHECK_EXTERN_DATA version: 3 updated: 2001/12/30 18:03:23
@@ -1861,7 +1862,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_LOCALE_ALIAS version: 2 updated: 2006/08/20 16:52:53
+dnl CF_WITH_LOCALE_ALIAS version: 3 updated: 2008/08/23 10:16:26
 dnl --------------------
 dnl Configure option to specify the location of locale.alias, for programs that
 dnl must read it directly.
@@ -1869,10 +1870,35 @@ AC_DEFUN([CF_WITH_LOCALE_ALIAS],
 [
 AC_MSG_CHECKING(for location of locale alias file)
 AC_ARG_WITH(locale-alias,
-[  --with-locale-alias=XXX file used for locale aliases
-                          (default: LIBDIR/X11/locale/locale.alias)],
+[  --with-locale-alias=XXX file used for locale aliases (default: auto)],
 [LOCALE_ALIAS_FILE=$withval],
-[LOCALE_ALIAS_FILE="$libdir/X11/locale/locale.alias"])
+[LOCALE_ALIAS_FILE=auto])
+
+CF_VERBOSE()
+case "x$LOCALE_ALIAS_FILE" in #(vi
+xauto|xyes|xno)
+    LOCALE_ALIAS_FILE=unknown
+    for cf_path in \
+        /usr/lib/X11/locale \
+        /usr/share/X11/locale \
+        /usr/X11R6/lib/X11/locale \
+        /usr/X11R5/lib/X11/locale \
+        /usr/X11/lib/X11/locale
+        do
+            cf_alias_file=$cf_path/locale.alias
+            CF_VERBOSE(testing $cf_alias_file)
+            if test -f $cf_alias_file ; then
+                LOCALE_ALIAS_FILE=$cf_alias_file
+                break
+            fi
+        done
+    ;; #(vi
+*)
+    if test ! -f "$LOCALE_ALIAS_FILE" ; then
+        AC_MSG_WARN(Alias file not found: $LOCALE_ALIAS_FILE)
+    fi
+    ;;
+esac
 AC_MSG_RESULT($LOCALE_ALIAS_FILE)
 AC_SUBST(LOCALE_ALIAS_FILE)
 ])dnl

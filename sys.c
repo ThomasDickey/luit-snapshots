@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.4 2008/08/21 23:31:26 tom Exp $ */
+/* $XTermId: sys.c,v 1.6 2008/08/23 14:51:17 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -452,48 +452,55 @@ openTty(char *line)
 /* Post-4.4 BSD systems have POSIX semantics (_POSIX_SAVED_IDS
    or not, depending on the version).  4.3BSD and Minix do not have
    saved IDs at all, so there's no issue. */
-#if (defined(BSD) && !defined(_POSIX_SAVED_IDS)) || defined(_MINIX)
 int
 droppriv(void)
 {
     int rc;
+#if (defined(BSD) && !defined(_POSIX_SAVED_IDS)) || defined(_MINIX)
     rc = setuid(getuid());
-    if (rc < 0)
-	return rc;
-    return setgid(getgid());
-}
+    if (rc >= 0) {
+	rc = setgid(getgid());
+    }
 #elif defined(_POSIX_SAVED_IDS)
-int
-droppriv(void)
-{
     uid_t uid = getuid();
     uid_t euid = geteuid();
     gid_t gid = getgid();
     gid_t egid = getegid();
-    int rc;
 
     if ((uid != euid || gid != egid) && euid != 0) {
 	errno = ENOSYS;
-	return -1;
+	rc = -1;
+    } else {
+	rc = setuid(uid);
+	if (rc >= 0)
+	    rc = setgid(gid);
     }
-    rc = setuid(uid);
-    if (rc < 0)
-	return rc;
-    return setgid(gid);
-}
 #else
-int
-droppriv(void)
-{
-    int uid = getuid();
-    int euid = geteuid();
-    int gid = getgid();
-    int egid = getegid();
+    uid_t uid = getuid();
+    uid_t euid = geteuid();
+    gid_t gid = getgid();
+    gid_t egid = getegid();
 
     if (uid != euid || gid != egid) {
 	errno = ENOSYS;
-	return -1;
+	rc = -1;
+    } else {
+	rc = 0;
     }
-    return 0;
+#endif
+    return rc;
+}
+
+#ifndef HAVE_STRDUP
+char *
+strmalloc(const char *value)
+{
+    char *result = 0;
+    if (value != 0) {
+	result = malloc(strlen(value) + 1);
+	if (result != 0)
+	    strcpy(result, value);
+    }
+    return result;
 }
 #endif
