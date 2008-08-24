@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.6 2008/08/23 14:51:17 tom Exp $ */
+/* $XTermId: sys.c,v 1.7 2008/08/24 18:11:00 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -502,5 +502,16 @@ strmalloc(const char *value)
 	    strcpy(result, value);
     }
     return result;
+}
+#endif
+
+#ifdef NO_LEAKS
+void
+ExitProgram(int code)
+{
+    luit_leaks();
+    iso2022_leaks();
+    charset_leaks();
+    exit(code);
 }
 #endif

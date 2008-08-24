@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.4 2008/08/23 15:32:28 tom Exp $
+.\" $XTermId: luit.man,v 1.5 2008/08/24 17:21:21 tom Exp $
 .\"
 .\"
 .\" $XFree86: xc/programs/luit/luit.man,v 1.9 2005/02/09 17:06:55 dawes Exp $
@@ -50,7 +50,7 @@ Function as a simple converter from standard input to standard output.
 .B \-x
 Exit as soon as the child dies.  This may cause
 .B luit
-to loose data at the end of the child's output.
+to lose data at the end of the child's output.
 .TP
 .BI \-argv0 " name"
 Set the child's name (as passed in argv[0]).
