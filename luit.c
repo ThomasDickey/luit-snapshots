@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.9 2008/08/23 15:04:04 tom Exp $ */
+/* $XTermId: luit.c,v 1.10 2008/08/24 18:05:14 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -79,7 +79,7 @@ FatalError(const char *f,...)
     va_start(args, f);
     vfprintf(stderr, f, args);
     va_end(args);
-    exit(1);
+    ExitProgram(1);
 }
 
 static void
@@ -116,10 +116,10 @@ parseOptions(int argc, char **argv)
 	    i++;
 	} else if (!strcmp(argv[i], "-h")) {
 	    help();
-	    exit(0);
+	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "-list")) {
 	    reportCharsets();
-	    exit(0);
+	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "+oss")) {
 	    outputState->outputFlags &= ~OF_SS;
 	    i++;
@@ -267,7 +267,7 @@ parseOptions(int argc, char **argv)
 	    ilog = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	    if (ilog < 0) {
 		perror("Couldn't open input log");
-		exit(1);
+		ExitProgram(1);
 	    }
 	    i += 2;
 	} else if (!strcmp(argv[i], "-olog")) {
@@ -276,7 +276,7 @@ parseOptions(int argc, char **argv)
 	    olog = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	    if (olog < 0) {
 		perror("Couldn't open output log");
-		exit(1);
+		ExitProgram(1);
 	    }
 	    i += 2;
 	} else if (!strcmp(argv[i], "-encoding")) {
@@ -405,9 +405,14 @@ main(int argc, char **argv)
 	FatalError("Couldn't init input state\n");
 
     if (converter)
-	return convert(0, 1);
+	rc = convert(0, 1);
     else
-	return condom(argc - i, argv + i);
+	rc = condom(argc - i, argv + i);
+
+#ifdef NO_LEAKS
+    ExitProgram(rc);
+#endif
+    return rc;
 }
 
 static int
@@ -419,7 +424,7 @@ convert(int ifd, int ofd)
     rc = droppriv();
     if (rc < 0) {
 	perror("Couldn't drop priviledges");
-	exit(1);
+	ExitProgram(1);
     }
 
     while (1) {
@@ -427,7 +432,7 @@ convert(int ifd, int ofd)
 	if (i <= 0) {
 	    if (i < 0) {
 		perror("Read error");
-		exit(1);
+		ExitProgram(1);
 	    }
 	    break;
 	}
@@ -467,13 +472,13 @@ condom(int argc, char **argv)
     rc = allocatePty(&pty, &line);
     if (rc < 0) {
 	perror("Couldn't allocate pty");
-	exit(1);
+	ExitProgram(1);
     }
 
     rc = droppriv();
     if (rc < 0) {
 	perror("Couldn't drop privileges");
-	exit(1);
+	ExitProgram(1);
     }
 #ifdef SIGWINCH
     installHandler(SIGWINCH, sigwinchHandler);
@@ -504,7 +509,7 @@ condom(int argc, char **argv)
     pid = fork();
     if (pid < 0) {
 	perror("Couldn't fork");
-	exit(1);
+	ExitProgram(1);
     }
 
     if (pid == 0) {
@@ -542,13 +547,13 @@ child(char *line, char *path, char *const argv[])
     pgrp = setsid();
     if (pgrp < 0) {
 	kill(getppid(), SIGABRT);
-	exit(1);
+	ExitProgram(1);
     }
 
     tty = openTty(line);
     if (tty < 0) {
 	kill(getppid(), SIGABRT);
-	exit(1);
+	ExitProgram(1);
     }
     write(c2p_waitpipe[1], "1", 1);
 
@@ -567,7 +572,7 @@ child(char *line, char *path, char *const argv[])
     close(p2c_waitpipe[0]);
     execvp(path, argv);
     perror("Couldn't exec");
-    exit(1);
+    ExitProgram(1);
 }
 
 void
@@ -617,3 +622,12 @@ parent(int pid GCC_UNUSED, int pty)
 
     restoreTermios();
 }
+
+#ifdef NO_LEAKS
+void
+luit_leaks(void)
+{
+    destroyIso2022(inputState);
+    destroyIso2022(outputState);
+}
+#endif

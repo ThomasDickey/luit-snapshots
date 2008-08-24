@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.13 2008/08/23 15:45:47 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.14 2008/08/24 17:40:29 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -47,7 +47,7 @@ FatalError(const char *f,...)
     va_start(args, f);
     vfprintf(stderr, f, args);
     va_end(args);
-    exit(1);
+    ExitProgram(1);
 }
 
 static void
@@ -1062,3 +1062,10 @@ terminateEsc(Iso2022Ptr is, int fd, unsigned char *s_start, unsigned count)
     } else
 	outbuf_buffered(is, fd);
 }
+
+#ifdef NO_LEAKS
+void
+iso2022_leaks(void)
+{
+}
+#endif

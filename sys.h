@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.5 2008/08/23 15:01:35 tom Exp $ */
+/* $XTermId: sys.h,v 1.6 2008/08/24 17:41:44 tom Exp $ */
 
 /* $XFree86: xc/programs/luit/sys.h,v 1.3 2003/10/24 20:38:12 tsi Exp $ */
 /*
@@ -43,6 +43,15 @@ int droppriv(void);
 #define strmalloc(value) strdup(value)
 #else
 char *strmalloc(const char *value);
+#endif
+
+#ifdef NO_LEAKS
+void luit_leaks(void);
+void charset_leaks(void);
+void iso2022_leaks(void);
+void ExitProgram(int code);
+#else
+#define ExitProgram(code) exit(code)
 #endif
 
 #endif /* LUIT_SYS_H */

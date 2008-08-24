@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.9 2008/08/23 15:45:30 tom Exp $ */
+/* $XTermId: charset.c,v 1.10 2008/08/24 18:50:20 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+
+#include "sys.h"
 #include "other.h"
 #include "charset.h"
 #include "parser.h"
@@ -490,6 +492,7 @@ getLocaleState(const char *locale,
 	       CharsetPtr * g2_return, CharsetPtr * g3_return,
 	       CharsetPtr * other_return)
 {
+    int result = 0;
     char *resolved = 0;
     LocaleCharsetPtr p;
 
@@ -510,20 +513,76 @@ getLocaleState(const char *locale,
     }
 
     if (p->name == NULL) {
-	if (resolved != 0)
-	    free(resolved);
-	return -1;
-    }
+	result = -1;
+    } else {
 
-    *gl_return = p->gl;
-    *gr_return = p->gr;
-    *g0_return = getCharsetByName(p->g0);
-    *g1_return = getCharsetByName(p->g1);
-    *g2_return = getCharsetByName(p->g2);
-    *g3_return = getCharsetByName(p->g3);
-    if (p->other)
-	*other_return = getCharsetByName(p->other);
-    else
-	*other_return = NULL;
-    return 0;
+	*gl_return = p->gl;
+	*gr_return = p->gr;
+	*g0_return = getCharsetByName(p->g0);
+	*g1_return = getCharsetByName(p->g1);
+	*g2_return = getCharsetByName(p->g2);
+	*g3_return = getCharsetByName(p->g3);
+	if (p->other)
+	    *other_return = getCharsetByName(p->other);
+	else
+	    *other_return = NULL;
+    }
+    if (resolved != 0)
+	free(resolved);
+    return result;
 }
+
+#ifdef NO_LEAKS
+static int
+isUnknownCharsetPtr(CharsetPtr p)
+{
+    return (p == &Unknown94Charset
+	    || p == &Unknown96Charset
+	    || p == &Unknown9494Charset
+	    || p == &Unknown9696Charset);
+}
+
+static void
+destroyFontencCharsetPtr(FontencCharsetPtr p)
+{
+    p->mapping = 0;
+
+    /*
+     * This should, but does not work -
+     *     FontMapReverseFree(p->reverse)
+     *
+     * The iteration for map[] is based on reading the source of
+     * FontMapReverse().
+     */
+    if (p->reverse) {
+	int n;
+	unsigned **map = p->reverse->data;
+	for (n = 0; n < 256; ++n) {
+	    if (map[n])
+		free(map[n]);
+	}
+	free(p->reverse->data);
+	free(p->reverse);
+	p->reverse = 0;
+    }
+}
+
+static void
+destroyCharset(CharsetPtr p)
+{
+    if (!isUnknownCharsetPtr(p)) {
+	destroyFontencCharsetPtr(p->data);
+	free(p);
+    }
+}
+
+void
+charset_leaks(void)
+{
+    while (cachedCharsets != 0) {
+	CharsetPtr next = cachedCharsets->next;
+	destroyCharset(cachedCharsets);
+	cachedCharsets = next;
+    }
+}
+#endif
