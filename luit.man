@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.5 2008/08/24 17:21:21 tom Exp $
+.\" $XTermId: luit.man,v 1.6 2008/08/29 23:51:43 tom Exp $
 .\"
 .\"
 .\" $XFree86: xc/programs/luit/luit.man,v 1.9 2005/02/09 17:06:55 dawes Exp $
@@ -46,6 +46,9 @@ Be verbose.
 .TP
 .B \-c
 Function as a simple converter from standard input to standard output.
+.TP
+.B \-p
+In startup, establish a handshake between parent and child processes.
 .TP
 .B \-x
 Exit as soon as the child dies.  This may cause
