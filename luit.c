@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.10 2008/08/24 18:05:14 tom Exp $ */
+/* $XTermId: luit.c,v 1.11 2008/08/29 23:41:21 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -45,12 +45,15 @@ THE SOFTWARE.
 #include "other.h"
 #include "iso2022.h"
 
+static int pipe_option = 0;
 static int p2c_waitpipe[2];
 static int c2p_waitpipe[2];
+
 static Iso2022Ptr inputState = NULL, outputState = NULL;
 
 static char *child_argv0 = NULL;
 static const char *locale_name = NULL;
+
 int ilog = -1;
 int olog = -1;
 int verbose = 0;
@@ -97,7 +100,12 @@ help(void)
 	    "[ -kg0 set ] [ -kg1 set ] "
 	    "[ -kg2 set ] [ -kg3 set ]\n"
 	    "  [ -k7 ] [ +kss ] [ +kssgr ] [ -kls ]\n"
-	    "  [ -c ] [ -x ] [ -ilog filename ] [ -olog filename ] [ -- ]\n"
+	    "  [ -c ] "
+	    "[ -p ] "
+	    "[ -x ] "
+	    "[ -ilog filename ] "
+	    "[ -olog filename ] "
+	    "[ -- ]\n"
 	    "  [ program [ args ] ]\n");
 }
 
@@ -287,6 +295,9 @@ parseOptions(int argc, char **argv)
 	    if (rc < 0)
 		FatalError("Couldn't init output state\n");
 	    i += 2;
+	} else if (!strcmp(argv[i], "-p")) {
+	    pipe_option = 1;
+	    i += 1;
 	} else {
 	    FatalError("Unknown option %s\n", argv[i]);
 	}
@@ -441,11 +452,13 @@ convert(int ifd, int ofd)
     return 0;
 }
 
+#ifdef SIGWINCH
 static void
 sigwinchHandler(int sig GCC_UNUSED)
 {
     sigwinch_queued = 1;
 }
+#endif
 
 static void
 sigchldHandler(int sig GCC_UNUSED)
@@ -454,32 +467,11 @@ sigchldHandler(int sig GCC_UNUSED)
 }
 
 static int
-condom(int argc, char **argv)
+setup_io(int pty)
 {
-    int pty;
-    int pid;
-    char *line;
-    char *path = 0;
-    char **child_argv = 0;
     int rc;
     int val;
 
-    rc = parseArgs(argc, argv, child_argv0,
-		   &path, &child_argv);
-    if (rc < 0)
-	FatalError("Couldn't parse arguments\n");
-
-    rc = allocatePty(&pty, &line);
-    if (rc < 0) {
-	perror("Couldn't allocate pty");
-	ExitProgram(1);
-    }
-
-    rc = droppriv();
-    if (rc < 0) {
-	perror("Couldn't drop privileges");
-	ExitProgram(1);
-    }
 #ifdef SIGWINCH
     installHandler(SIGWINCH, sigwinchHandler);
 #endif
@@ -504,8 +496,62 @@ condom(int argc, char **argv)
 
     setWindowSize(0, pty);
 
-    pipe(p2c_waitpipe);
-    pipe(c2p_waitpipe);
+    return rc;
+}
+
+static void
+close_waitpipe(int which)
+{
+    close(p2c_waitpipe[which]);
+    close(c2p_waitpipe[!which]);
+}
+
+static void
+write_waitpipe(int fds[2])
+{
+    write(fds[1], "1", 1);
+}
+
+static void
+read_waitpipe(int fds[2])
+{
+    char tmp[10];
+    read(fds[0], tmp, 1);
+}
+
+static int
+condom(int argc, char **argv)
+{
+    int pty;
+    int pid;
+    char *line;
+    char *path = 0;
+    char **child_argv = 0;
+    int rc;
+
+    rc = parseArgs(argc, argv, child_argv0,
+		   &path, &child_argv);
+    if (rc < 0)
+	FatalError("Couldn't parse arguments\n");
+
+    rc = allocatePty(&pty, &line);
+    if (rc < 0) {
+	perror("Couldn't allocate pty");
+	ExitProgram(1);
+    }
+
+    rc = droppriv();
+    if (rc < 0) {
+	perror("Couldn't drop privileges");
+	ExitProgram(1);
+    }
+
+    if (pipe_option) {
+	rc = setup_io(pty);
+	pipe(p2c_waitpipe);
+	pipe(c2p_waitpipe);
+    }
+
     pid = fork();
     if (pid < 0) {
 	perror("Couldn't fork");
@@ -514,16 +560,18 @@ condom(int argc, char **argv)
 
     if (pid == 0) {
 	close(pty);
-	close(p2c_waitpipe[1]);
-	close(c2p_waitpipe[0]);
+	if (pipe_option) {
+	    close_waitpipe(1);
 #ifdef SIGWINCH
-	installHandler(SIGWINCH, SIG_DFL);
+	    installHandler(SIGWINCH, SIG_DFL);
 #endif
-	installHandler(SIGCHLD, SIG_DFL);
+	    installHandler(SIGCHLD, SIG_DFL);
+	}
 	child(line, path, child_argv);
     } else {
-	close(p2c_waitpipe[0]);
-	close(c2p_waitpipe[1]);
+	if (pipe_option) {
+	    close_waitpipe(0);
+	}
 	free(child_argv);
 	free(path);
 	free(line);
@@ -538,7 +586,6 @@ child(char *line, char *path, char *const argv[])
 {
     int tty;
     int pgrp;
-    char tmp[10];
 
     close(0);
     close(1);
@@ -555,7 +602,9 @@ child(char *line, char *path, char *const argv[])
 	kill(getppid(), SIGABRT);
 	ExitProgram(1);
     }
-    write(c2p_waitpipe[1], "1", 1);
+    if (pipe_option) {
+	write_waitpipe(c2p_waitpipe);
+    }
 
     if (tty != 0)
 	dup2(tty, 0);
@@ -567,9 +616,11 @@ child(char *line, char *path, char *const argv[])
     if (tty > 2)
 	close(tty);
 
-    read(p2c_waitpipe[0], tmp, 1);
-    close(c2p_waitpipe[1]);
-    close(p2c_waitpipe[0]);
+    if (pipe_option) {
+	read_waitpipe(p2c_waitpipe);
+	close_waitpipe(0);
+    }
+
     execvp(path, argv);
     perror("Couldn't exec");
     ExitProgram(1);
@@ -581,16 +632,21 @@ parent(int pid GCC_UNUSED, int pty)
     unsigned char buf[BUFFER_SIZE];
     int i;
     int rc;
-    char tmp[10];
+    if (pipe_option) {
+	read_waitpipe(c2p_waitpipe);
+    }
 
-    read(c2p_waitpipe[0], tmp, 1);
     if (verbose) {
 	reportIso2022(outputState);
     }
 
-    write(p2c_waitpipe[1], "1", 1);
-    close(c2p_waitpipe[0]);
-    close(p2c_waitpipe[1]);
+    if (pipe_option) {
+	write_waitpipe(p2c_waitpipe);
+	close_waitpipe(1);
+    } else {
+	setup_io(pty);
+    }
+
     for (;;) {
 	rc = waitForInput(0, pty);
 
