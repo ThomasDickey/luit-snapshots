@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.14 2008/08/24 17:40:29 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.15 2009/08/12 00:44:03 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -213,7 +213,7 @@ destroyIso2022(Iso2022Ptr is)
 }
 
 static int
-identifyCharset(Iso2022Ptr i, CharsetPtr * p)
+identifyCharset(Iso2022Ptr i, const CharsetRec * *p)
 {
     if (p == &G0(i)) {
 	return 0;
@@ -248,7 +248,11 @@ int
 initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
 {
     int gl = 0, gr = 2;
-    CharsetPtr g0 = NULL, g1 = NULL, g2 = NULL, g3 = NULL, other = NULL;
+    const CharsetRec *g0 = NULL;
+    const CharsetRec *g1 = NULL;
+    const CharsetRec *g2 = NULL;
+    const CharsetRec *g3 = NULL;
+    const CharsetRec *other = NULL;
     int rc;
 
     rc = getLocaleState(locale, charset, &gl, &gr, &g0, &g1, &g2, &g3, &other);
@@ -716,7 +720,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		    outbufOne(is, fd, *s);
 		    s++;
 		} else {
-		    CharsetPtr charset;
+		    const CharsetRec *charset;
 		    unsigned char code = 0;
 		    if (*s <= 0x7F) {
 			switch (is->shiftState) {
@@ -781,7 +785,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		    }
 		}
 	    } else {		/* buffered_ku */
-		CharsetPtr charset;
+		const CharsetRec *charset;
 		unsigned char ku_code;
 		unsigned code = 0;
 		if (is->buffered_ku <= 0x7F) {
@@ -988,7 +992,7 @@ terminate(Iso2022Ptr is, int fd)
 void
 terminateEsc(Iso2022Ptr is, int fd, unsigned char *s_start, unsigned count)
 {
-    CharsetPtr charset;
+    const CharsetRec *charset;
 
     /* ISO 2022 doesn't allow 2C, but Emacs/MULE uses it in 7-bit
        mode */

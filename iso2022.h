@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.h,v 1.9 2008/08/21 23:16:03 tom Exp $ */
+/* $XTermId: iso2022.h,v 1.10 2009/08/12 00:44:03 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -65,9 +65,10 @@ THE SOFTWARE.
 #define OF_PASSTHRU 8
 
 typedef struct _Iso2022 {
-    CharsetPtr *glp, *grp;
-    CharsetPtr g[4];
-    CharsetPtr other;
+    const CharsetRec **glp;
+    const CharsetRec **grp;
+    const CharsetRec *g[4];
+    const CharsetRec *other;
     int parserState;
     int shiftState;
     int inputFlags;
