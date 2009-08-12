@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.10 2008/08/24 18:50:20 tom Exp $ */
+/* $XTermId: charset.c,v 1.12 2009/08/12 00:53:13 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -38,14 +38,14 @@ THE SOFTWARE.
 #endif
 
 static unsigned int
-IdentityRecode(unsigned int n, CharsetPtr self GCC_UNUSED)
+IdentityRecode(unsigned int n, const CharsetRec * self GCC_UNUSED)
 {
     return n;
 }
 
 #ifdef UNUSED
 static int
-IdentityReverse(unsigned int n, CharsetPtr self)
+IdentityReverse(unsigned int n, const CharsetRec * self)
 {
 #define IS_GL(n) ((n) >= 0x20 && (n) < 0x80)
     switch (self->type) {
@@ -80,18 +80,18 @@ IdentityReverse(unsigned int n, CharsetPtr self)
 #endif
 
 static int
-NullReverse(unsigned int n GCC_UNUSED, CharsetPtr self GCC_UNUSED)
+NullReverse(unsigned int n GCC_UNUSED, const CharsetRec * self GCC_UNUSED)
 {
     return -1;
 }
 
-CharsetRec Unknown94Charset =
+static const CharsetRec Unknown94Charset =
 {"Unknown (94)", T_94, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
-CharsetRec Unknown96Charset =
+static const CharsetRec Unknown96Charset =
 {"Unknown (96)", T_96, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
-CharsetRec Unknown9494Charset =
+static const CharsetRec Unknown9494Charset =
 {"Unknown (94x94)", T_9494, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
-CharsetRec Unknown9696Charset =
+static const CharsetRec Unknown9696Charset =
 {"Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
 
 typedef struct _FontencCharset {
@@ -104,7 +104,7 @@ typedef struct _FontencCharset {
     FontMapReversePtr reverse;
 } FontencCharsetRec, *FontencCharsetPtr;
 /* *INDENT-OFF* */
-FontencCharsetRec fontencCharsets[] =
+static FontencCharsetRec fontencCharsets[] =
 {
     {"ISO 646 (1973)", T_94,    '@', "iso646.1973-0",    0x00,   0, 0},
     {"ASCII",          T_94,    'B', "iso8859-1",        0x00,   0, 0},
@@ -166,7 +166,7 @@ typedef struct _OtherCharset {
     int (*stack) (unsigned char, OtherStatePtr);
 } OtherCharsetRec, *OtherCharsetPtr;
 
-OtherCharsetRec otherCharsets[] =
+static const OtherCharsetRec otherCharsets[] =
 {
     {"GBK", init_gbk, mapping_gbk, reverse_gbk, stack_gbk},
     {"UTF-8", init_utf8, mapping_utf8, reverse_utf8, stack_utf8},
@@ -194,17 +194,17 @@ compare(const char *s, const char *t)
 }
 
 static unsigned int
-FontencCharsetRecode(unsigned int n, CharsetPtr self)
+FontencCharsetRecode(unsigned int n, const CharsetRec * self)
 {
-    FontencCharsetPtr fc = (FontencCharsetPtr) (self->data);
+    const FontencCharsetRec *fc = (const FontencCharsetRec *) (self->data);
 
     return FontEncRecode(n + fc->shift, fc->mapping);
 }
 
 static int
-FontencCharsetReverse(unsigned int i, CharsetPtr self)
+FontencCharsetReverse(unsigned int i, const CharsetRec * self)
 {
-    FontencCharsetPtr fc = (FontencCharsetPtr) (self->data);
+    const FontencCharsetRec *fc = (const FontencCharsetRec *) (self->data);
     unsigned n;
 
     n = fc->reverse->reverse(i, fc->reverse->data);
@@ -319,7 +319,7 @@ getFontencCharset(unsigned char final, int type, const char *name)
 static CharsetPtr
 getOtherCharset(const char *name)
 {
-    OtherCharsetPtr fc;
+    const OtherCharsetRec *fc;
     CharsetPtr c;
     OtherStatePtr s;
 
@@ -361,7 +361,7 @@ getOtherCharset(const char *name)
     return c;
 }
 
-CharsetPtr
+const CharsetRec *
 getUnknownCharset(int type)
 {
     switch (type) {
@@ -378,10 +378,10 @@ getUnknownCharset(int type)
     }
 }
 
-CharsetPtr
+const CharsetRec *
 getCharset(unsigned char final, int type)
 {
-    CharsetPtr c;
+    const CharsetRec *c;
 
     c = getCachedCharset(final, type, NULL);
     if (c)
@@ -394,10 +394,10 @@ getCharset(unsigned char final, int type)
     return getUnknownCharset(type);
 }
 
-CharsetPtr
+const CharsetRec *
 getCharsetByName(const char *name)
 {
-    CharsetPtr c;
+    const CharsetRec *c;
 
     if (name == NULL)
 	return getUnknownCharset(T_94);
@@ -417,7 +417,7 @@ getCharsetByName(const char *name)
     return getUnknownCharset(T_94);
 }
 /* *INDENT-OFF* */
-LocaleCharsetRec localeCharsets[] =
+static const LocaleCharsetRec localeCharsets[] =
 {
     {"C",          0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
     {"POSIX",      0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
@@ -458,7 +458,7 @@ LocaleCharsetRec localeCharsets[] =
 void
 reportCharsets(void)
 {
-    LocaleCharsetPtr p;
+    const LocaleCharsetRec *p;
     FontencCharsetPtr q;
     printf("Known locale encodings:\n\n");
     for (p = localeCharsets; p->name; p++) {
@@ -488,13 +488,15 @@ int
 getLocaleState(const char *locale,
 	       const char *charset,
 	       int *gl_return, int *gr_return,
-	       CharsetPtr * g0_return, CharsetPtr * g1_return,
-	       CharsetPtr * g2_return, CharsetPtr * g3_return,
-	       CharsetPtr * other_return)
+	       const CharsetRec * *g0_return,
+	       const CharsetRec * *g1_return,
+	       const CharsetRec * *g2_return,
+	       const CharsetRec * *g3_return,
+	       const CharsetRec * *other_return)
 {
     int result = 0;
     char *resolved = 0;
-    LocaleCharsetPtr p;
+    const LocaleCharsetRec *p;
 
     if (!charset) {
 	resolved = resolveLocale(locale);

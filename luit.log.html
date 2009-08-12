@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 2006,2008 by Thomas E. Dickey                                   *
+ * Copyright 2006-2008,2009 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.14 2008/08/29 23:48:03 tom Exp $
+  $XTermId: luit.log.html,v 1.20 2009/08/12 01:00:38 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -30,11 +30,36 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright 2006,2008 by <A
+Copyright 2006-2008,2009 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
+<p>
+2009/8/11 -
+<ul>
+<li>improve use of <code>const</code> more consistently in sources.
+<li>add changes from xorg git:
+<ul>
+<li>Apple: Use secure tty
+(adds <code>__APPLE__</code> to an ifdef for <code>HAVE_GRANTPT</code>).
+</ul>
+<li>update configure script macros
+(CF_ADD_CFLAGS,
+CF_ADD_INCDIR,
+CF_ADD_LIBDIR,
+CF_ADD_SEARCHPATH,
+CF_FIND_LINKAGE,
+CF_GCC_ATTRIBUTES,
+CF_GCC_WARNINGS,
+CF_HEADER_PATH,
+CF_LIBRARY_PATH,
+CF_PATH_PROG,
+CF_PKG_CONFIG,
+CF_XOPEN_SOURCE,
+CF_X_FONTENC).
+<li>update configure utility scripts (config.guess, config.sub, install-sh, mkdirs.sh).
+</ul>
 2008/8/29 -
 <ul>
 <li>add <code>-p</code> option, to make the wait-pipe workaround from XFree86

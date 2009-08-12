@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.7 2008/08/24 18:11:00 tom Exp $ */
+/* $XTermId: sys.c,v 1.8 2009/08/12 00:04:40 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -57,7 +57,7 @@ THE SOFTWARE.
 
 #if (defined(__GLIBC__) && \
      (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1))) || \
-    defined(SVR4)
+    defined(SVR4) || defined(__APPLE__)
 #define HAVE_GRANTPT
 #endif
 

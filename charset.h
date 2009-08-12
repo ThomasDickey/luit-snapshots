@@ -1,4 +1,4 @@
-/* $XTermId: charset.h,v 1.4 2008/08/21 22:49:40 tom Exp $ */
+/* $XTermId: charset.h,v 1.6 2009/08/12 00:50:42 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -46,9 +46,9 @@ typedef struct _Charset {
     const char *name;
     int type;
     unsigned char final;
-    unsigned int (*recode) (unsigned int, struct _Charset * self);
-    int (*reverse) (unsigned int, struct _Charset * self);
-    void *data;
+    unsigned int (*recode) (unsigned int, const struct _Charset * self);
+    int (*reverse) (unsigned int, const struct _Charset * self);
+    const void *data;
     int (*other_stack) (unsigned char c, OtherStatePtr aux);
     OtherState *other_aux;
     unsigned int (*other_recode) (unsigned int c, OtherStatePtr aux);
@@ -67,14 +67,16 @@ typedef struct _LocaleCharset {
     const char *other;
 } LocaleCharsetRec, *LocaleCharsetPtr;
 
-CharsetPtr getUnknownCharset(int);
-CharsetPtr getCharset(unsigned char, int);
-CharsetPtr getCharsetByName(const char *);
+const CharsetRec *getUnknownCharset(int);
+const CharsetRec *getCharset(unsigned char, int);
+const CharsetRec *getCharsetByName(const char *);
 void reportCharsets(void);
 int getLocaleState(const char *locale, const char *charset,
 		   int *gl_return, int *gr_return,
-		   CharsetPtr * g0_return, CharsetPtr * g1_return,
-		   CharsetPtr * g2_return, CharsetPtr * g3_return,
-		   CharsetPtr * other_return);
+		   const CharsetRec * *g0_return,
+		   const CharsetRec * *g1_return,
+		   const CharsetRec * *g2_return,
+		   const CharsetRec * *g3_return,
+		   const CharsetRec * *other_return);
 
 #endif /* LUIT_CHARSET_H */

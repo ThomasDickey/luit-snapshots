@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.10 2008/08/23 14:17:48 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.13 2009/08/12 00:20:37 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006,2008 by Thomas E. Dickey
+dnl Copyright 2006-2008,2009 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -25,7 +25,7 @@ dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_CFLAGS version: 7 updated: 2004/04/25 17:48:30
+dnl CF_ADD_CFLAGS version: 8 updated: 2009/01/06 19:33:30
 dnl -------------
 dnl Copy non-preprocessor flags to $CFLAGS, preprocessor flags to $CPPFLAGS
 dnl The second parameter if given makes this macro verbose.
@@ -95,7 +95,7 @@ fi
 
 if test -n "$cf_new_cppflags" ; then
 	ifelse($2,,,[CF_VERBOSE(add to \$CPPFLAGS $cf_new_cppflags)])
-	CPPFLAGS="$cf_new_cppflags $CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $cf_new_cppflags"
 fi
 
 if test -n "$cf_new_extra_cppflags" ; then
@@ -107,7 +107,7 @@ AC_SUBST(EXTRA_CPPFLAGS)
 
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_INCDIR version: 9 updated: 2008/02/09 13:15:34
+dnl CF_ADD_INCDIR version: 12 updated: 2009/01/18 10:00:47
 dnl -------------
 dnl Add an include-directory to $CPPFLAGS.  Don't add /usr/include, since it's
 dnl redundant.  We don't normally need to add -I/usr/local/include for gcc,
@@ -134,7 +134,7 @@ if test -n "$1" ; then
 		fi
 
 		if test "$cf_have_incdir" = no ; then
-          if test "$cf_add_incdir" = /usr/local/include ; then
+		  if test "$cf_add_incdir" = /usr/local/include ; then
 			if test "$GCC" = yes
 			then
 			  cf_save_CPPFLAGS=$CPPFLAGS
@@ -150,11 +150,11 @@ if test -n "$1" ; then
 
 		if test "$cf_have_incdir" = no ; then
 		  CF_VERBOSE(adding $cf_add_incdir to include-path)
-		  ifelse($2,,CPPFLAGS,$2)="-I$cf_add_incdir $ifelse($2,,CPPFLAGS,[$]$2)"
+		  ifelse($2,,CPPFLAGS,$2)="$ifelse($2,,CPPFLAGS,$2) -I$cf_add_incdir"
 
-          cf_top_incdir=`echo $cf_add_incdir | sed -e 's%/include/.*$%/include%'`
-          test "$cf_top_incdir" = "$cf_add_incdir" && break
-          cf_add_incdir="$cf_top_incdir"
+		  cf_top_incdir=`echo $cf_add_incdir | sed -e 's%/include/.*$%/include%'`
+		  test "$cf_top_incdir" = "$cf_add_incdir" && break
+		  cf_add_incdir="$cf_top_incdir"
 		else
 		  break
 		fi
@@ -164,7 +164,7 @@ if test -n "$1" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_LIBDIR version: 6 updated: 2008/02/09 13:15:34
+dnl CF_ADD_LIBDIR version: 8 updated: 2009/01/18 10:01:08
 dnl -------------
 dnl	Adds to the library-path
 dnl
@@ -193,7 +193,7 @@ if test -n "$1" ; then
       fi
       if test "$cf_have_libdir" = no ; then
         CF_VERBOSE(adding $cf_add_libdir to library-path)
-        ifelse($2,,LDFLAGS,$2)="-L$cf_add_libdir $ifelse($2,,LDFLAGS,[$]$2)"
+        ifelse($2,,LDFLAGS,$2)="-L$cf_add_libdir $ifelse($2,,LDFLAGS,$2)"
       fi
     fi
   done
@@ -219,7 +219,7 @@ AC_DEFUN([CF_ADD_OPTIONAL_PATH],[
   esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_SEARCHPATH version: 4 updated: 2007/07/29 13:35:20
+dnl CF_ADD_SEARCHPATH version: 5 updated: 2009/01/11 20:40:21
 dnl -----------------
 dnl Set $CPPFLAGS and $LDFLAGS with the directories given via the parameter.
 dnl They can be either the common root of include- and lib-directories, or the
@@ -230,7 +230,8 @@ dnl $1 is the list of colon-separated directory names to search.
 dnl $2 is the action to take if a parameter does not yield a directory.
 AC_DEFUN([CF_ADD_SEARCHPATH],
 [
-for cf_searchpath in `echo "$1" | tr : ' '`; do
+AC_REQUIRE([CF_PATHSEP])
+for cf_searchpath in `echo "$1" | tr $PATH_SEPARATOR ' '`; do
 	if test -d $cf_searchpath/include; then
 		CF_ADD_INCDIR($cf_searchpath/include)
 	elif test -d $cf_searchpath/../include ; then
@@ -584,7 +585,7 @@ fi
 ])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FIND_LINKAGE version: 12 updated: 2007/07/29 20:13:53
+dnl CF_FIND_LINKAGE version: 13 updated: 2008/12/24 07:59:55
 dnl ---------------
 dnl Find a library (specifically the linkage used in the code fragment),
 dnl searching for it if it is not already in the library path.
@@ -617,6 +618,7 @@ AC_TRY_LINK([$1],[$2],
     cf_cv_find_linkage_$3=yes,[
     cf_cv_find_linkage_$3=no
 
+    CF_VERBOSE(find linkage for $3 library)
     CF_MSG_LOG([Searching for headers in [FIND_LINKAGE]($3,$6)])
 
     cf_save_CPPFLAGS="$CPPFLAGS"
@@ -696,7 +698,7 @@ ifelse([$5],,AC_MSG_WARN(Cannot find $3 library),[$5])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_ATTRIBUTES version: 11 updated: 2007/07/29 09:55:12
+dnl CF_GCC_ATTRIBUTES version: 13 updated: 2009/08/11 20:19:56
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
@@ -742,26 +744,61 @@ extern void oops(char *,...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
 extern void foo(void) GCC_NORETURN;
 int main(int argc GCC_UNUSED, char *argv[[]] GCC_UNUSED) { return 0; }
 EOF
+	cf_printf_attribute=no
+	cf_scanf_attribute=no
 	for cf_attribute in scanf printf unused noreturn
 	do
 		CF_UPPER(cf_ATTRIBUTE,$cf_attribute)
 		cf_directive="__attribute__(($cf_attribute))"
 		echo "checking for $CC $cf_directive" 1>&AC_FD_CC
-		case $cf_attribute in
-		scanf|printf)
-		cat >conftest.h <<EOF
+
+		case $cf_attribute in #(vi
+		printf) #(vi
+			cf_printf_attribute=yes
+			cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE 1
 EOF
 			;;
-		*)
-		cat >conftest.h <<EOF
+		scanf) #(vi
+			cf_scanf_attribute=yes
+			cat >conftest.h <<EOF
+#define GCC_$cf_ATTRIBUTE 1
+EOF
+			;;
+		*) #(vi
+			cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE $cf_directive
 EOF
 			;;
 		esac
+
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... $cf_attribute)
 			cat conftest.h >>confdefs.h
+			case $cf_attribute in #(vi
+			printf) #(vi
+				if test "$cf_printf_attribute" = no ; then
+					cat >>confdefs.h <<EOF
+#define GCC_PRINTFLIKE(fmt,var) /* nothing */
+EOF
+				else
+					cat >>confdefs.h <<EOF
+#define GCC_PRINTFLIKE(fmt,var) __attribute__((format(printf,fmt,var)))
+EOF
+				fi
+				;;
+			scanf) #(vi
+				if test "$cf_scanf_attribute" = no ; then
+					cat >>confdefs.h <<EOF
+#define GCC_SCANFLIKE(fmt,var) /* nothing */
+EOF
+				else
+					cat >>confdefs.h <<EOF
+#define GCC_SCANFLIKE(fmt,var)  __attribute__((format(scanf,fmt,var)))
+EOF
+				fi
+				;;
+			esac
 		fi
 	done
 else
@@ -785,7 +822,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 23 updated: 2008/07/26 17:54:02
+dnl CF_GCC_WARNINGS version: 24 updated: 2009/02/01 15:21:00
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -818,7 +855,6 @@ if test "$INTEL_COMPILER" = yes
 then
 # The "-wdXXX" options suppress warnings:
 # remark #1419: external declaration in primary source file
-# remark #1682: implicit conversion of a 64-bit integral type to a smaller integral type (potential portability problem)
 # remark #1683: explicit conversion of a 64-bit integral type to a smaller integral type (potential portability problem)
 # remark #1684: conversion from pointer to same-sized integral type (potential portability problem)
 # remark #193: zero used for undefined preprocessing identifier
@@ -826,19 +862,18 @@ then
 # remark #810: conversion from "int" to "Dimension={unsigned short}" may lose significant bits
 # remark #869: parameter "tw" was never referenced
 # remark #981: operands are evaluated in unspecified order
-# warning #269: invalid format string conversion
+# warning #279: controlling expression is constant
 
 	AC_CHECKING([for $CC warning options])
 	cf_save_CFLAGS="$CFLAGS"
 	EXTRA_CFLAGS="-Wall"
 	for cf_opt in \
 		wd1419 \
-		wd1682 \
 		wd1683 \
 		wd1684 \
 		wd193 \
-		wd279 \
 		wd593 \
+		wd279 \
 		wd810 \
 		wd869 \
 		wd981
@@ -926,11 +961,31 @@ make an error
 test "$cf_cv_gnu_source" = yes && CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_HEADER_PATH version: 8 updated: 2002/11/10 14:46:59
+dnl CF_HEADER_PATH version: 9 updated: 2008/12/07 19:38:31
 dnl --------------
-dnl Construct a search-list for a nonstandard header-file
+dnl Construct a search-list of directories for a nonstandard header-file
+dnl
+dnl Parameters
+dnl	$1 = the variable to return as result
+dnl	$2 = the package name
 AC_DEFUN([CF_HEADER_PATH],
-[CF_SUBDIR_PATH($1,$2,include)
+[
+cf_header_path_list=""
+if test -n "${CFLAGS}${CPPFLAGS}" ; then
+	for cf_header_path in $CPPFLAGS $CFLAGS
+	do
+		case $cf_header_path in #(vi
+		-I*)
+			cf_header_path=`echo ".$cf_header_path" |sed -e 's/^...//' -e 's,/include$,,'`
+			CF_ADD_SUBDIR_PATH($1,$2,include,$cf_header_path,NONE)
+			cf_header_path_list="$cf_header_path_list [$]$1"
+			;;
+		esac
+	done
+fi
+
+CF_SUBDIR_PATH($1,$2,include)
+
 test "$includedir" != NONE && \
 test "$includedir" != "/usr/include" && \
 test -d "$includedir" && {
@@ -945,6 +1000,7 @@ test -d "$oldincludedir" && {
 	test -d $oldincludedir/$2 && $1="[$]$1 $oldincludedir/$2"
 }
 
+$1="$cf_header_path_list [$]$1"
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_HELP_MESSAGE version: 3 updated: 1998/01/14 10:56:23
@@ -1177,11 +1233,33 @@ cf_save_CFLAGS="$cf_save_CFLAGS -we147 -no-gcc"
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_LIBRARY_PATH version: 7 updated: 2002/11/10 14:46:59
+dnl CF_LIBRARY_PATH version: 8 updated: 2008/12/07 19:38:31
 dnl ---------------
-dnl Construct a search-list for a nonstandard library-file
+dnl Construct a search-list of directories for a nonstandard library-file
+dnl
+dnl Parameters
+dnl	$1 = the variable to return as result
+dnl	$2 = the package name
 AC_DEFUN([CF_LIBRARY_PATH],
-[CF_SUBDIR_PATH($1,$2,lib)])dnl
+[
+cf_library_path_list=""
+if test -n "${LDFLAGS}${LIBS}" ; then
+	for cf_library_path in $LDFLAGS $LIBS
+	do
+		case $cf_library_path in #(vi
+		-L*)
+			cf_library_path=`echo ".$cf_library_path" |sed -e 's/^...//' -e 's,/lib$,,'`
+			CF_ADD_SUBDIR_PATH($1,$2,lib,$cf_library_path,NONE)
+			cf_library_path_list="$cf_library_path_list [$]$1"
+			;;
+		esac
+	done
+fi
+
+CF_SUBDIR_PATH($1,$2,lib)
+
+$1="$cf_library_path_list [$]$1"
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_MSG_LOG version: 4 updated: 2007/07/29 09:55:12
 dnl ----------
@@ -1191,7 +1269,7 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "${as_me-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_PROG version: 6 updated: 2004/01/26 20:58:41
+dnl CF_PATH_PROG version: 7 updated: 2009/01/11 20:34:16
 dnl ------------
 dnl Check for a given program, defining corresponding symbol.
 dnl	$1 = environment variable, which is suffixed by "_PATH" in the #define.
@@ -1204,21 +1282,13 @@ dnl
 dnl FIXME: we should allow this to be overridden by environment variables
 dnl
 AC_DEFUN([CF_PATH_PROG],[
+AC_REQUIRE([CF_PATHSEP])
 test -z "[$]$1" && $1=$2
 AC_PATH_PROGS($1,[$]$1 $2 $3,[$]$1)
 
 cf_path_prog=""
 cf_path_args=""
-IFS="${IFS= 	}"; cf_save_ifs="$IFS"
-case $host_os in #(vi
-os2*) #(vi
-	IFS="${IFS};"
-	;;
-*)
-	IFS="${IFS}:"
-	;;
-esac
-
+IFS="${IFS= 	}"; cf_save_ifs="$IFS"; IFS="${IFS}$PATH_SEPARATOR"
 for cf_temp in $ac_cv_path_$1
 do
 	if test -z "$cf_path_prog" ; then
@@ -1280,12 +1350,49 @@ case ".[$]$1" in #(vi
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PKG_CONFIG version: 1 updated: 2006/08/20 13:51:03
+dnl CF_PATHSEP version: 4 updated: 2009/01/11 20:30:23
+dnl ----------
+dnl Provide a value for the $PATH and similar separator
+AC_DEFUN([CF_PATHSEP],
+[
+	case $cf_cv_system_name in
+	os2*)	PATH_SEPARATOR=';'  ;;
+	*)	PATH_SEPARATOR=':'  ;;
+	esac
+ifelse($1,,,[$1=$PATH_SEPARATOR])
+	AC_SUBST(PATH_SEPARATOR)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PKG_CONFIG version: 3 updated: 2009/01/25 10:55:09
 dnl -------------
-dnl Check for the package-config program.
+dnl Check for the package-config program, unless disabled by command-line.
 AC_DEFUN([CF_PKG_CONFIG],
 [
-AC_PATH_PROG(PKG_CONFIG, pkg-config, none)
+AC_MSG_CHECKING(if you want to use pkg-config)
+AC_ARG_WITH(pkg-config,
+	[  --with-pkg-config{=path} enable/disable use of pkg-config],
+	[cf_pkg_config=$withval],
+	[cf_pkg_config=yes])
+AC_MSG_RESULT($cf_pkg_config)
+
+case $cf_pkg_config in #(vi
+no) #(vi
+	PKG_CONFIG=none
+	;;
+yes) #(vi
+	AC_PATH_PROG(PKG_CONFIG, pkg-config, none)
+	;;
+*)
+	PKG_CONFIG=$withval
+	;;
+esac
+
+test -z "$PKG_CONFIG" && PKG_CONFIG=none
+if test "$PKG_CONFIG" != none ; then
+	CF_PATH_SYNTAX(PKG_CONFIG)
+fi
+
+AC_SUBST(PKG_CONFIG)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_POSIX_C_SOURCE version: 6 updated: 2005/07/14 20:25:10
@@ -1937,7 +2044,7 @@ AC_DEFUN([CF_WITH_ZLIB],[
 ],z,,,zlib)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 26 updated: 2008/07/27 11:26:57
+dnl CF_XOPEN_SOURCE version: 29 updated: 2009/07/16 21:07:04
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -1954,7 +2061,7 @@ cf_XOPEN_SOURCE=ifelse($1,,500,$1)
 cf_POSIX_C_SOURCE=ifelse($2,,199506L,$2)
 
 case $host_os in #(vi
-aix[[45]]*) #(vi
+aix[[456]]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
 	;;
 freebsd*|dragonfly*) #(vi
@@ -1965,13 +2072,16 @@ freebsd*|dragonfly*) #(vi
 	cf_XOPEN_SOURCE=600
 	CPPFLAGS="$CPPFLAGS -D_BSD_TYPES -D__BSD_VISIBLE -D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE -D_XOPEN_SOURCE=$cf_XOPEN_SOURCE"
 	;;
+hpux11*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE -D_XOPEN_SOURCE=500"
+	;;
 hpux*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
 	;;
 irix[[56]].*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_SGI_SOURCE"
 	;;
-linux*|gnu*|k*bsd*-gnu) #(vi
+linux*|gnu*|mint*|k*bsd*-gnu) #(vi
 	CF_GNU_SOURCE
 	;;
 mirbsd*) #(vi
@@ -2025,7 +2135,7 @@ make an error
 esac
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTENC version: 3 updated: 2008/08/21 16:01:19
+dnl CF_X_FONTENC version: 4 updated: 2009/01/06 19:39:28
 dnl ------------
 dnl
 dnl First check for the appropriate config program, since the developers for
@@ -2096,7 +2206,7 @@ cf_save_LIBS="$LIBS"
 cf_save_INCS="$CPPFLAGS"
 
 LIBS="$cf_cv_x_fontenc_libs $LIBS"
-CPPFLAGS="$cf_cv_x_fontenc_incs $CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $cf_cv_x_fontenc_incs"
 
 AC_MSG_CHECKING(if we can link with font encoding library)
 AC_TRY_LINK([
