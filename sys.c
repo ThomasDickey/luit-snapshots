@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.8 2009/08/12 00:04:40 tom Exp $ */
+/* $XTermId: sys.c,v 1.13 2009/08/16 20:55:51 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/sys.c,v 1.11 2004/10/27 23:03:54 dickey Exp $ */
+
+#include "config.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -36,40 +37,36 @@ THE SOFTWARE.
 #include <signal.h>
 #include <errno.h>
 
-#ifdef SVR4
-#define HAVE_POLL
-#endif
-
-#ifndef HAVE_POLL
-#ifndef _MINIX
-#define HAVE_SELECT
-#endif
-#endif
-
-#ifdef HAVE_POLL
+#ifdef HAVE_WORKING_POLL
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#else
 #include <sys/poll.h>
+#endif
 #undef HAVE_SELECT
 #endif
 
-#ifdef __QNX__
+#ifdef HAVE_SELECT
+#if !(defined(_MINIX) || defined(__BEOS__))
+#define HAVE_WORKING_SELECT 1
+#endif
+#endif
+
+#ifdef HAVE_WORKING_SELECT
+#if defined(HAVE_SYS_SELECT_H) && defined(HAVE_SYS_TIME_SELECT)
 #include <sys/select.h>
 #endif
-
-#if (defined(__GLIBC__) && \
-     (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1))) || \
-    defined(SVR4) || defined(__APPLE__)
-#define HAVE_GRANTPT
 #endif
 
-#ifdef __GLIBC__
+#ifdef HAVE_PTY_H
 #include <pty.h>
 #endif
 
-#ifdef SVR4
+#ifdef HAVE_STROPTS_H
 #include <stropts.h>
 #endif
 
-#if (defined(__unix__) || defined(unix)) && !defined(USG)
+#ifdef HAVE_SYS_PARAM
 #include <sys/param.h>
 #endif
 
@@ -78,7 +75,7 @@ THE SOFTWARE.
 static int saved_tio_valid = 0;
 static struct termios saved_tio;
 
-#ifdef HAVE_POLL
+#ifdef HAVE_WORKING_POLL
 int
 waitForOutput(int fd)
 {
@@ -115,15 +112,15 @@ waitForInput(int fd1, int fd2)
 	return -1;
 
     ret = 0;
-    if (pfd[0].revents & POLLIN)
+    if (pfd[0].revents & (POLLIN | POLLHUP))
 	ret |= 1;
-    if (pfd[1].revents & POLLIN)
+    if (pfd[1].revents & (POLLIN | POLLHUP))
 	ret |= 2;
     return ret;
 }
 #endif
 
-#ifdef HAVE_SELECT
+#ifdef HAVE_WORKING_SELECT
 int
 waitForOutput(int fd)
 {
@@ -164,8 +161,8 @@ waitForInput(int fd1, int fd2)
 }
 #endif
 
-#ifndef HAVE_POLL
-#ifndef HAVE_SELECT
+#ifndef HAVE_WORKING_POLL
+#ifndef HAVE_WORKING_SELECT
 /* Busy looping implementation */
 int
 waitForOutput(int fd)
@@ -427,7 +424,7 @@ openTty(char *line)
     }
 #endif
 
-#ifdef SVR4
+#if defined(I_PUSH) && (defined(SVR4) || defined(__SVR4))
     rc = ioctl(tty, I_PUSH, "ptem");
     if (rc < 0)
 	goto bail;

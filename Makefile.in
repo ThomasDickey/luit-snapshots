@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.5 2008/08/23 15:35:25 tom Exp $
+## $XTermId: Makefile.in,v 1.7 2009/08/12 20:54:46 tom Exp $
 ##
-## Copyright 2006,2008 by Thomas E. Dickey
+## Copyright 2006-2008,2009 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -33,7 +33,6 @@ o		= .@OBJEXT@
 
 CC		= @CC@
 CPP		= @CPP@
-AWK		= @AWK@
 LINK		= $(CC) $(CFLAGS)
 
 RM              = rm -f
@@ -59,9 +58,9 @@ EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 
 CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H -DLOCALE_ALIAS_FILE=\"$(LOCALE_ALIAS)\" @CPPFLAGS@ $(EXTRA_CPPFLAGS)
-CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
+CFLAGS		= @X_CFLAGS@ @CFLAGS@ $(EXTRA_CFLAGS)
 LDFLAGS		= @LDFLAGS@
-LIBS		= @LIBS@
+LIBS		= @X_LIBS@ @LIBS@
 
 #### End of system configuration section. ####
 

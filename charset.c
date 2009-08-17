@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.12 2009/08/12 00:53:13 tom Exp $ */
+/* $XTermId: charset.c,v 1.13 2009/08/12 08:58:28 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/charset.c,v 1.11 2004/10/27 23:03:54 dickey Exp $ */
+
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

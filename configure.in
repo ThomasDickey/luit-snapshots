@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.9 2008/08/23 14:50:21 tom Exp $
+dnl $XTermId: configure.in,v 1.14 2009/08/12 20:52:15 tom Exp $
 
 AC_PREREQ(2.52.20030208)
 AC_INIT(luit.c)
@@ -9,14 +9,14 @@ AC_ARG_PROGRAM
 
 AC_PROG_CC
 AC_PROG_CPP
-AC_PROG_AWK
 AC_PROG_INSTALL
-AC_CHECK_PROGS(LINT, lint alint splint lclint, [])
+CF_PROG_LINT
 
 CF_ANSI_CC_REQD
 AC_CONST
 CF_PROG_EXT
 
+AC_PATH_XTRA
 CF_XOPEN_SOURCE
 CF_SIGWINCH
 CF_SVR4
@@ -40,9 +40,29 @@ then
 fi
 fi
 
-AC_CHECK_FUNCS(putenv strdup)
-CF_X_FONTENC
+AC_CHECK_HEADERS( \ 
+poll.h \
+pty.h \
+stropts.h \
+sys/ioctl.h \
+sys/param.h \
+sys/poll.h \
+sys/select.h \
+sys/time.h \
+termios.h \
+) 
+
+AC_CHECK_FUNCS(\
+grantpt \
+poll \
+putenv \
+select \
+strdup \
+)
+CF_SYS_TIME_SELECT 
+CF_FUNC_POLL
 CF_WITH_ZLIB
+CF_X_FONTENC
 
 CF_WITH_LOCALE_ALIAS
 

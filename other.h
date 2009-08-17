@@ -1,4 +1,4 @@
-/* $XTermId: other.h,v 1.5 2008/08/21 00:08:01 tom Exp $ */
+/* $XTermId: other.h,v 1.6 2009/08/12 09:08:09 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -21,14 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/other.h,v 1.2 2004/01/27 02:30:30 dawes Exp $ */
 
 #ifndef LUIT_OTHER_H
 #define LUIT_OTHER_H 1
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"		/* include this, for self-contained headers */
 
 #ifndef GCC_UNUSED
 #define GCC_UNUSED		/* ARGSUSED */

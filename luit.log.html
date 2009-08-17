@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.20 2009/08/12 01:00:38 tom Exp $
+  $XTermId: luit.log.html,v 1.25 2009/08/16 21:52:49 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -36,28 +36,41 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
 <p>
-2009/8/11 -
+2009/8/16 -
 <ul>
+<li>reset connection to blocking mode on exit.
+<li>modify <code>poll</code>-flavor of <code>waitForInput</code> to also
+check if the connection has hung up.
+<li>improve initialization for <code>-p</code> command-line option to
+work with more BSD-flavors.
+<li>improve configure script checks for font encoding library using AC_PATH_XTRA,
+and noting that font encoding library may depend upon z library.
+<li>replace #ifdef to define <code>HAVE_GRANTPT</code> with configure script.
 <li>improve use of <code>const</code> more consistently in sources.
-<li>add changes from xorg git:
+<li>clean up include-dependencies by including config.h before other includes.
+<li>add change from xorg git:
 <ul>
-<li>Apple: Use secure tty
-(adds <code>__APPLE__</code> to an ifdef for <code>HAVE_GRANTPT</code>).
+<li>luit: Convert platform #ifdefs to configure tests for functions &amp; headers
+<br>
+(adds configure checks for functions and headers used to open pty's,
+uses that to replace a derived #define for <code>HAVE_POLL</code>,
+#ifdef's the corresponding headers and
+modifies #ifdef for <code>I_PUSH</code> ioctl to add <code>__SVR4</code>).
 </ul>
-<li>update configure script macros
-(CF_ADD_CFLAGS,
-CF_ADD_INCDIR,
-CF_ADD_LIBDIR,
-CF_ADD_SEARCHPATH,
-CF_FIND_LINKAGE,
-CF_GCC_ATTRIBUTES,
-CF_GCC_WARNINGS,
-CF_HEADER_PATH,
-CF_LIBRARY_PATH,
-CF_PATH_PROG,
-CF_PKG_CONFIG,
-CF_XOPEN_SOURCE,
-CF_X_FONTENC).
+<li>update configure script macros:
+CF_ADD_CFLAGS
+CF_ADD_INCDIR
+CF_ADD_LIBDIR
+CF_ADD_SEARCHPATH
+CF_FIND_LINKAGE
+CF_GCC_ATTRIBUTES
+CF_GCC_WARNINGS
+CF_HEADER_PATH
+CF_LIBRARY_PATH
+CF_PATH_PROG
+CF_PKG_CONFIG
+CF_XOPEN_SOURCE
+CF_X_FONTENC
 <li>update configure utility scripts (config.guess, config.sub, install-sh, mkdirs.sh).
 </ul>
 2008/8/29 -
