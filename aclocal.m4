@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.13 2009/08/12 00:20:37 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.16 2009/08/12 20:55:32 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -698,6 +698,35 @@ ifelse([$5],,AC_MSG_WARN(Cannot find $3 library),[$5])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_FUNC_POLL version: 4 updated: 2006/12/16 12:33:30
+dnl ------------
+dnl See if the poll function really works.  Some platforms have poll(), but
+dnl it does not work for terminals or files.
+AC_DEFUN([CF_FUNC_POLL],[
+AC_CACHE_CHECK(if poll really works,cf_cv_working_poll,[
+AC_TRY_RUN([
+#include <stdio.h>
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#else
+#include <sys/poll.h>
+#endif
+int main() {
+	struct pollfd myfds;
+	int ret;
+
+	myfds.fd = 0;
+	myfds.events = POLLIN;
+
+	ret = poll(&myfds, 1, 100);
+	${cf_cv_main_return:-return}(ret != 0);
+}],
+	[cf_cv_working_poll=yes],
+	[cf_cv_working_poll=no],
+	[cf_cv_working_poll=unknown])])
+test "$cf_cv_working_poll" = "yes" && AC_DEFINE(HAVE_WORKING_POLL)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_GCC_ATTRIBUTES version: 13 updated: 2009/08/11 20:19:56
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
@@ -1269,6 +1298,19 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "${as_me-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_PATHSEP version: 4 updated: 2009/01/11 20:30:23
+dnl ----------
+dnl Provide a value for the $PATH and similar separator
+AC_DEFUN([CF_PATHSEP],
+[
+	case $cf_cv_system_name in
+	os2*)	PATH_SEPARATOR=';'  ;;
+	*)	PATH_SEPARATOR=':'  ;;
+	esac
+ifelse($1,,,[$1=$PATH_SEPARATOR])
+	AC_SUBST(PATH_SEPARATOR)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_PATH_PROG version: 7 updated: 2009/01/11 20:34:16
 dnl ------------
 dnl Check for a given program, defining corresponding symbol.
@@ -1348,19 +1390,6 @@ case ".[$]$1" in #(vi
   ifelse($2,,[AC_MSG_ERROR([expected a pathname, not \"[$]$1\"])],$2)
   ;;
 esac
-])dnl
-dnl ---------------------------------------------------------------------------
-dnl CF_PATHSEP version: 4 updated: 2009/01/11 20:30:23
-dnl ----------
-dnl Provide a value for the $PATH and similar separator
-AC_DEFUN([CF_PATHSEP],
-[
-	case $cf_cv_system_name in
-	os2*)	PATH_SEPARATOR=';'  ;;
-	*)	PATH_SEPARATOR=':'  ;;
-	esac
-ifelse($1,,,[$1=$PATH_SEPARATOR])
-	AC_SUBST(PATH_SEPARATOR)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_PKG_CONFIG version: 3 updated: 2009/01/25 10:55:09
@@ -1599,6 +1628,14 @@ AC_SUBST(PROG_EXT)
 test -n "$PROG_EXT" && AC_DEFINE_UNQUOTED(PROG_EXT,"$PROG_EXT")
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_PROG_LINT version: 2 updated: 2009/08/12 04:43:14
+dnl ------------
+AC_DEFUN([CF_PROG_LINT],
+[
+AC_CHECK_PROGS(LINT, tdlint lint alint splint lclint)
+AC_SUBST(LINT_OPTS)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_REMOVE_DEFINE version: 2 updated: 2005/07/09 16:12:18
 dnl ----------------
 dnl Remove all -U and -D options that refer to the given symbol from a list
@@ -1815,6 +1852,29 @@ AC_DEFUN([CF_SYS_ERRLIST],
 [
     CF_CHECK_ERRNO(sys_nerr)
     CF_CHECK_ERRNO(sys_errlist)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_SYS_TIME_SELECT version: 4 updated: 2000/10/04 09:18:40
+dnl ------------------
+dnl Check if we can include <sys/time.h> with <sys/select.h>; this breaks on
+dnl older SCO configurations.
+AC_DEFUN([CF_SYS_TIME_SELECT],
+[
+AC_MSG_CHECKING(if sys/time.h works with sys/select.h)
+AC_CACHE_VAL(cf_cv_sys_time_select,[
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+],[],[cf_cv_sys_time_select=yes],
+     [cf_cv_sys_time_select=no])
+     ])
+AC_MSG_RESULT($cf_cv_sys_time_select)
+test "$cf_cv_sys_time_select" = yes && AC_DEFINE(HAVE_SYS_TIME_SELECT)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_TYPE_FD_SET version: 4 updated: 2008/03/25 20:56:03
@@ -2135,7 +2195,7 @@ make an error
 esac
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTENC version: 4 updated: 2009/01/06 19:39:28
+dnl CF_X_FONTENC version: 5 updated: 2009/08/12 16:55:32
 dnl ------------
 dnl
 dnl First check for the appropriate config program, since the developers for
@@ -2149,6 +2209,7 @@ dnl	--with-fontenc-cflags
 dnl	--with-fontenc-libs
 AC_DEFUN([CF_X_FONTENC],
 [
+AC_REQUIRE([CF_WITH_ZLIB])
 AC_REQUIRE([CF_PKG_CONFIG])
 
 cf_extra_fontenc_incs=
@@ -2205,8 +2266,8 @@ fi
 cf_save_LIBS="$LIBS"
 cf_save_INCS="$CPPFLAGS"
 
-LIBS="$cf_cv_x_fontenc_libs $LIBS"
-CPPFLAGS="$CPPFLAGS $cf_cv_x_fontenc_incs"
+LIBS="$cf_cv_x_fontenc_libs $LIBS $X_LIBS"
+CPPFLAGS="$CPPFLAGS $X_CFLAGS $cf_cv_x_fontenc_incs"
 
 AC_MSG_CHECKING(if we can link with font encoding library)
 AC_TRY_LINK([

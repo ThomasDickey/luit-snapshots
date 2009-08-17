@@ -1,4 +1,4 @@
-/* $XTermId: other.c,v 1.5 2008/08/21 23:30:54 tom Exp $ */
+/* $XTermId: other.c,v 1.6 2009/08/12 08:58:28 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/other.c,v 1.2 2004/01/27 02:30:30 dawes Exp $ */
+
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

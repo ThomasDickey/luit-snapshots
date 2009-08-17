@@ -1,7 +1,13 @@
-.\" $XTermId: luit.man,v 1.6 2008/08/29 23:51:43 tom Exp $
+.\" $XTermId: luit.man,v 1.9 2009/08/16 21:56:40 tom Exp $
 .\"
 .\"
-.\" $XFree86: xc/programs/luit/luit.man,v 1.9 2005/02/09 17:06:55 dawes Exp $
+.\" Escape single quotes in literal strings from groff's Unicode transform.
+.ie \n(.g .ds AQ \(aq
+.el       .ds AQ '
+.ie \n(.g .ds `` \(lq
+.el       .ds `` ``
+.ie \n(.g .ds '' \(rq
+.el       .ds '' ''
 .TH LUIT 1 __vendorversion__
 .SH NAME
 luit \- Locale and ISO\ 2022 support for Unicode terminals
@@ -49,6 +55,7 @@ Function as a simple converter from standard input to standard output.
 .TP
 .B \-p
 In startup, establish a handshake between parent and child processes.
+This is needed for some systems, e.g., BSDs.
 .TP
 .B \-x
 Exit as soon as the child dies.  This may cause
@@ -186,12 +193,12 @@ M-x set-terminal-coding-system RET iso-2022-8bit-ss2 RET
 .B __locale_alias__
 The file mapping locales to locale encodings.
 .SH SECURITY
-On systems with SVR4 (``Unix-98'') ptys (Linux version 2.2 and later,
+On systems with SVR4 (\*(``Unix-98\*('') ptys (Linux version 2.2 and later,
 SVR4),
 .B luit
 should be run as the invoking user.
 
-On systems without SVR4 (``Unix-98'') ptys (notably BSD variants),
+On systems without SVR4 (\*(``Unix-98\*('') ptys (notably BSD variants),
 running
 .B luit
 as an ordinary user will leave the tty world-writable; this is a
@@ -217,8 +224,12 @@ Selecting alternate sets of control characters is not supported and
 will never be.
 .SH SEE ALSO
 xterm(__mansuffix__), unicode(7), utf-8(7), charsets(7).
+.nf
+.br
 .I Character Code Structure and Extension Techniques (ISO\ 2022, ECMA-35).
+.br
 .I Control Functions for Coded Character Sets (ISO\ 6429, ECMA-48).
+.fi
 .SH AUTHOR
 Luit was written by Juliusz Chroboczek <jch@pps.jussieu.fr> for the
 XFree86 project.

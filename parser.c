@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.5 2008/08/23 14:55:02 tom Exp $ */
+/* $XTermId: parser.c,v 1.6 2009/08/12 08:58:28 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/parser.c,v 1.2 2002/09/18 17:11:50 tsi Exp $ */
+
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

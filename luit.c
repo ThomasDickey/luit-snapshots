@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.11 2008/08/29 23:41:21 tom Exp $ */
+/* $XTermId: luit.c,v 1.16 2009/08/16 22:10:34 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/luit.c,v 1.13 2004/10/27 23:03:54 dickey Exp $ */
+
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,10 +36,6 @@ THE SOFTWARE.
 #include <stdarg.h>
 #include <sys/ioctl.h>
 #include <signal.h>
-
-#ifdef SVR4
-#include <stropts.h>
-#endif
 
 #include "luit.h"
 #include "sys.h"
@@ -434,7 +431,7 @@ convert(int ifd, int ofd)
 
     rc = droppriv();
     if (rc < 0) {
-	perror("Couldn't drop priviledges");
+	perror("Couldn't drop privileges");
 	ExitProgram(1);
     }
 
@@ -500,6 +497,26 @@ setup_io(int pty)
 }
 
 static void
+cleanup_io(int pty)
+{
+    int val;
+
+#ifdef SIGWINCH
+    installHandler(SIGWINCH, SIG_DFL);
+#endif
+    installHandler(SIGCHLD, SIG_DFL);
+
+    val = fcntl(0, F_GETFL, 0);
+    if (val >= 0) {
+	fcntl(0, F_SETFL, val & ~O_NONBLOCK);
+    }
+    val = fcntl(pty, F_GETFL, 0);
+    if (val >= 0) {
+	fcntl(pty, F_SETFL, val & ~O_NONBLOCK);
+    }
+}
+
+static void
 close_waitpipe(int which)
 {
     close(p2c_waitpipe[which]);
@@ -547,7 +564,6 @@ condom(int argc, char **argv)
     }
 
     if (pipe_option) {
-	rc = setup_io(pty);
 	pipe(p2c_waitpipe);
 	pipe(c2p_waitpipe);
     }
@@ -562,10 +578,6 @@ condom(int argc, char **argv)
 	close(pty);
 	if (pipe_option) {
 	    close_waitpipe(1);
-#ifdef SIGWINCH
-	    installHandler(SIGWINCH, SIG_DFL);
-#endif
-	    installHandler(SIGCHLD, SIG_DFL);
 	}
 	child(line, path, child_argv);
     } else {
@@ -632,6 +644,7 @@ parent(int pid GCC_UNUSED, int pty)
     unsigned char buf[BUFFER_SIZE];
     int i;
     int rc;
+
     if (pipe_option) {
 	read_waitpipe(c2p_waitpipe);
     }
@@ -639,12 +652,11 @@ parent(int pid GCC_UNUSED, int pty)
     if (verbose) {
 	reportIso2022(outputState);
     }
+    setup_io(pty);
 
     if (pipe_option) {
 	write_waitpipe(p2c_waitpipe);
 	close_waitpipe(1);
-    } else {
-	setup_io(pty);
     }
 
     for (;;) {
@@ -677,6 +689,7 @@ parent(int pid GCC_UNUSED, int pty)
     }
 
     restoreTermios();
+    cleanup_io(pty);
 }
 
 #ifdef NO_LEAKS

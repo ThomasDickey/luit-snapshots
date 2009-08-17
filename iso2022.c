@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.15 2009/08/12 00:44:03 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.16 2009/08/12 08:58:28 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/iso2022.c,v 1.9 2002/12/08 20:19:49 dickey Exp $ */
+
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
