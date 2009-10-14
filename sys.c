@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.13 2009/08/16 20:55:51 tom Exp $ */
+/* $XTermId: sys.c,v 1.20 2009/10/14 11:12:12 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -70,7 +70,25 @@ THE SOFTWARE.
 #include <sys/param.h>
 #endif
 
+#ifdef HAVE_OPENPTY
+#if defined(HAVE_UTIL_H)
+#include <util.h>
+#elif defined(HAVE_LIBUTIL_H)
+#include <libutil.h>
+#elif defined(HAVE_PTY_H)
+#include <pty.h>
+#endif
+#endif /* HAVE_OPENPTY */
+
 #include "sys.h"
+
+#ifdef USE_IGNORE_RC
+int ignore_unused;
+#endif
+
+#if defined(HAVE_OPENPTY)
+static int opened_tty = -1;
+#endif
 
 static int saved_tio_valid = 0;
 static struct termios saved_tio;
@@ -332,8 +350,7 @@ allocatePty(int *pty_return, char **line_return)
     const char *p1;
     char *p2;
 
-#ifdef HAVE_GRANTPT
-    char *temp_line;
+#if defined(HAVE_GRANTPT)
     int rc;
 
     pty = open("/dev/ptmx", O_RDWR);
@@ -352,17 +369,11 @@ allocatePty(int *pty_return, char **line_return)
 	goto bsd;
     }
 
-    temp_line = ptsname(pty);
-    if (!temp_line) {
+    line = strmalloc(ptsname(pty));
+    if (!line) {
 	close(pty);
 	goto bsd;
     }
-    line = malloc(strlen(temp_line) + 1);
-    if (!line) {
-	close(pty);
-	return -1;
-    }
-    strcpy(line, temp_line);
 
     fix_pty_perms(line);
 
@@ -371,7 +382,29 @@ allocatePty(int *pty_return, char **line_return)
     return 0;
 
   bsd:
-#endif /* HAVE_GRANTPT */
+#elif defined(HAVE_OPENPTY)
+    int rc;
+    char ttydev[80];		/* OpenBSD says at least 16 bytes */
+
+    rc = openpty(&pty, &opened_tty, ttydev, NULL, NULL);
+    if (rc < 0) {
+	close(pty);
+	goto bsd;
+    }
+    line = strmalloc(ttydev);
+    if (!line) {
+	close(pty);
+	goto bsd;
+    }
+
+    fix_pty_perms(line);
+
+    *pty_return = pty;
+    *line_return = line;
+    return 0;
+
+  bsd:
+#endif /* HAVE_GRANTPT, etc */
 
     strcpy(name, "/dev/pty??");
     for (p1 = name1; *p1; p1++) {
@@ -390,13 +423,13 @@ allocatePty(int *pty_return, char **line_return)
     goto bail;
 
   found:
-    line = malloc(strlen(name) + 1);
-    strcpy(line, name);
-    line[5] = 't';
-    fix_pty_perms(line);
-    *pty_return = pty;
-    *line_return = line;
-    return 0;
+    if ((line = strmalloc(name)) != 0) {
+	line[5] = 't';
+	fix_pty_perms(line);
+	*pty_return = pty;
+	*line_return = line;
+	return 0;
+    }
 
   bail:
     if (pty >= 0)
@@ -412,12 +445,35 @@ openTty(char *line)
     int rc;
     int tty = -1;
 
-    tty = open(line, O_RDWR | O_NOCTTY);
+    tty = open(line, O_RDWR
+#if defined(TIOCSCTTY) && defined(O_NOCTTY)
+    /*
+     * Do not make this our controlling terminal, yet just in case it fails
+     * in some intermediate state.  But do not add this flag if we haven't
+     * the corresponding ioctl.
+     */
+	       | O_NOCTTY
+#endif
+	);
 
     if (tty < 0)
 	goto bail;
 
+#if defined(HAVE_OPENPTY)
+    if (opened_tty >= 0) {
+	close(opened_tty);
+	opened_tty = -1;
+    }
+#endif
+
 #ifdef TIOCSCTTY
+    /*
+     * Now that we've successfully opened the terminal, make it the controlling
+     * terminal.  This call works only if the process does not already have a
+     * controlling terminal.
+     *
+     * Cygwin as of 2009/10/12 lacks this call, but has O_NOCTTY.
+     */
     rc = ioctl(tty, TIOCSCTTY, (char *) 0);
     if (rc < 0) {
 	goto bail;
@@ -488,19 +544,22 @@ droppriv(void)
     return rc;
 }
 
-#ifndef HAVE_STRDUP
 char *
 strmalloc(const char *value)
 {
     char *result = 0;
+
     if (value != 0) {
+#ifdef HAVE_STRDUP
+	result = strdup(value);
+#else
 	result = malloc(strlen(value) + 1);
 	if (result != 0)
 	    strcpy(result, value);
+#endif
     }
     return result;
 }
-#endif
 
 #ifdef NO_LEAKS
 void

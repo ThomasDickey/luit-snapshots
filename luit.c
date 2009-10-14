@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.16 2009/08/16 22:10:34 tom Exp $ */
+/* $XTermId: luit.c,v 1.19 2009/10/14 11:22:15 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include <sys/ioctl.h>
 #include <signal.h>
 
+#include "version.h"
 #include "luit.h"
 #include "sys.h"
 #include "other.h"
@@ -87,7 +88,7 @@ help(void)
 {
     fprintf(stderr,
 	    "luit\n"
-	    "  [ -h ] [ -list ] [ -v ] [ -argv0 name ]\n"
+	    "  [ -V ] [ -h ] [ -list ] [ -v ] [ -argv0 name ]\n"
 	    "  [ -gl gn ] [-gr gk] "
 	    "[ -g0 set ] [ -g1 set ] "
 	    "[ -g2 set ] [ -g3 set ]\n"
@@ -119,6 +120,9 @@ parseOptions(int argc, char **argv)
 	} else if (!strcmp(argv[i], "-v")) {
 	    verbose++;
 	    i++;
+	} else if (!strcmp(argv[i], "-V")) {
+	    printf("%s - %s\n", argv[0], LUIT_VERSION);
+	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "-h")) {
 	    help();
 	    ExitProgram(0);
@@ -526,14 +530,14 @@ close_waitpipe(int which)
 static void
 write_waitpipe(int fds[2])
 {
-    write(fds[1], "1", 1);
+    IGNORE_RC(write(fds[1], "1", 1));
 }
 
 static void
 read_waitpipe(int fds[2])
 {
     char tmp[10];
-    read(fds[0], tmp, 1);
+    IGNORE_RC(read(fds[0], tmp, 1));
 }
 
 static int
@@ -564,8 +568,8 @@ condom(int argc, char **argv)
     }
 
     if (pipe_option) {
-	pipe(p2c_waitpipe);
-	pipe(c2p_waitpipe);
+	IGNORE_RC(pipe(p2c_waitpipe));
+	IGNORE_RC(pipe(c2p_waitpipe));
     }
 
     pid = fork();

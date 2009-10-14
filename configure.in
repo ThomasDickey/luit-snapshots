@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.14 2009/08/12 20:52:15 tom Exp $
+dnl $XTermId: configure.in,v 1.18 2009/10/14 09:47:48 tom Exp $
 
 AC_PREREQ(2.52.20030208)
 AC_INIT(luit.c)
@@ -59,6 +59,20 @@ putenv \
 select \
 strdup \
 )
+
+if test "x$ac_cv_func_grantpt" != "xyes" ; then
+	AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])
+	if test "$cf_have_openpty" = yes ; then
+		LIBS="-lutil $LIBS"
+		AC_DEFINE(HAVE_OPENPTY)
+		AC_CHECK_HEADERS( \ 
+			util.h \
+			libutil.h \
+			pty.h \
+		)
+	fi
+fi
+
 CF_SYS_TIME_SELECT 
 CF_FUNC_POLL
 CF_WITH_ZLIB
