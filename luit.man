@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.9 2009/08/16 21:56:40 tom Exp $
+.\" $XTermId: luit.man,v 1.11 2009/10/14 11:21:47 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -46,6 +46,9 @@ Display some summary help and quit.
 .TP
 .B \-list
 List the supported charsets and encodings, then quit.
+.TP
+.B \-V
+Print luit's version and quit.
 .TP
 .B \-v
 Be verbose.
@@ -233,3 +236,5 @@ xterm(__mansuffix__), unicode(7), utf-8(7), charsets(7).
 .SH AUTHOR
 Luit was written by Juliusz Chroboczek <jch@pps.jussieu.fr> for the
 XFree86 project.
+.PP
+Thomas E. Dickey has maintained luit for use by \fBxterm\fP since 2006.

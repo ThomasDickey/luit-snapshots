@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.16 2009/08/12 08:58:28 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.17 2009/10/14 11:14:19 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -71,7 +71,7 @@ outbuf_flush(Iso2022Ptr is, int fd)
     unsigned i = 0;
 
     if (olog >= 0)
-	write(olog, is->outbuf, is->outbuf_count);
+	IGNORE_RC(write(olog, is->outbuf, is->outbuf_count));
 
     while (i < is->outbuf_count) {
 	rc = write(fd, is->outbuf + i, is->outbuf_count - i);
@@ -428,19 +428,19 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 
 #define WRITE_1(i) do { \
 	    obuf[0] = UChar(i); \
-	    write(fd, obuf, 1); \
+	    IGNORE_RC(write(fd, obuf, 1)); \
 	} while(0)
 #define WRITE_2(i) do { \
 	    obuf[0] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[1] = UChar((i) & 0xFF); \
-	    write(fd, obuf, 2);\
+	    IGNORE_RC(write(fd, obuf, 2)); \
 	} while(0)
 
 #define WRITE_3(i) do { \
 	    obuf[0] = UChar(((i) >> 16) & 0xFF); \
 	    obuf[1] = UChar(((i) >>  8) & 0xFF); \
 	    obuf[2] = UChar((i) & 0xFF); \
-	    write(fd, obuf, 3); \
+	    IGNORE_RC(write(fd, obuf, 3)); \
 	} while(0)
 
 #define WRITE_4(i) do { \
@@ -448,20 +448,20 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[1] = UChar(((i) >> 16) & 0xFF); \
 	    obuf[2] = UChar(((i) >>  8) & 0xFF); \
 	    obuf[3] = UChar((i) & 0xFF); \
-	    write(fd, obuf, 4); \
+	    IGNORE_RC(write(fd, obuf, 4)); \
        } while(0)
 
 #define WRITE_1_P_8bit(p, i) { \
 	    obuf[0] = UChar(p); \
 	    obuf[1] = UChar(i); \
-	    write(fd, obuf, 2); \
+	    IGNORE_RC(write(fd, obuf, 2)); \
 	}
 
 #define WRITE_1_P_7bit(p, i) { \
 	    obuf[0] = ESC; \
 	    obuf[1] = UChar((p) - 0x40); \
 	    obuf[2] = UChar(i); \
-	    write(fd, obuf, 3); \
+	    IGNORE_RC(write(fd, obuf, 3)); \
 	}
 
 #define WRITE_1_P(p,i) do { \
@@ -474,7 +474,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[0] = UChar(p); \
 	    obuf[1] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[2] = UChar((i) & 0xFF); \
-	    write(fd, obuf, 3); \
+	    IGNORE_RC(write(fd, obuf, 3)); \
 	}
 
 #define WRITE_2_P_7bit(p, i) { \
@@ -482,7 +482,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[1] = UChar((p) - 0x40); \
 	    obuf[2] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[3] = UChar((i) & 0xFF); \
-	    write(fd, obuf, 4); \
+	    IGNORE_RC(write(fd, obuf, 4)); \
 	}
 
 #define WRITE_2_P(p,i) do { \
@@ -496,7 +496,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[0] = UChar(p); \
 	    obuf[1] = UChar((i) & 0xFF); \
 	    obuf[2] = UChar(s); \
-	    write(fd, obuf, 3); \
+	    IGNORE_RC(write(fd, obuf, 3)); \
 	} while(0)
 
 #define WRITE_2_P_S(p,i,s) do { \
@@ -504,7 +504,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[1] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[2] = UChar((i) & 0xFF); \
 	    obuf[3] = UChar(s); \
-	    write(fd, obuf, 4); \
+	    IGNORE_RC(write(fd, obuf, 4)); \
 	} while(0)
 
 	    if (ucode < 0x20 ||
@@ -686,7 +686,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
     unsigned char *s = buf;
 
     if (ilog >= 0)
-	write(ilog, buf, count);
+	IGNORE_RC(write(ilog, buf, count));
 
     while (s < buf + count) {
 	switch (is->parserState) {

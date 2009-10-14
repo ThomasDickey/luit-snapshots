@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.25 2009/08/16 21:52:49 tom Exp $
+  $XTermId: luit.log.html,v 1.30 2009/10/14 11:21:11 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -35,6 +35,17 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
+<p>
+2009/10/14 -
+<ul>
+<li>add <code>-V</code> version option.
+<li>work around defective implementation of gcc attribute warn_unused_return.
+<li>add configure check for <code>openpty</code>, use that on systems such
+as OpenBSD rather than requiring setuid operation.
+<li>ifdef <code>open</code> to work with incomplete
+definitions for <code>O_NOCTTY</code> and <code>TIOCSCTTY</code>
+(adapted from patch by Yaakov Selkowitz).
+</ul>
 <p>
 2009/8/16 -
 <ul>
