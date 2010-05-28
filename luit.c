@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.19 2009/10/14 11:22:15 tom Exp $ */
+/* $XTermId: luit.c,v 1.20 2010/05/27 22:46:29 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -440,7 +440,7 @@ convert(int ifd, int ofd)
     }
 
     while (1) {
-	i = read(ifd, buf, BUFFER_SIZE);
+	i = (int) read(ifd, buf, BUFFER_SIZE);
 	if (i <= 0) {
 	    if (i < 0) {
 		perror("Read error");
@@ -676,14 +676,14 @@ parent(int pid GCC_UNUSED, int pty)
 
 	if (rc > 0) {
 	    if (rc & 2) {
-		i = read(pty, buf, BUFFER_SIZE);
+		i = (int) read(pty, buf, BUFFER_SIZE);
 		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
 		    break;
 		if (i > 0)
 		    copyOut(outputState, 0, buf, (unsigned) i);
 	    }
 	    if (rc & 1) {
-		i = read(0, buf, BUFFER_SIZE);
+		i = (int) read(0, buf, BUFFER_SIZE);
 		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
 		    break;
 		if (i > 0)

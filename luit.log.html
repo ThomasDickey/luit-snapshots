@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 2006-2008,2009 by Thomas E. Dickey                              *
+ * Copyright 2006-2009,2010 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.30 2009/10/14 11:21:11 tom Exp $
+  $XTermId: luit.log.html,v 1.33 2010/05/27 22:26:14 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -30,11 +30,19 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright 2006-2008,2009 by <A
+Copyright 2006-2009,2010 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
+<p>
+2010/5/27 -
+<ul>
+<li>fix warnings from <code>clang --analyze</code>
+<li>update configure script macros, mostly for quoting- and variable
+initialization fixes.
+<li>update config.guess, config.sub
+</ul>
 <p>
 2009/10/14 -
 <ul>
@@ -68,7 +76,7 @@ uses that to replace a derived #define for <code>HAVE_POLL</code>,
 #ifdef's the corresponding headers and
 modifies #ifdef for <code>I_PUSH</code> ioctl to add <code>__SVR4</code>).
 </ul>
-<li>update configure script macros:
+<li>updated configure script macros:
 CF_ADD_CFLAGS
 CF_ADD_INCDIR
 CF_ADD_LIBDIR
@@ -113,8 +121,8 @@ is not available.
 <li>fixes for configuring fontenc library without <code>pkg-config</code>.
 <li>fixes for gcc <code>-Wwrite-strings</code> warnings.
 <li>fixes for gcc <code>-Wconversion</code> warnings.
-<li>update configure script macros
-(CF_ANSI_CC_REQD,
+<li>updated configure script macros
+CF_ANSI_CC_REQD,
 CF_CHECK_CACHE,
 CF_FIND_LIBRARY,
 CF_GCC_ATTRIBUTES,
@@ -128,7 +136,7 @@ CF_TYPE_FD_SET,
 CF_VERBOSE,
 CF_WITH_PATH,
 CF_WITH_ZLIB,
-CF_XOPEN_SOURCE).
+CF_XOPEN_SOURCE.
 <li>update configure utility scripts (config.guess, config.sub, install-sh, mkdirs.sh).
 </ul>
 2006/8/20 -
