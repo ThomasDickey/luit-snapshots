@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.6 2009/08/12 08:58:28 tom Exp $ */
+/* $XTermId: parser.c,v 1.7 2010/05/27 22:46:29 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -149,7 +149,7 @@ parseTwoTokenLine(FILE *f, char *first, char *second)
     else if (tok == TOK_EOL)
 	goto again;
     else if (tok == TOK_KEYWORD) {
-	unsigned len = strlen(keyword);
+	size_t len = strlen(keyword);
 	if (keyword[len - 1] == ':')
 	    keyword[len - 1] = '\0';
 	strcpy(first, keyword);

@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.20 2009/10/14 11:12:12 tom Exp $ */
+/* $XTermId: sys.c,v 1.21 2010/05/27 22:33:16 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -274,16 +274,16 @@ setRawTermios(void)
     rc = tcgetattr(0, &tio);
     if (rc < 0)
 	return rc;
-    tio.c_lflag &= ~(ECHO | ICANON | ISIG);
-    tio.c_iflag &= ~(ICRNL | IXOFF | IXON | ISTRIP);
+    tio.c_lflag &= (unsigned) ~(ECHO | ICANON | ISIG);
+    tio.c_iflag &= (unsigned) ~(ICRNL | IXOFF | IXON | ISTRIP);
 #ifdef ONLCR
-    tio.c_oflag &= ~ONLCR;
+    tio.c_oflag &= (unsigned) ~ONLCR;
 #endif
 #ifdef OCRNL
-    tio.c_oflag &= ~OCRNL;
+    tio.c_oflag &= (unsigned) ~OCRNL;
 #endif
 #ifdef ONOCR
-    tio.c_oflag &= ~ONOCR;
+    tio.c_oflag &= (unsigned) ~ONOCR;
 #endif
 
 #ifdef VMIN

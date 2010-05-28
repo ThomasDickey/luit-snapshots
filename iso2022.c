@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.17 2009/10/14 11:14:19 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.19 2010/05/27 22:46:29 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -74,7 +74,7 @@ outbuf_flush(Iso2022Ptr is, int fd)
 	IGNORE_RC(write(olog, is->outbuf, is->outbuf_count));
 
     while (i < is->outbuf_count) {
-	rc = write(fd, is->outbuf + i, is->outbuf_count - i);
+	rc = (int) write(fd, is->outbuf + i, is->outbuf_count - i);
 	if (rc > 0) {
 	    i += (unsigned) rc;
 	} else {
@@ -680,6 +680,8 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
     }
 }
 
+#define PAIR(a,b) ((unsigned) ((a) << 8) | (b))
+
 void
 copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 {
@@ -836,8 +838,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		case T_9494:
 		    if (code >= 0x21 && code <= 0x7E) {
 			outbufUTF8(is, fd,
-				   charset->recode((ku_code << 8) | code,
-						   charset));
+				   charset->recode(PAIR(ku_code, code), charset));
 			is->buffered_ku = -1;
 			is->shiftState = S_NORMAL;
 		    } else {
@@ -850,8 +851,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		case T_9696:
 		    if (code >= 0x20) {
 			outbufUTF8(is, fd,
-				   charset->recode((ku_code << 8) | code,
-						   charset));
+				   charset->recode(PAIR(ku_code, code), charset));
 			is->buffered_ku = -1;
 			is->shiftState = S_NORMAL;
 		    } else {
@@ -865,7 +865,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		    /* Use *s, not code */
 		    if (((*s >= 0x21) && (*s <= 0x7E)) ||
 			((*s >= 0xA1) && (*s <= 0xFE))) {
-			unsigned ucode = (unsigned) ((ku_code << 8) | *s);
+			unsigned ucode = PAIR(ku_code, *s);
 			outbufUTF8(is, fd,
 				   charset->recode(ucode, charset));
 			is->buffered_ku = -1;
