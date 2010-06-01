@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.8 2009/10/14 11:12:09 tom Exp $ */
+/* $XTermId: sys.h,v 1.9 2010/05/31 22:48:13 tom Exp $ */
 
 /* $XFree86: xc/programs/luit/sys.h,v 1.3 2003/10/24 20:38:12 tsi Exp $ */
 /*
@@ -29,7 +29,7 @@ THE SOFTWARE.
 #if defined(__GNUC__) && defined(_FORTIFY_SOURCE)
 #define USE_IGNORE_RC
 extern int ignore_unused;
-#define IGNORE_RC(func) ignore_unused = func
+#define IGNORE_RC(func) ignore_unused = (int) func
 #else
 #define IGNORE_RC(func) (void) func
 #endif /* gcc workarounds */

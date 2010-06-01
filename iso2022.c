@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.19 2010/05/27 22:46:29 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.21 2010/05/29 13:29:01 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -91,10 +91,10 @@ outbuf_flush(Iso2022Ptr is, int fd)
 }
 
 static void
-outbufOne(Iso2022Ptr is, int fd, unsigned char c)
+outbufOne(Iso2022Ptr is, int fd, unsigned c)
 {
     OUTBUF_MAKE_FREE(is, fd, 1);
-    is->outbuf[is->outbuf_count++] = c;
+    is->outbuf[is->outbuf_count++] = UChar(c);
 }
 
 /* Discards null codepoints */
@@ -120,13 +120,13 @@ outbufUTF8(Iso2022Ptr is, int fd, unsigned c)
 }
 
 static void
-buffer(Iso2022Ptr is, unsigned char c)
+buffer(Iso2022Ptr is, unsigned c)
 {
     if (is->buffered == NULL) {
-	is->buffered = malloc(10);
+	is->buffered_len = 10;
+	is->buffered = malloc(is->buffered_len);
 	if (is->buffered == NULL)
 	    FatalError("Couldn't allocate buffered.\n");
-	is->buffered_len = 10;
     }
 
     if (is->buffered_count >= is->buffered_len) {
@@ -137,7 +137,7 @@ buffer(Iso2022Ptr is, unsigned char c)
 	is->buffered_len = 2 * is->buffered_len + 1;
     }
 
-    is->buffered[is->buffered_count++] = c;
+    is->buffered[is->buffered_count++] = UChar(c);
 }
 
 static void
@@ -193,7 +193,7 @@ allocIso2022(void)
 
     is->buffered_ku = -1;
 
-    is->outbuf = malloc(BUFFER_SIZE);
+    is->outbuf = malloc((size_t) BUFFER_SIZE);
     if (!is->outbuf) {
 	free(is);
 	return NULL;
@@ -317,7 +317,7 @@ mergeIso2022(Iso2022Ptr d, Iso2022Ptr s)
 }
 
 static int
-utf8Count(unsigned char c)
+utf8Count(unsigned c)
 {
     /* All return values must be less than BUFFERED_INPUT_SIZE */
     if ((c & 0x80) == 0)
@@ -428,19 +428,19 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 
 #define WRITE_1(i) do { \
 	    obuf[0] = UChar(i); \
-	    IGNORE_RC(write(fd, obuf, 1)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 1)); \
 	} while(0)
 #define WRITE_2(i) do { \
 	    obuf[0] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[1] = UChar((i) & 0xFF); \
-	    IGNORE_RC(write(fd, obuf, 2)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 2)); \
 	} while(0)
 
 #define WRITE_3(i) do { \
 	    obuf[0] = UChar(((i) >> 16) & 0xFF); \
 	    obuf[1] = UChar(((i) >>  8) & 0xFF); \
 	    obuf[2] = UChar((i) & 0xFF); \
-	    IGNORE_RC(write(fd, obuf, 3)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 3)); \
 	} while(0)
 
 #define WRITE_4(i) do { \
@@ -448,20 +448,20 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[1] = UChar(((i) >> 16) & 0xFF); \
 	    obuf[2] = UChar(((i) >>  8) & 0xFF); \
 	    obuf[3] = UChar((i) & 0xFF); \
-	    IGNORE_RC(write(fd, obuf, 4)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 4)); \
        } while(0)
 
 #define WRITE_1_P_8bit(p, i) { \
 	    obuf[0] = UChar(p); \
 	    obuf[1] = UChar(i); \
-	    IGNORE_RC(write(fd, obuf, 2)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 2)); \
 	}
 
 #define WRITE_1_P_7bit(p, i) { \
 	    obuf[0] = ESC; \
 	    obuf[1] = UChar((p) - 0x40); \
 	    obuf[2] = UChar(i); \
-	    IGNORE_RC(write(fd, obuf, 3)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 3)); \
 	}
 
 #define WRITE_1_P(p,i) do { \
@@ -474,7 +474,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[0] = UChar(p); \
 	    obuf[1] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[2] = UChar((i) & 0xFF); \
-	    IGNORE_RC(write(fd, obuf, 3)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 3)); \
 	}
 
 #define WRITE_2_P_7bit(p, i) { \
@@ -482,7 +482,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[1] = UChar((p) - 0x40); \
 	    obuf[2] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[3] = UChar((i) & 0xFF); \
-	    IGNORE_RC(write(fd, obuf, 4)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 4)); \
 	}
 
 #define WRITE_2_P(p,i) do { \
@@ -496,7 +496,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[0] = UChar(p); \
 	    obuf[1] = UChar((i) & 0xFF); \
 	    obuf[2] = UChar(s); \
-	    IGNORE_RC(write(fd, obuf, 3)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 3)); \
 	} while(0)
 
 #define WRITE_2_P_S(p,i,s) do { \
@@ -504,7 +504,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 	    obuf[1] = UChar(((i) >> 8) & 0xFF); \
 	    obuf[2] = UChar((i) & 0xFF); \
 	    obuf[3] = UChar(s); \
-	    IGNORE_RC(write(fd, obuf, 4)); \
+	    IGNORE_RC(write(fd, obuf, (size_t) 4)); \
 	} while(0)
 
 	    if (ucode < 0x20 ||
@@ -688,7 +688,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
     unsigned char *s = buf;
 
     if (ilog >= 0)
-	IGNORE_RC(write(ilog, buf, count));
+	IGNORE_RC(write(ilog, buf, (size_t) count));
 
     while (s < buf + count) {
 	switch (is->parserState) {
@@ -981,7 +981,9 @@ terminate(Iso2022Ptr is, int fd)
 	    discard_buffered(is);
 	    return;
 	default:
-	    terminateEsc(is, fd, is->buffered + 1, is->buffered_count - 1);
+	    terminateEsc(is, fd,
+			 is->buffered + 1,
+			 (unsigned) (is->buffered_count - 1));
 	    break;
 	}
 	return;

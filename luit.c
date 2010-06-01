@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.20 2010/05/27 22:46:29 tom Exp $ */
+/* $XTermId: luit.c,v 1.25 2010/06/01 07:56:16 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "luit.h"
 #include "sys.h"
 #include "other.h"
+#include "parser.h"
 #include "iso2022.h"
 
 static int pipe_option = 0;
@@ -51,12 +52,14 @@ static Iso2022Ptr inputState = NULL, outputState = NULL;
 
 static char *child_argv0 = NULL;
 static const char *locale_name = NULL;
+static int exitOnChild = 0;
+static int converter = 0;
+
+const char *locale_alias = LOCALE_ALIAS_FILE;
 
 int ilog = -1;
 int olog = -1;
 int verbose = 0;
-int converter = 0;
-int exitOnChild = 0;
 
 volatile int sigwinch_queued = 0;
 volatile int sigchld_queued = 0;
@@ -103,6 +106,7 @@ help(void)
 	    "[ -x ] "
 	    "[ -ilog filename ] "
 	    "[ -olog filename ] "
+	    "[ -alias filename ] "
 	    "[ -- ]\n"
 	    "  [ program [ args ] ]\n");
 }
@@ -288,13 +292,15 @@ parseOptions(int argc, char **argv)
 		ExitProgram(1);
 	    }
 	    i += 2;
+	} else if (!strcmp(argv[i], "-alias")) {
+	    if (i + 1 >= argc)
+		FatalError("-alias requires an argument\n");
+	    locale_alias = argv[i + 1];
+	    i += 2;
 	} else if (!strcmp(argv[i], "-encoding")) {
-	    int rc;
 	    if (i + 1 >= argc)
 		FatalError("-encoding requires an argument\n");
-	    rc = initIso2022(NULL, argv[i + 1], outputState);
-	    if (rc < 0)
-		FatalError("Couldn't init output state\n");
+	    locale_name = argv[i + 1];
 	    i += 2;
 	} else if (!strcmp(argv[i], "-p")) {
 	    pipe_option = 1;
@@ -404,13 +410,13 @@ main(int argc, char **argv)
 	locale_name = "C";
     }
 
-    rc = initIso2022(locale_name, NULL, outputState);
-    if (rc < 0)
-	FatalError("Couldn't init output state\n");
-
     i = parseOptions(argc, argv);
     if (i < 0)
 	FatalError("Couldn't parse options\n");
+
+    rc = initIso2022(locale_name, NULL, outputState);
+    if (rc < 0)
+	FatalError("Couldn't init output state\n");
 
     rc = mergeIso2022(inputState, outputState);
     if (rc < 0)
@@ -440,7 +446,7 @@ convert(int ifd, int ofd)
     }
 
     while (1) {
-	i = (int) read(ifd, buf, BUFFER_SIZE);
+	i = (int) read(ifd, buf, (size_t) BUFFER_SIZE);
 	if (i <= 0) {
 	    if (i < 0) {
 		perror("Read error");
@@ -530,14 +536,14 @@ close_waitpipe(int which)
 static void
 write_waitpipe(int fds[2])
 {
-    IGNORE_RC(write(fds[1], "1", 1));
+    IGNORE_RC(write(fds[1], "1", (size_t) 1));
 }
 
 static void
 read_waitpipe(int fds[2])
 {
     char tmp[10];
-    IGNORE_RC(read(fds[0], tmp, 1));
+    IGNORE_RC(read(fds[0], tmp, (size_t) 1));
 }
 
 static int
@@ -676,14 +682,14 @@ parent(int pid GCC_UNUSED, int pty)
 
 	if (rc > 0) {
 	    if (rc & 2) {
-		i = (int) read(pty, buf, BUFFER_SIZE);
+		i = (int) read(pty, buf, (size_t) BUFFER_SIZE);
 		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
 		    break;
 		if (i > 0)
 		    copyOut(outputState, 0, buf, (unsigned) i);
 	    }
 	    if (rc & 1) {
-		i = (int) read(0, buf, BUFFER_SIZE);
+		i = (int) read(0, buf, (size_t) BUFFER_SIZE);
 		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
 		    break;
 		if (i > 0)

@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.7 2010/05/27 22:46:29 tom Exp $ */
+/* $XTermId: parser.c,v 1.9 2010/05/29 17:13:33 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 
+#include "luit.h"
 #include "parser.h"
 #include "sys.h"
 
@@ -176,37 +177,32 @@ resolveLocale(const char *locale)
     char first[MAX_KEYWORD_LENGTH], second[MAX_KEYWORD_LENGTH];
     char *resolved = NULL;
     int rc;
+    int found = 0;
 
-    f = fopen(LOCALE_ALIAS_FILE, "r");
-    if (f == NULL)
-	goto bail;
+    f = fopen(locale_alias, "r");
 
-    do {
-	rc = parseTwoTokenLine(f, first, second);
-	if (rc < -1)
-	    goto bail;
-	if (!strcmp(first, locale)) {
-	    resolved = strmalloc(second);
-	    if (resolved == NULL)
-		goto bail;
-	    break;
+    if (f != NULL) {
+	do {
+	    rc = parseTwoTokenLine(f, first, second);
+	    if (rc < -1)
+		break;
+	    if (!strcmp(first, locale)) {
+		resolved = strmalloc(second);
+		found = 1;
+		break;
+	    }
+	} while (rc >= 0);
+
+	if (!found) {
+	    if (resolved == NULL) {
+		resolved = strmalloc(locale);
+	    }
 	}
-    } while (rc >= 0);
 
-    if (resolved == NULL) {
-	resolved = strmalloc(locale);
-	if (resolved == NULL)
-	    goto bail;
+	fclose(f);
+    } else {
+	perror(locale_alias);
     }
 
-    fclose(f);
-
     return resolved;
-
-  bail:
-    if (f != NULL)
-	fclose(f);
-    if (resolved != NULL)
-	free(resolved);
-    return NULL;
 }

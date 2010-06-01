@@ -1,4 +1,4 @@
-/* $XTermId: charset.h,v 1.6 2009/08/12 00:50:42 tom Exp $ */
+/* $XTermId: charset.h,v 1.7 2010/05/29 13:19:13 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -49,7 +49,7 @@ typedef struct _Charset {
     unsigned int (*recode) (unsigned int, const struct _Charset * self);
     int (*reverse) (unsigned int, const struct _Charset * self);
     const void *data;
-    int (*other_stack) (unsigned char c, OtherStatePtr aux);
+    int (*other_stack) (unsigned c, OtherStatePtr aux);
     OtherState *other_aux;
     unsigned int (*other_recode) (unsigned int c, OtherStatePtr aux);
     unsigned int (*other_reverse) (unsigned int c, OtherStatePtr aux);
@@ -68,7 +68,7 @@ typedef struct _LocaleCharset {
 } LocaleCharsetRec, *LocaleCharsetPtr;
 
 const CharsetRec *getUnknownCharset(int);
-const CharsetRec *getCharset(unsigned char, int);
+const CharsetRec *getCharset(unsigned, int);
 const CharsetRec *getCharsetByName(const char *);
 void reportCharsets(void);
 int getLocaleState(const char *locale, const char *charset,

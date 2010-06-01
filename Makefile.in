@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.9 2010/05/27 22:50:54 tom Exp $
+## $XTermId: Makefile.in,v 1.15 2010/06/01 07:53:07 tom Exp $
 ##
 ## Copyright 2006-2009,2010 by Thomas E. Dickey
 ##
@@ -37,6 +37,9 @@ LINK		= $(CC) $(CFLAGS)
 
 RM              = rm -f
 LINT		= @LINT@
+
+CTAGS		= @CTAGS@
+ETAGS		= @ETAGS@
 
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
@@ -77,8 +80,8 @@ HDRS		= charset.h config.h iso2022.h luit.h other.h parser.h sys.h
        PROGRAMS = luit$x
 
 all :	$(PROGRAMS)
-
-.SUFFIXES : .i
+################################################################################
+.SUFFIXES : .i .html .$(manext) .man .ps .pdf .txt
 
 .c$o :
 	@RULE_CC@
@@ -88,6 +91,21 @@ all :	$(PROGRAMS)
 	@RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
+.man.$(manext) :
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $< $@ $(appsdir)
+
+.$(manext).html :
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
+
+.$(manext).ps :
+	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
+
+.$(manext).txt :
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | nroff -Tascii -man | col -bx" >$@
+
+.ps.pdf :
+	ps2pdf $*.ps
+################################################################################
 $(OBJS) : $(HDRS)
 
 luit$x : $(OBJS)
@@ -129,6 +147,7 @@ clean : mostlyclean
 
 distclean : clean
 	-$(RM) Makefile config.status config.cache config.log config.h
+	-$(RM) luit.html *.pdf *.ps *.txt *.$(manext)
 
 realclean : distclean
 	-$(RM) tags TAGS
@@ -139,10 +158,10 @@ lint :
 	$(LINT) $(CPPFLAGS) $(SRCS)
 
 tags :
-	ctags $(SRCS) $(HDRS)
+	$(CTAGS) $(SRCS) $(HDRS)
 
-TAGS :
-	etags $(SRCS) $(HDRS)
+@MAKE_UPPER_TAGS@TAGS :
+@MAKE_UPPER_TAGS@	$(ETAGS) $(SRCS) $(HDRS)
 
 ALWAYS :
 
@@ -151,6 +170,16 @@ depend : $(TABLES)
 
 $(BINDIR) \
 $(MANDIR) :
-	$(SHELL) $(srcdir)/mkdirs.sh $@
+	mkdir -p $@
+################################################################################
+docs :: luit.html \
+	luit.pdf \
+	luit.ps \
+	luit.txt
+luit.html : luit.$(manext)
+luit.pdf : luit.ps
+luit.ps : luit.$(manext)
+luit.txt : luit.$(manext)
+################################################################################
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.

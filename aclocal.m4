@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.17 2010/05/27 22:20:49 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.20 2010/05/29 16:47:20 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1066,161 +1066,6 @@ AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_IMAKE_CFLAGS version: 31 updated: 2010/05/26 05:38:42
-dnl ---------------
-dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
-dnl get these, but if imake is properly configured there is no point in doing
-dnl this.
-dnl
-dnl Parameters (used in constructing a sample Imakefile):
-dnl	$1 = optional value to append to $IMAKE_CFLAGS
-dnl	$2 = optional value to append to $IMAKE_LOADFLAGS
-AC_DEFUN([CF_IMAKE_CFLAGS],
-[
-AC_PATH_PROGS(IMAKE,xmkmf imake)
-
-if test -n "$IMAKE" ; then
-
-case $IMAKE in # (vi
-*/imake)
-	cf_imake_opts="-DUseInstalled=YES" # (vi
-	;;
-*/util/xmkmf)
-	# A single parameter tells xmkmf where the config-files are:
-	cf_imake_opts="`echo $IMAKE|sed -e s,/config/util/xmkmf,,`" # (vi
-	;;
-*)
-	cf_imake_opts=
-	;;
-esac
-
-# If it's installed properly, imake (or its wrapper, xmkmf) will point to the
-# config directory.
-if mkdir conftestdir; then
-	CDPATH=; export CDPATH
-	cf_makefile=`cd $srcdir;pwd`/Imakefile
-	cd conftestdir
-
-	cat >fix_cflags.sed <<'CF_EOF'
-s/\\//g
-s/[[ 	]][[ 	]]*/ /g
-s/"//g
-:pack
-s/\(=[[^ ]][[^ ]]*\) \([[^-]]\)/\1	\2/g
-t pack
-s/\(-D[[a-zA-Z0-9_]][[a-zA-Z0-9_]]*\)=\([[^\'0-9 ]][[^ ]]*\)/\1='\\"\2\\"'/g
-s/^IMAKE[[ ]]/IMAKE_CFLAGS="/
-s/	/ /g
-s/$/"/
-CF_EOF
-
-	cat >fix_lflags.sed <<'CF_EOF'
-s/^IMAKE[[ 	]]*/IMAKE_LOADFLAGS="/
-s/$/"/
-CF_EOF
-
-	echo >./Imakefile
-	test -f $cf_makefile && cat $cf_makefile >>./Imakefile
-
-	cat >> ./Imakefile <<'CF_EOF'
-findstddefs:
-	@echo IMAKE ${ALLDEFINES}ifelse([$1],,,[ $1])       | sed -f fix_cflags.sed
-	@echo IMAKE ${EXTRA_LOAD_FLAGS}ifelse([$2],,,[ $2]) | sed -f fix_lflags.sed
-CF_EOF
-
-	if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC && test -f Makefile)
-	then
-		CF_VERBOSE(Using $IMAKE $cf_imake_opts)
-	else
-		# sometimes imake doesn't have the config path compiled in.  Find it.
-		cf_config=
-		for cf_libpath in $X_LIBS $LIBS ; do
-			case $cf_libpath in # (vi
-			-L*)
-				cf_libpath=`echo .$cf_libpath | sed -e 's/^...//'`
-				cf_libpath=$cf_libpath/X11/config
-				if test -d $cf_libpath ; then
-					cf_config=$cf_libpath
-					break
-				fi
-				;;
-			esac
-		done
-		if test -z "$cf_config" ; then
-			AC_MSG_WARN(Could not find imake config-directory)
-		else
-			cf_imake_opts="$cf_imake_opts -I$cf_config"
-			if ( $IMAKE -v $cf_imake_opts 2>&AC_FD_CC)
-			then
-				CF_VERBOSE(Using $IMAKE $cf_config)
-			else
-				AC_MSG_WARN(Cannot run $IMAKE)
-			fi
-		fi
-	fi
-
-	# GNU make sometimes prints "make[1]: Entering...", which
-	# would confuse us.
-	eval `make findstddefs 2>/dev/null | grep -v make`
-
-	cd ..
-	rm -rf conftestdir
-
-	# We use ${ALLDEFINES} rather than ${STD_DEFINES} because the former
-	# declares XTFUNCPROTO there.  However, some vendors (e.g., SGI) have
-	# modified it to support site.cf, adding a kludge for the /usr/include
-	# directory.  Try to filter that out, otherwise gcc won't find its
-	# headers.
-	if test -n "$GCC" ; then
-	    if test -n "$IMAKE_CFLAGS" ; then
-		cf_nostdinc=""
-		cf_std_incl=""
-		cf_cpp_opts=""
-		for cf_opt in $IMAKE_CFLAGS
-		do
-		    case "$cf_opt" in
-		    -nostdinc) #(vi
-			cf_nostdinc="$cf_opt"
-			;;
-		    -I/usr/include) #(vi
-			cf_std_incl="$cf_opt"
-			;;
-		    *) #(vi
-			cf_cpp_opts="$cf_cpp_opts $cf_opt"
-			;;
-		    esac
-		done
-		if test -z "$cf_nostdinc" ; then
-		    IMAKE_CFLAGS="$cf_cpp_opts $cf_std_incl"
-		elif test -z "$cf_std_incl" ; then
-		    IMAKE_CFLAGS="$cf_cpp_opts $cf_nostdinc"
-		else
-		    CF_VERBOSE(suppressed \"$cf_nostdinc\" and \"$cf_std_incl\")
-		    IMAKE_CFLAGS="$cf_cpp_opts"
-		fi
-	    fi
-	fi
-fi
-
-# Some imake configurations define PROJECTROOT with an empty value.  Remove
-# the empty definition.
-case $IMAKE_CFLAGS in
-*-DPROJECTROOT=/*)
-	;;
-*)
-	IMAKE_CFLAGS=`echo "$IMAKE_CFLAGS" |sed -e "s,-DPROJECTROOT=[[ 	]], ,"`
-	;;
-esac
-
-fi
-
-CF_VERBOSE(IMAKE_CFLAGS $IMAKE_CFLAGS)
-CF_VERBOSE(IMAKE_LOADFLAGS $IMAKE_LOADFLAGS)
-
-AC_SUBST(IMAKE_CFLAGS)
-AC_SUBST(IMAKE_LOADFLAGS)
-])dnl
-dnl ---------------------------------------------------------------------------
 dnl CF_INPUT_METHOD version: 3 updated: 2000/04/11 23:46:57
 dnl ---------------
 dnl Check if the X libraries support input-method
@@ -1316,6 +1161,73 @@ fi
 CF_SUBDIR_PATH($1,$2,lib)
 
 $1="$cf_library_path_list [$]$1"
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_MAKE_TAGS version: 5 updated: 2010/04/03 20:07:32
+dnl ------------
+dnl Generate tags/TAGS targets for makefiles.  Do not generate TAGS if we have
+dnl a monocase filesystem.
+AC_DEFUN([CF_MAKE_TAGS],[
+AC_REQUIRE([CF_MIXEDCASE_FILENAMES])
+
+AC_CHECK_PROGS(CTAGS, exctags ctags)
+AC_CHECK_PROGS(ETAGS, exetags etags)
+
+AC_CHECK_PROG(MAKE_LOWER_TAGS, ${CTAGS-ctags}, yes, no)
+
+if test "$cf_cv_mixedcase" = yes ; then
+	AC_CHECK_PROG(MAKE_UPPER_TAGS, ${ETAGS-etags}, yes, no)
+else
+	MAKE_UPPER_TAGS=no
+fi
+
+if test "$MAKE_UPPER_TAGS" = yes ; then
+	MAKE_UPPER_TAGS=
+else
+	MAKE_UPPER_TAGS="#"
+fi
+
+if test "$MAKE_LOWER_TAGS" = yes ; then
+	MAKE_LOWER_TAGS=
+else
+	MAKE_LOWER_TAGS="#"
+fi
+
+AC_SUBST(CTAGS)
+AC_SUBST(ETAGS)
+
+AC_SUBST(MAKE_UPPER_TAGS)
+AC_SUBST(MAKE_LOWER_TAGS)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_MIXEDCASE_FILENAMES version: 3 updated: 2003/09/20 17:07:55
+dnl ----------------------
+dnl Check if the file-system supports mixed-case filenames.  If we're able to
+dnl create a lowercase name and see it as uppercase, it doesn't support that.
+AC_DEFUN([CF_MIXEDCASE_FILENAMES],
+[
+AC_CACHE_CHECK(if filesystem supports mixed-case filenames,cf_cv_mixedcase,[
+if test "$cross_compiling" = yes ; then
+	case $target_alias in #(vi
+	*-os2-emx*|*-msdosdjgpp*|*-cygwin*|*-mingw32*|*-uwin*) #(vi
+		cf_cv_mixedcase=no
+		;;
+	*)
+		cf_cv_mixedcase=yes
+		;;
+	esac
+else
+	rm -f conftest CONFTEST
+	echo test >conftest
+	if test -f CONFTEST ; then
+		cf_cv_mixedcase=no
+	else
+		cf_cv_mixedcase=yes
+	fi
+	rm -f conftest CONFTEST
+fi
+])
+test "$cf_cv_mixedcase" = yes && AC_DEFINE(MIXEDCASE_FILENAMES)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_MSG_LOG version: 4 updated: 2007/07/29 09:55:12
@@ -1976,83 +1888,7 @@ AC_DEFUN([CF_VERBOSE],
 CF_MSG_LOG([$1])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_IMAKE_CFLAGS version: 9 updated: 2010/05/26 05:38:42
-dnl --------------------
-dnl xterm and similar programs build more readily when propped up with imake's
-dnl hand-tuned definitions.  If we do not use imake, provide fallbacks for the
-dnl most common definitions that we're not likely to do by autoconf tests.
-AC_DEFUN([CF_WITH_IMAKE_CFLAGS],[
-AC_REQUIRE([CF_ENABLE_NARROWPROTO])
-
-AC_MSG_CHECKING(if we should use imake to help)
-CF_ARG_DISABLE(imake,
-	[  --disable-imake         disable use of imake for definitions],
-	[enable_imake=no],
-	[enable_imake=yes])
-AC_MSG_RESULT($enable_imake)
-
-if test "$enable_imake" = yes ; then
-	CF_IMAKE_CFLAGS(ifelse([$1],,,[$1]))
-fi
-
-if test -n "$IMAKE" && test -n "$IMAKE_CFLAGS" ; then
-	CF_ADD_CFLAGS($IMAKE_CFLAGS)
-else
-	IMAKE_CFLAGS=
-	IMAKE_LOADFLAGS=
-	CF_VERBOSE(make fallback definitions)
-
-	# We prefer config.guess' values when we can get them, to avoid
-	# inconsistent results with uname (AIX for instance).  However,
-	# config.guess is not always consistent either.
-	case $host_os in
-	*[[0-9]].[[0-9]]*)
-		UNAME_RELEASE="$host_os"
-		;;
-	*)
-		UNAME_RELEASE=`(uname -r) 2>/dev/null` || UNAME_RELEASE=unknown
-		;;
-	esac
-
-	case .$UNAME_RELEASE in
-	*[[0-9]].[[0-9]]*)
-		OSMAJORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/^[[^0-9]]*//' -e 's/\..*//'`
-		OSMINORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/^[[^0-9]]*//' -e 's/^[[^.]]*\.//' -e 's/\..*//' -e 's/[[^0-9]].*//' `
-		test -z "$OSMAJORVERSION" && OSMAJORVERSION=1
-		test -z "$OSMINORVERSION" && OSMINORVERSION=0
-		IMAKE_CFLAGS="-DOSMAJORVERSION=$OSMAJORVERSION -DOSMINORVERSION=$OSMINORVERSION $IMAKE_CFLAGS"
-		;;
-	esac
-
-	# FUNCPROTO is standard with X11R6, but XFree86 drops it, leaving some
-	# fallback/fragments for NeedPrototypes, etc.
-	IMAKE_CFLAGS="-DFUNCPROTO=15 $IMAKE_CFLAGS"
-
-	# If this is not set properly, Xaw's scrollbars will not work
-	if test "$enable_narrowproto" = yes ; then
-		IMAKE_CFLAGS="-DNARROWPROTO=1 $IMAKE_CFLAGS"
-	fi
-
-	# Other special definitions:
-	case $host_os in
-	aix*)
-		# imake on AIX 5.1 defines AIXV3.  really.
-		IMAKE_CFLAGS="-DAIXV3 -DAIXV4 $IMAKE_CFLAGS"
-		;;
-	irix[[56]].*) #(vi
-		# these are needed to make SIGWINCH work in xterm
-		IMAKE_CFLAGS="-DSYSV -DSVR4 $IMAKE_CFLAGS"
-		;;
-	esac
-
-	CF_ADD_CFLAGS($IMAKE_CFLAGS)
-
-	AC_SUBST(IMAKE_CFLAGS)
-	AC_SUBST(IMAKE_LOADFLAGS)
-fi
-])dnl
-dnl ---------------------------------------------------------------------------
-dnl CF_WITH_LOCALE_ALIAS version: 3 updated: 2008/08/23 10:16:26
+dnl CF_WITH_LOCALE_ALIAS version: 4 updated: 2010/05/29 12:18:48
 dnl --------------------
 dnl Configure option to specify the location of locale.alias, for programs that
 dnl must read it directly.
@@ -2071,6 +1907,7 @@ xauto|xyes|xno)
     for cf_path in \
         /usr/lib/X11/locale \
         /usr/share/X11/locale \
+        /usr/X11R7/lib/X11/locale \
         /usr/X11R6/lib/X11/locale \
         /usr/X11R5/lib/X11/locale \
         /usr/X11/lib/X11/locale

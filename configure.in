@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.18 2009/10/14 09:47:48 tom Exp $
+dnl $XTermId: configure.in,v 1.19 2010/05/29 14:32:52 tom Exp $
 
 AC_PREREQ(2.52.20030208)
 AC_INIT(luit.c)
@@ -11,6 +11,7 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 CF_PROG_LINT
+CF_MAKE_TAGS
 
 CF_ANSI_CC_REQD
 AC_CONST
