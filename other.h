@@ -1,4 +1,4 @@
-/* $XTermId: other.h,v 1.6 2009/08/12 09:08:09 tom Exp $ */
+/* $XTermId: other.h,v 1.7 2010/05/29 13:20:25 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -83,26 +83,26 @@ typedef union {
 int init_gbk(OtherStatePtr);
 unsigned int mapping_gbk(unsigned int, OtherStatePtr);
 unsigned int reverse_gbk(unsigned int, OtherStatePtr);
-int stack_gbk(unsigned char, OtherStatePtr);
+int stack_gbk(unsigned, OtherStatePtr);
 
 int init_utf8(OtherStatePtr);
 unsigned int mapping_utf8(unsigned int, OtherStatePtr);
 unsigned int reverse_utf8(unsigned int, OtherStatePtr);
-int stack_utf8(unsigned char, OtherStatePtr);
+int stack_utf8(unsigned, OtherStatePtr);
 
 int init_sjis(OtherStatePtr);
 unsigned int mapping_sjis(unsigned int, OtherStatePtr);
 unsigned int reverse_sjis(unsigned int, OtherStatePtr);
-int stack_sjis(unsigned char, OtherStatePtr);
+int stack_sjis(unsigned, OtherStatePtr);
 
 int init_hkscs(OtherStatePtr);
 unsigned int mapping_hkscs(unsigned int, OtherStatePtr);
 unsigned int reverse_hkscs(unsigned int, OtherStatePtr);
-int stack_hkscs(unsigned char, OtherStatePtr);
+int stack_hkscs(unsigned, OtherStatePtr);
 
 int init_gb18030(OtherStatePtr);
 unsigned int mapping_gb18030(unsigned int, OtherStatePtr);
 unsigned int reverse_gb18030(unsigned int, OtherStatePtr);
-int stack_gb18030(unsigned char, OtherStatePtr);
+int stack_gb18030(unsigned, OtherStatePtr);
 
 #endif /* LUIT_OTHER_H */

@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.13 2009/08/12 08:58:28 tom Exp $ */
+/* $XTermId: charset.c,v 1.14 2010/05/29 13:19:33 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -164,7 +164,7 @@ typedef struct _OtherCharset {
     int (*init) (OtherStatePtr);
     unsigned int (*mapping) (unsigned int, OtherStatePtr);
     unsigned int (*reverse) (unsigned int, OtherStatePtr);
-    int (*stack) (unsigned char, OtherStatePtr);
+    int (*stack) (unsigned, OtherStatePtr);
 } OtherCharsetRec, *OtherCharsetPtr;
 
 static const OtherCharsetRec otherCharsets[] =
@@ -181,11 +181,11 @@ static int
 compare(const char *s, const char *t)
 {
     while (*s || *t) {
-	if (*s && (isspace(*s) || *s == '-' || *s == '_'))
+	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
 	    s++;
-	else if (*t && (isspace(*t) || *t == '-' || *t == '_'))
+	else if (*t && (isspace(UChar(*t)) || *t == '-' || *t == '_'))
 	    t++;
-	else if (*s && *t && tolower(*s) == tolower(*t)) {
+	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
 	    s++;
 	    t++;
 	} else
@@ -248,7 +248,7 @@ FontencCharsetReverse(unsigned int i, const CharsetRec * self)
 static CharsetPtr cachedCharsets = NULL;
 
 static CharsetPtr
-getCachedCharset(unsigned char final, int type, const char *name)
+getCachedCharset(unsigned final, int type, const char *name)
 {
     CharsetPtr c;
     for (c = cachedCharsets; c; c = c->next) {
@@ -268,7 +268,7 @@ cacheCharset(CharsetPtr c)
 }
 
 static CharsetPtr
-getFontencCharset(unsigned char final, int type, const char *name)
+getFontencCharset(unsigned final, int type, const char *name)
 {
     FontencCharsetPtr fc;
     CharsetPtr c;
@@ -380,7 +380,7 @@ getUnknownCharset(int type)
 }
 
 const CharsetRec *
-getCharset(unsigned char final, int type)
+getCharset(unsigned final, int type)
 {
     const CharsetRec *c;
 

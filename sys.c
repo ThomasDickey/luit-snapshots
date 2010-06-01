@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.21 2010/05/27 22:33:16 tom Exp $ */
+/* $XTermId: sys.c,v 1.23 2010/05/29 15:18:52 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -93,10 +93,12 @@ static int opened_tty = -1;
 static int saved_tio_valid = 0;
 static struct termios saved_tio;
 
-#ifdef HAVE_WORKING_POLL
 int
 waitForOutput(int fd)
 {
+    int ret = 0;
+
+#if defined(HAVE_WORKING_POLL)
     struct pollfd pfd[1];
     int rc;
 
@@ -106,42 +108,11 @@ waitForOutput(int fd)
 
     rc = poll(pfd, 1, -1);
     if (rc < 0)
-	return -1;
+	ret = -1;
+    else if (pfd[0].revents & (POLLOUT | POLLERR | POLLHUP))
+	ret = 1;
 
-    if (pfd[0].revents & POLLOUT)
-	return 1;
-
-    return 0;
-}
-
-int
-waitForInput(int fd1, int fd2)
-{
-    struct pollfd pfd[2];
-    int ret, rc;
-
-    pfd[0].fd = fd1;
-    pfd[1].fd = fd2;
-    pfd[0].events = pfd[1].events = POLLIN;
-    pfd[0].revents = pfd[1].revents = 0;
-
-    rc = poll(pfd, 2, -1);
-    if (rc < 0)
-	return -1;
-
-    ret = 0;
-    if (pfd[0].revents & (POLLIN | POLLHUP))
-	ret |= 1;
-    if (pfd[1].revents & (POLLIN | POLLHUP))
-	ret |= 2;
-    return ret;
-}
-#endif
-
-#ifdef HAVE_WORKING_SELECT
-int
-waitForOutput(int fd)
-{
+#elif defined(HAVE_WORKING_SELECT)
     fd_set fds;
     int rc;
 
@@ -149,52 +120,63 @@ waitForOutput(int fd)
     FD_SET(fd, &fds);
     rc = select(FD_SETSIZE, NULL, &fds, NULL, NULL);
     if (rc < 0)
-	return -1;
+	ret = -1;
+    else if (FD_ISSET(fd, &fds))
+	ret = 1;
 
-    if (FD_ISSET(fd, &fds))
-	return 1;
+#else
+    ret = 1;
+#endif
 
-    return 0;
+    return ret;
 }
 
 int
 waitForInput(int fd1, int fd2)
 {
+    int ret = 0;
+
+#if defined(HAVE_WORKING_POLL)
+    struct pollfd pfd[2];
+    int rc;
+
+    pfd[0].fd = fd1;
+    pfd[1].fd = fd2;
+    pfd[0].events = pfd[1].events = POLLIN;
+    pfd[0].revents = pfd[1].revents = 0;
+
+    rc = poll(pfd, 2, -1);
+    if (rc < 0) {
+	ret = -1;
+    } else {
+	if (pfd[0].revents & (POLLIN | POLLERR | POLLHUP))
+	    ret |= 1;
+	if (pfd[1].revents & (POLLIN | POLLERR | POLLHUP))
+	    ret |= 2;
+    }
+
+#elif defined(HAVE_WORKING_SELECT)
     fd_set fds;
-    int ret, rc;
+    int rc;
 
     FD_ZERO(&fds);
     FD_SET(fd1, &fds);
     FD_SET(fd2, &fds);
     rc = select(FD_SETSIZE, &fds, NULL, NULL, NULL);
-    if (rc < 0)
-	return -1;
+    if (rc < 0) {
+	ret = -1;
+    } else {
+	if (FD_ISSET(fd1, &fds))
+	    ret |= 1;
+	if (FD_ISSET(fd2, &fds))
+	    ret |= 2;
+    }
+#else
+    ret = (1 | 2);
+#endif
 
-    ret = 0;
-    if (FD_ISSET(fd1, &fds))
-	ret |= 1;
-    if (FD_ISSET(fd2, &fds))
-	ret |= 2;
     return ret;
 }
-#endif
-
-#ifndef HAVE_WORKING_POLL
-#ifndef HAVE_WORKING_SELECT
-/* Busy looping implementation */
-int
-waitForOutput(int fd)
-{
-    return 1;
-}
-
-int
-waitForInput(int fd1, int fd2)
-{
-    return 1 | 2;
-}
-#endif
-#endif
 
 int
 setWindowSize(int sfd, int dfd)

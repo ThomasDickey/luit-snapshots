@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.h,v 1.11 2009/08/12 09:04:46 tom Exp $ */
+/* $XTermId: iso2022.h,v 1.12 2010/05/29 13:13:40 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -73,11 +73,11 @@ typedef struct _Iso2022 {
     int inputFlags;
     int outputFlags;
     unsigned char *buffered;
-    unsigned buffered_len;
-    unsigned buffered_count;
+    size_t buffered_len;
+    size_t buffered_count;
     int buffered_ku;
     unsigned char *outbuf;
-    unsigned outbuf_count;
+    size_t outbuf_count;
 } Iso2022Rec, *Iso2022Ptr;
 
 #define GL(i) (*(i)->glp)

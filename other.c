@@ -1,4 +1,4 @@
-/* $XTermId: other.c,v 1.6 2009/08/12 08:58:28 tom Exp $ */
+/* $XTermId: other.c,v 1.8 2010/05/29 13:36:19 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -75,21 +75,21 @@ reverse_gbk(unsigned int n, OtherStatePtr s)
 }
 
 int
-stack_gbk(unsigned char c, OtherStatePtr s)
+stack_gbk(unsigned c, OtherStatePtr s)
 {
     if (s->gbk.buf < 0) {
 	if (c < 129)
-	    return c;
-	s->gbk.buf = c;
+	    return (int) c;
+	s->gbk.buf = (int) c;
 	return -1;
     } else {
 	int b;
 	if (c < 0x40 || c == 0x7F) {
 	    s->gbk.buf = -1;
-	    return c;
+	    return (int) c;
 	}
 	if (s->gbk.buf < 0xFF && c < 0xFF)
-	    b = (s->gbk.buf << 8) + c;
+	    b = (int) ((unsigned) (s->gbk.buf << 8) + c);
 	else
 	    b = -1;
 	s->gbk.buf = -1;
@@ -124,18 +124,18 @@ reverse_utf8(unsigned int n, OtherStatePtr s GCC_UNUSED)
 }
 
 int
-stack_utf8(unsigned char c, OtherStatePtr s)
+stack_utf8(unsigned c, OtherStatePtr s)
 {
     int u;
 
     if (c < 0x80) {
 	s->utf8.buf_ptr = 0;
-	return c;
+	return (int) c;
     }
     if (s->utf8.buf_ptr == 0) {
 	if ((c & 0x40) == 0)
 	    return -1;
-	s->utf8.buf[s->utf8.buf_ptr++] = c;
+	s->utf8.buf[s->utf8.buf_ptr++] = UChar(c);
 	if ((c & 0x60) == 0x40)
 	    s->utf8.len = 2;
 	else if ((c & 0x70) == 0x60)
@@ -150,7 +150,7 @@ stack_utf8(unsigned char c, OtherStatePtr s)
 	s->utf8.buf_ptr = 0;
 	return -1;
     }
-    s->utf8.buf[s->utf8.buf_ptr++] = c;
+    s->utf8.buf[s->utf8.buf_ptr++] = UChar(c);
     if (s->utf8.buf_ptr < s->utf8.len)
 	return -1;
     switch (s->utf8.len) {
@@ -263,21 +263,21 @@ reverse_sjis(unsigned int n, OtherStatePtr s)
 }
 
 int
-stack_sjis(unsigned char c, OtherStatePtr s)
+stack_sjis(unsigned c, OtherStatePtr s)
 {
     if (s->sjis.buf < 0) {
 	if (c < 128 || (c >= 0xA0 && c <= 0xDF))
-	    return c;
-	s->sjis.buf = c;
+	    return (int) c;
+	s->sjis.buf = (int) c;
 	return -1;
     } else {
 	int b;
 	if (c < 0x40 || c == 0x7F) {
 	    s->sjis.buf = -1;
-	    return c;
+	    return (int) c;
 	}
 	if (s->sjis.buf < 0xFF && c < 0xFF)
-	    b = (s->sjis.buf << 8) + c;
+	    b = (int) ((unsigned) (s->sjis.buf << 8) + c);
 	else
 	    b = -1;
 	s->sjis.buf = -1;
@@ -324,21 +324,21 @@ reverse_hkscs(unsigned int n, OtherStatePtr s)
 }
 
 int
-stack_hkscs(unsigned char c, OtherStatePtr s)
+stack_hkscs(unsigned c, OtherStatePtr s)
 {
     if (s->hkscs.buf < 0) {
 	if (c < 129)
-	    return c;
-	s->hkscs.buf = c;
+	    return (int) c;
+	s->hkscs.buf = (int) c;
 	return -1;
     } else {
 	int b;
 	if (c < 0x40 || c == 0x7F) {
 	    s->hkscs.buf = -1;
-	    return c;
+	    return (int) c;
 	}
 	if (s->hkscs.buf < 0xFF && c < 0xFF)
-	    b = (s->hkscs.buf << 8) + c;
+	    b = (int) ((unsigned) (s->hkscs.buf << 8) + c);
 	else
 	    b = -1;
 	s->hkscs.buf = -1;
@@ -434,16 +434,16 @@ reverse_gb18030(unsigned int n, OtherStatePtr s)
 }
 
 int
-stack_gb18030(unsigned char c, OtherStatePtr s)
+stack_gb18030(unsigned c, OtherStatePtr s)
 {
     /* if set gb18030.linear => True. the return value is "linear'd" */
     if (s->gb18030.buf_ptr == 0) {
 	if (c <= 0x80)
-	    return c;
+	    return (int) c;
 	if (c == 0xFF)
 	    return -1;
 	s->gb18030.linear = 0;
-	s->gb18030.buf[s->gb18030.buf_ptr++] = c;
+	s->gb18030.buf[s->gb18030.buf_ptr++] = (int) c;
 	return -1;
     } else if (s->gb18030.buf_ptr == 1) {
 	if (c >= 0x40) {
@@ -451,21 +451,21 @@ stack_gb18030(unsigned char c, OtherStatePtr s)
 	    if ((c == 0x80) || (c == 0xFF))
 		return -1;
 	    else
-		return (s->gb18030.buf[0] << 8) + c;
+		return (int) ((unsigned) (s->gb18030.buf[0] << 8) + c);
 	} else if (c >= 30) {	/* 2Byte is (0x30 -> 0x39) */
-	    s->gb18030.buf[s->gb18030.buf_ptr++] = c;
+	    s->gb18030.buf[s->gb18030.buf_ptr++] = (int) c;
 	    return -1;
 	} else {
 	    s->gb18030.buf_ptr = 0;
-	    return c;
+	    return (int) c;
 	}
     } else if (s->gb18030.buf_ptr == 2) {
 	if ((c >= 0x81) && (c <= 0xFE)) {
-	    s->gb18030.buf[s->gb18030.buf_ptr++] = c;
+	    s->gb18030.buf[s->gb18030.buf_ptr++] = (int) c;
 	    return -1;
 	} else {
 	    s->gb18030.buf_ptr = 0;
-	    return c;
+	    return (int) c;
 	}
     } else {
 	int r = 0;
@@ -475,7 +475,7 @@ stack_gb18030(unsigned char c, OtherStatePtr s)
 	    r = (((s->gb18030.buf[0] - 0x81) * 10
 		  + (s->gb18030.buf[1] - 0x30)) * 126
 		 + (s->gb18030.buf[2] - 0x81)) * 10
-		+ (c - 0x30);
+		+ ((int) c - 0x30);
 	    return r;
 	}
 	return -1;

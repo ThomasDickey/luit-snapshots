@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.4 2008/08/23 15:47:07 tom Exp $
+# $XTermId: minstall.sh,v 1.5 2010/05/31 21:16:36 tom Exp $
 #
 # Install manpages, substituting a reasonable section value since XFree86 4.x
 # and derived imakes do not use constants...
@@ -35,6 +35,25 @@ NEW_FILE=temp$$
 
 MY_MANSECT=$suffix
 
+# provide for renaming via --program-prefix, etc.
+lower=abcdefghikjlmnopqrstuvwxyz
+upper=ABCDEFGHIKJLMNOPQRSTUVWXYZ
+
+OLD_LOWER=`basename "$OLD_FILE" | sed -e 's/\..*$//'`
+NEW_LOWER=`basename "$END_FILE" | sed -e 's/\..*$//'`
+
+OLD_UPPER=`echo $OLD_LOWER | tr $lower $upper`
+NEW_UPPER=`echo $NEW_LOWER | tr $lower $upper`
+
+OLD_CHAR0=`echo $OLD_LOWER | sed -e 's/^\(.\).*/\1/' | tr $lower $upper`
+NEW_CHAR0=`echo $NEW_LOWER | sed -e 's/^\(.\).*/\1/' | tr $lower $upper`
+
+OLD_CHARS=`echo $OLD_LOWER | sed -e 's/^.//'`
+NEW_CHARS=`echo $NEW_LOWER | sed -e 's/^.//'`
+
+OLD_FIRST=${OLD_CHAR0}${OLD_CHARS}
+NEW_FIRST=${NEW_CHAR0}${NEW_CHARS}
+
 # "X" is usually in the miscellaneous section, along with "undocumented".
 # Use that to guess an appropriate section.
 X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
@@ -45,6 +64,9 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%__mansuffix__%$MY_MANSECT%g \
 	-e s%__miscmansuffix__%$X_MANSECT%g \
 	-e s%__locale_alias__%$ALIAS_IS%g \
+	-e s%$OLD_LOWER%$NEW_LOWER%g \
+	-e s%$OLD_UPPER%$NEW_UPPER%g \
+	-e s%$OLD_FIRST%$NEW_FIRST%g \
 	$OLD_FILE >$NEW_FILE
 
 echo "$MINSTALL $OLD_FILE $END_FILE"

@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.11 2009/10/14 11:21:47 tom Exp $
+.\" $XTermId: luit.man,v 1.13 2010/05/31 22:02:40 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -58,7 +58,7 @@ Function as a simple converter from standard input to standard output.
 .TP
 .B \-p
 In startup, establish a handshake between parent and child processes.
-This is needed for some systems, e.g., BSDs.
+This is needed for some systems, e.g., FreeBSD.
 .TP
 .B \-x
 Exit as soon as the child dies.  This may cause
@@ -147,6 +147,11 @@ all the bytes received from the child.
 Log into
 .I filename
 all the bytes sent to the terminal emulator.
+.TP
+.BI \-alias " filename"
+the locale alias file
+.br
+(default: __locale_alias__).
 .TP
 .B \-\-
 End of options.
