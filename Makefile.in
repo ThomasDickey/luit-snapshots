@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.15 2010/06/01 07:53:07 tom Exp $
+## $XTermId: Makefile.in,v 1.16 2010/06/01 23:44:45 tom Exp $
 ##
 ## Copyright 2006-2009,2010 by Thomas E. Dickey
 ##
@@ -62,7 +62,7 @@ EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 
 CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H -DLOCALE_ALIAS_FILE=\"$(LOCALE_ALIAS)\" @CPPFLAGS@ $(EXTRA_CPPFLAGS)
 CFLAGS		= @X_CFLAGS@ @CFLAGS@ $(EXTRA_CFLAGS)
-LDFLAGS		= @LDFLAGS@
+LDFLAGS		= @EXTRA_LDFLAGS@ @LDFLAGS@
 LIBS		= @X_LIBS@ @LIBS@
 
 #### End of system configuration section. ####

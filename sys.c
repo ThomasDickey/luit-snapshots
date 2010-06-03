@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.23 2010/05/29 15:18:52 tom Exp $ */
+/* $XTermId: sys.c,v 1.24 2010/06/03 00:44:00 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -66,7 +66,7 @@ THE SOFTWARE.
 #include <stropts.h>
 #endif
 
-#ifdef HAVE_SYS_PARAM
+#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
 
