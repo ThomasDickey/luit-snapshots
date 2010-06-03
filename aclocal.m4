@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.20 2010/05/29 16:47:20 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.22 2010/06/02 00:06:30 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -169,6 +169,14 @@ if test -n "$1" ; then
   done
 fi
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ADD_LIB version: 1 updated: 2010/05/29 16:02:10
+dnl ----------
+dnl Add a library, used to enforce consistency.
+dnl
+dnl $1 = library to add, without the "-l"
+dnl $2 = variable to update (default $LIBS)
+AC_DEFUN([CF_ADD_LIB],[ifelse($2,,LIBS,[$2])="-l$1 [$]ifelse($2,,LIBS,[$2])"])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ADD_LIBDIR version: 9 updated: 2010/05/26 16:44:57
 dnl -------------
@@ -533,6 +541,25 @@ AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_DISABLE_RPATH_HACK version: 1 updated: 2010/04/11 10:54:00
+dnl ---------------------
+dnl The rpath-hack makes it simpler to build programs, particularly with the
+dnl *BSD ports which may have essential libraries in unusual places.  But it
+dnl can interfere with building an executable for the base system.  Use this
+dnl option in that case.
+AC_DEFUN([CF_DISABLE_RPATH_HACK],
+[
+AC_MSG_CHECKING(if rpath should be not be set)
+CF_ARG_DISABLE(rpath-hack,
+	[  --disable-rpath-hack    don't add rpath options for additional libraries],
+	[cf_disable_rpath_hack=yes],
+	[cf_disable_rpath_hack=no])
+AC_MSG_RESULT($cf_disable_rpath_hack)
+if test "$cf_disable_rpath_hack" = no ; then
+	CF_RPATH_HACK
+fi
+])
+dnl ---------------------------------------------------------------------------
 dnl CF_ERRNO version: 5 updated: 1997/11/30 12:44:39
 dnl --------
 dnl Check if 'errno' is declared in <errno.h>
@@ -591,7 +618,7 @@ fi
 ])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FIND_LINKAGE version: 18 updated: 2010/05/05 20:27:55
+dnl CF_FIND_LINKAGE version: 19 updated: 2010/05/29 16:31:02
 dnl ---------------
 dnl Find a library (specifically the linkage used in the code fragment),
 dnl searching for it if it is not already in the library path.
@@ -714,7 +741,7 @@ if test "$cf_cv_find_linkage_$3" = yes ; then
 ifelse([$4],,[
 	CF_ADD_INCDIR($cf_cv_header_path_$3)
 	CF_ADD_LIBDIR($cf_cv_library_path_$3)
-	LIBS="-l$3 $LIBS"
+	CF_ADD_LIB($3)
 ],[$4])
 else
 ifelse([$5],,AC_MSG_WARN(Cannot find $3 library),[$5])
@@ -1132,6 +1159,60 @@ cf_save_CFLAGS="$cf_save_CFLAGS -we147 -no-gcc"
 		;;
 	esac
 fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_LD_RPATH_OPT version: 2 updated: 2010/03/27 19:27:54
+dnl ---------------
+dnl For the given system and compiler, find the compiler flags to pass to the
+dnl loader to use the "rpath" feature.
+AC_DEFUN([CF_LD_RPATH_OPT],
+[
+AC_REQUIRE([CF_CHECK_CACHE])
+
+LD_RPATH_OPT=
+AC_MSG_CHECKING(for an rpath option)
+case $cf_cv_system_name in #(vi
+irix*) #(vi
+	if test "$GCC" = yes; then
+		LD_RPATH_OPT="-Wl,-rpath,"
+	else
+		LD_RPATH_OPT="-rpath "
+	fi
+	;;
+linux*|gnu*|k*bsd*-gnu) #(vi
+	LD_RPATH_OPT="-Wl,-rpath,"
+	;;
+openbsd[[2-9]].*) #(vi
+	LD_RPATH_OPT="-Wl,-rpath,"
+	;;
+freebsd*) #(vi
+	LD_RPATH_OPT="-rpath "
+	;;
+netbsd*) #(vi
+	LD_RPATH_OPT="-Wl,-rpath,"
+	;;
+osf*|mls+*) #(vi
+	LD_RPATH_OPT="-rpath "
+	;;
+solaris2*) #(vi
+	LD_RPATH_OPT="-R"
+	;;
+*)
+	;;
+esac
+AC_MSG_RESULT($LD_RPATH_OPT)
+
+case "x$LD_RPATH_OPT" in #(vi
+x-R*)
+	AC_MSG_CHECKING(if we need a space after rpath option)
+	cf_save_LIBS="$LIBS"
+	LIBS="${LD_RPATH_OPT}$libdir $LIBS"
+	AC_TRY_LINK(, , cf_rpath_space=no, cf_rpath_space=yes)
+	LIBS="$cf_save_LIBS"
+	AC_MSG_RESULT($cf_rpath_space)
+	test "$cf_rpath_space" = yes && LD_RPATH_OPT="$LD_RPATH_OPT "
+	;;
+esac
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_LIBRARY_PATH version: 9 updated: 2010/03/28 12:52:50
@@ -1588,6 +1669,94 @@ $1=`echo "$2" | \
 		-e 's/-[[UD]]'"$3"'\(=[[^ 	]]*\)\?[$]//g'`
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_RPATH_HACK version: 8 updated: 2010/04/17 15:38:58
+dnl -------------
+AC_DEFUN([CF_RPATH_HACK],
+[
+AC_REQUIRE([CF_LD_RPATH_OPT])
+AC_MSG_CHECKING(for updated LDFLAGS)
+if test -n "$LD_RPATH_OPT" ; then
+	AC_MSG_RESULT(maybe)
+
+	AC_CHECK_PROGS(cf_ldd_prog,ldd,no)
+	cf_rpath_list="/usr/lib /lib"
+	if test "$cf_ldd_prog" != no
+	then
+AC_TRY_LINK([#include <stdio.h>],
+		[printf("Hello");],
+		[cf_rpath_list=`$cf_ldd_prog conftest$ac_exeext | fgrep / | sed -e 's%^.*[[ 	]]/%/%' -e 's%/[[^/]][[^/]]*$%%' |sort -u`])
+	fi
+
+	CF_VERBOSE(...checking EXTRA_LDFLAGS $EXTRA_LDFLAGS)
+
+	CF_RPATH_HACK_2(LDFLAGS)
+	CF_RPATH_HACK_2(LIBS)
+
+	CF_VERBOSE(...checked EXTRA_LDFLAGS $EXTRA_LDFLAGS)
+fi
+AC_SUBST(EXTRA_LDFLAGS)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_RPATH_HACK_2 version: 6 updated: 2010/04/17 16:31:24
+dnl ---------------
+dnl Do one set of substitutions for CF_RPATH_HACK, adding an rpath option to
+dnl EXTRA_LDFLAGS for each -L option found.
+dnl
+dnl $cf_rpath_list contains a list of directories to ignore.
+dnl
+dnl $1 = variable name to update.  The LDFLAGS variable should be the only one,
+dnl      but LIBS often has misplaced -L options.
+AC_DEFUN([CF_RPATH_HACK_2],
+[
+CF_VERBOSE(...checking $1 [$]$1)
+
+cf_rpath_dst=
+for cf_rpath_src in [$]$1
+do
+	case $cf_rpath_src in #(vi
+	-L*) #(vi
+
+		# check if this refers to a directory which we will ignore
+		cf_rpath_skip=no
+		if test -n "$cf_rpath_list"
+		then
+			for cf_rpath_item in $cf_rpath_list
+			do
+				if test "x$cf_rpath_src" = "x-L$cf_rpath_item"
+				then
+					cf_rpath_skip=yes
+					break
+				fi
+			done
+		fi
+
+		if test "$cf_rpath_skip" = no
+		then
+			# transform the option
+			if test "$LD_RPATH_OPT" = "-R " ; then
+				cf_rpath_tmp=`echo "$cf_rpath_src" |sed -e "s%-L%-R %"`
+			else
+				cf_rpath_tmp=`echo "$cf_rpath_src" |sed -e "s%-L%$LD_RPATH_OPT%"`
+			fi
+
+			# if we have not already added this, add it now
+			cf_rpath_tst=`echo "$EXTRA_LDFLAGS" | sed -e "s%$cf_rpath_tmp %%"`
+			if test "x$cf_rpath_tst" = "x$EXTRA_LDFLAGS"
+			then
+				CF_VERBOSE(...Filter $cf_rpath_src ->$cf_rpath_tmp)
+				EXTRA_LDFLAGS="$cf_rpath_tmp $EXTRA_LDFLAGS"
+			fi
+		fi
+		;;
+	esac
+	cf_rpath_dst="$cf_rpath_dst $cf_rpath_src"
+done
+$1=$cf_rpath_dst
+
+CF_VERBOSE(...checked $1 [$]$1)
+AC_SUBST(EXTRA_LDFLAGS)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_SIGWINCH version: 1 updated: 2006/04/02 16:41:09
 dnl -----------
 dnl Use this macro after CF_XOPEN_SOURCE, but do not require it (not all
@@ -1888,7 +2057,7 @@ AC_DEFUN([CF_VERBOSE],
 CF_MSG_LOG([$1])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_LOCALE_ALIAS version: 4 updated: 2010/05/29 12:18:48
+dnl CF_WITH_LOCALE_ALIAS version: 5 updated: 2010/06/01 20:06:13
 dnl --------------------
 dnl Configure option to specify the location of locale.alias, for programs that
 dnl must read it directly.
@@ -1910,7 +2079,8 @@ xauto|xyes|xno)
         /usr/X11R7/lib/X11/locale \
         /usr/X11R6/lib/X11/locale \
         /usr/X11R5/lib/X11/locale \
-        /usr/X11/lib/X11/locale
+        /usr/X11/lib/X11/locale \
+        /usr/X11/share/X11/locale
         do
             cf_alias_file=$cf_path/locale.alias
             CF_VERBOSE(testing $cf_alias_file)
