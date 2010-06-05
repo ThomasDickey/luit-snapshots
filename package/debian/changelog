@@ -1,3 +1,9 @@
+bluit (20100605) unstable; urgency=low
+
+  * Fixes/improvements for FreeBSD and Solaris
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sat, 05 Jun 2010 08:26:43 -0400
+
 bluit (20100601) unstable; urgency=high
 
   * Initial package release

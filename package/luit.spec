@@ -1,8 +1,8 @@
 Summary: luit - Locale and ISO 2022 support for Unicode terminals
 %define AppProgram luit
-%define AppVersion 20100601
+%define AppVersion 20100605
 %define UseProgram b%{AppProgram}
-# $XTermId: luit.spec,v 1.5 2010/06/01 08:01:27 tom Exp $
+# $XTermId: luit.spec,v 1.7 2010/06/05 12:32:04 tom Exp $
 Name: %{AppProgram}
 Version: %{AppVersion}
 Release: 1
@@ -59,6 +59,10 @@ strip $RPM_BUILD_ROOT%{_bindir}/%{UseProgram}
 
 %changelog
 # each patch should add its ChangeLog entries here
+
+* Sat Jun 05 2010 Thomas Dickey
+
+- Fixes/improvements for FreeBSD and Solaris
 
 * Mon May 31 2010 Thomas Dickey
 - initial version
