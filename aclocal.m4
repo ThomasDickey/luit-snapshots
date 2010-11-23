@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.22 2010/06/02 00:06:30 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.24 2010/11/23 14:24:14 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -170,13 +170,21 @@ if test -n "$1" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_LIB version: 1 updated: 2010/05/29 16:02:10
+dnl CF_ADD_LIB version: 2 updated: 2010/06/02 05:03:05
 dnl ----------
 dnl Add a library, used to enforce consistency.
 dnl
 dnl $1 = library to add, without the "-l"
 dnl $2 = variable to update (default $LIBS)
-AC_DEFUN([CF_ADD_LIB],[ifelse($2,,LIBS,[$2])="-l$1 [$]ifelse($2,,LIBS,[$2])"])dnl
+AC_DEFUN([CF_ADD_LIB],[CF_ADD_LIBS(-l$1,ifelse($2,,LIBS,[$2]))])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ADD_LIBS version: 1 updated: 2010/06/02 05:03:05
+dnl -----------
+dnl Add one or more libraries, used to enforce consistency.
+dnl
+dnl $1 = libraries to add, with the "-l", etc.
+dnl $2 = variable to update (default $LIBS)
+AC_DEFUN([CF_ADD_LIBS],[ifelse($2,,LIBS,[$2])="$1 [$]ifelse($2,,LIBS,[$2])"])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ADD_LIBDIR version: 9 updated: 2010/05/26 16:44:57
 dnl -------------
@@ -263,7 +271,7 @@ $2])
 done
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_SUBDIR_PATH version: 2 updated: 2007/07/29 10:12:59
+dnl CF_ADD_SUBDIR_PATH version: 3 updated: 2010/07/03 20:58:12
 dnl ------------------
 dnl Append to a search-list for a nonstandard header/lib-file
 dnl	$1 = the variable to return as result
@@ -275,7 +283,7 @@ AC_DEFUN([CF_ADD_SUBDIR_PATH],
 [
 test "$4" != "$5" && \
 test -d "$4" && \
-ifelse([$5],NONE,,[(test $5 = NONE || test -d $5) &&]) {
+ifelse([$5],NONE,,[(test $5 = NONE || test "$4" != "$5") &&]) {
 	test -n "$verbose" && echo "	... testing for $3-directories under $4"
 	test -d $4/$3 &&          $1="[$]$1 $4/$3"
 	test -d $4/$3/$2 &&       $1="[$]$1 $4/$3/$2"
@@ -285,13 +293,13 @@ ifelse([$5],NONE,,[(test $5 = NONE || test -d $5) &&]) {
 }
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ANSI_CC_CHECK version: 9 updated: 2001/12/30 17:53:34
+dnl CF_ANSI_CC_CHECK version: 10 updated: 2010/10/23 15:52:32
 dnl ----------------
 dnl This is adapted from the macros 'fp_PROG_CC_STDC' and 'fp_C_PROTOTYPES'
 dnl in the sharutils 4.2 distribution.
 AC_DEFUN([CF_ANSI_CC_CHECK],
 [
-AC_CACHE_CHECK(for ${CC-cc} option to accept ANSI C, cf_cv_ansi_cc,[
+AC_CACHE_CHECK(for ${CC:-cc} option to accept ANSI C, cf_cv_ansi_cc,[
 cf_cv_ansi_cc=no
 cf_save_CFLAGS="$CFLAGS"
 cf_save_CPPFLAGS="$CPPFLAGS"
@@ -777,7 +785,7 @@ int main() {
 test "$cf_cv_working_poll" = "yes" && AC_DEFINE(HAVE_WORKING_POLL)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_ATTRIBUTES version: 13 updated: 2009/08/11 20:19:56
+dnl CF_GCC_ATTRIBUTES version: 14 updated: 2010/10/23 15:52:32
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
@@ -804,7 +812,7 @@ if test "$GCC" = yes
 then
 	AC_CHECKING([for $CC __attribute__ directives])
 cat > conftest.$ac_ext <<EOF
-#line __oline__ "${as_me-configure}"
+#line __oline__ "${as_me:-configure}"
 #include "confdefs.h"
 #include "conftest.h"
 #include "conftest.i"
@@ -901,7 +909,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 25 updated: 2010/04/24 11:03:31
+dnl CF_GCC_WARNINGS version: 27 updated: 2010/10/23 15:52:32
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -926,7 +934,7 @@ AC_REQUIRE([CF_GCC_VERSION])
 CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
 
 cat > conftest.$ac_ext <<EOF
-#line __oline__ "${as_me-configure}"
+#line __oline__ "${as_me:-configure}"
 int main(int argc, char *argv[[]]) { return (argv[[argc-1]] == 0) ; }
 EOF
 
@@ -1005,7 +1013,7 @@ then
 	done
 	CFLAGS="$cf_save_CFLAGS"
 fi
-rm -f conftest*
+rm -rf conftest*
 
 AC_SUBST(EXTRA_CFLAGS)
 ])dnl
@@ -1161,7 +1169,7 @@ cf_save_CFLAGS="$cf_save_CFLAGS -we147 -no-gcc"
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_LD_RPATH_OPT version: 2 updated: 2010/03/27 19:27:54
+dnl CF_LD_RPATH_OPT version: 3 updated: 2010/06/02 05:03:05
 dnl ---------------
 dnl For the given system and compiler, find the compiler flags to pass to the
 dnl loader to use the "rpath" feature.
@@ -1206,7 +1214,7 @@ case "x$LD_RPATH_OPT" in #(vi
 x-R*)
 	AC_MSG_CHECKING(if we need a space after rpath option)
 	cf_save_LIBS="$LIBS"
-	LIBS="${LD_RPATH_OPT}$libdir $LIBS"
+	CF_ADD_LIBS(${LD_RPATH_OPT}$libdir)
 	AC_TRY_LINK(, , cf_rpath_space=no, cf_rpath_space=yes)
 	LIBS="$cf_save_LIBS"
 	AC_MSG_RESULT($cf_rpath_space)
@@ -1244,7 +1252,7 @@ CF_SUBDIR_PATH($1,$2,lib)
 $1="$cf_library_path_list [$]$1"
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_MAKE_TAGS version: 5 updated: 2010/04/03 20:07:32
+dnl CF_MAKE_TAGS version: 6 updated: 2010/10/23 15:52:32
 dnl ------------
 dnl Generate tags/TAGS targets for makefiles.  Do not generate TAGS if we have
 dnl a monocase filesystem.
@@ -1254,10 +1262,10 @@ AC_REQUIRE([CF_MIXEDCASE_FILENAMES])
 AC_CHECK_PROGS(CTAGS, exctags ctags)
 AC_CHECK_PROGS(ETAGS, exetags etags)
 
-AC_CHECK_PROG(MAKE_LOWER_TAGS, ${CTAGS-ctags}, yes, no)
+AC_CHECK_PROG(MAKE_LOWER_TAGS, ${CTAGS:-ctags}, yes, no)
 
 if test "$cf_cv_mixedcase" = yes ; then
-	AC_CHECK_PROG(MAKE_UPPER_TAGS, ${ETAGS-etags}, yes, no)
+	AC_CHECK_PROG(MAKE_UPPER_TAGS, ${ETAGS:-etags}, yes, no)
 else
 	MAKE_UPPER_TAGS=no
 fi
@@ -1311,12 +1319,12 @@ fi
 test "$cf_cv_mixedcase" = yes && AC_DEFINE(MIXEDCASE_FILENAMES)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_MSG_LOG version: 4 updated: 2007/07/29 09:55:12
+dnl CF_MSG_LOG version: 5 updated: 2010/10/23 15:52:32
 dnl ----------
 dnl Write a debug message to config.log, along with the line number in the
 dnl configure script.
 AC_DEFUN([CF_MSG_LOG],[
-echo "${as_me-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
+echo "${as_me:-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_PATHSEP version: 5 updated: 2010/05/26 05:38:42
@@ -1332,7 +1340,7 @@ ifelse([$1],,,[$1=$PATH_SEPARATOR])
 	AC_SUBST(PATH_SEPARATOR)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_PROG version: 7 updated: 2009/01/11 20:34:16
+dnl CF_PATH_PROG version: 8 updated: 2010/10/23 16:12:25
 dnl ------------
 dnl Check for a given program, defining corresponding symbol.
 dnl	$1 = environment variable, which is suffixed by "_PATH" in the #define.
@@ -1351,7 +1359,7 @@ AC_PATH_PROGS($1,[$]$1 $2 $3,[$]$1)
 
 cf_path_prog=""
 cf_path_args=""
-IFS="${IFS= 	}"; cf_save_ifs="$IFS"; IFS="${IFS}$PATH_SEPARATOR"
+IFS="${IFS:- 	}"; cf_save_ifs="$IFS"; IFS="${IFS}$PATH_SEPARATOR"
 for cf_temp in $ac_cv_path_$1
 do
 	if test -z "$cf_path_prog" ; then
@@ -2025,14 +2033,14 @@ AC_DEFUN([CF_UPPER],
 $1=`echo "$2" | sed y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%`
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTEMPTER version: 2 updated: 2000/01/22 22:50:59
+dnl CF_UTEMPTER version: 3 updated: 2010/06/02 05:03:05
 dnl -----------
 dnl Try to link with utempter library
 AC_DEFUN([CF_UTEMPTER],
 [
 AC_CACHE_CHECK(if we can link with utempter library,cf_cv_have_utempter,[
 cf_save_LIBS="$LIBS"
-LIBS="-lutempter $LIBS"
+CF_ADD_LIB(utempter)
 AC_TRY_LINK([
 #include <utempter.h>
 ],[
@@ -2045,7 +2053,7 @@ LIBS="$cf_save_LIBS"
 ])
 if test "$cf_cv_have_utempter" = yes ; then
 	AC_DEFINE(USE_UTEMPTER)
-	LIBS="-lutempter $LIBS"
+	CF_ADD_LIB(utempter)
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -2100,7 +2108,7 @@ AC_MSG_RESULT($LOCALE_ALIAS_FILE)
 AC_SUBST(LOCALE_ALIAS_FILE)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_PATH version: 9 updated: 2010/05/26 05:38:42
+dnl CF_WITH_PATH version: 10 updated: 2010/10/23 15:44:18
 dnl ------------
 dnl Wrapper for AC_ARG_WITH to ensure that user supplies a pathname, not just
 dnl defaulting to yes/no.
@@ -2113,7 +2121,7 @@ dnl $5 = default value, if it's an expression & cannot be in the help-message
 dnl
 AC_DEFUN([CF_WITH_PATH],
 [AC_ARG_WITH($1,[$2 ](default: ifelse([$4],,empty,[$4])),,
-ifelse([$4],,[withval="${$3}"],[withval="${$3-ifelse([$5],,[$4],[$5])}"]))dnl
+ifelse([$4],,[withval="${$3}"],[withval="${$3:-ifelse([$5],,[$4],[$5])}"]))dnl
 if ifelse([$5],,true,[test -n "$5"]) ; then
 CF_PATH_SYNTAX(withval)
 fi

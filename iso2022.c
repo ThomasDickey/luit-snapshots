@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.21 2010/05/29 13:29:01 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.22 2010/11/23 15:11:18 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -38,8 +38,11 @@ THE SOFTWARE.
 #include "iso2022.h"
 
 #define BUFFERED_INPUT_SIZE 4
-unsigned char buffered_input[BUFFERED_INPUT_SIZE];
-int buffered_input_count = 0;
+static unsigned char buffered_input[BUFFERED_INPUT_SIZE];
+static int buffered_input_count = 0;
+
+static void terminateEsc(Iso2022Ptr, int, unsigned char *, unsigned);
+static void terminate(Iso2022Ptr, int);
 
 static void
 FatalError(const char *f,...)
@@ -203,6 +206,7 @@ allocIso2022(void)
     return is;
 }
 
+#ifdef NO_LEAKS
 void
 destroyIso2022(Iso2022Ptr is)
 {
@@ -212,6 +216,7 @@ destroyIso2022(Iso2022Ptr is)
 	free(is->outbuf);
     free(is);
 }
+#endif
 
 static int
 identifyCharset(Iso2022Ptr i, const CharsetRec * *p)
@@ -913,7 +918,7 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
     outbuf_flush(is, fd);
 }
 
-void
+static void
 terminate(Iso2022Ptr is, int fd)
 {
     if (is->outputFlags & OF_PASSTHRU) {
@@ -992,7 +997,7 @@ terminate(Iso2022Ptr is, int fd)
     }
 }
 
-void
+static void
 terminateEsc(Iso2022Ptr is, int fd, unsigned char *s_start, unsigned count)
 {
     const CharsetRec *charset;
