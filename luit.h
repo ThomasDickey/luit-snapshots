@@ -1,4 +1,4 @@
-/* $XTermId: luit.h,v 1.5 2010/05/29 17:10:46 tom Exp $ */
+/* $XTermId: luit.h,v 1.6 2010/11/23 15:03:58 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -27,12 +27,8 @@ THE SOFTWARE.
 
 extern const char *locale_alias;
 extern int iso2022;
-extern int verbose;
 extern int sevenbit;
 extern int ilog;
 extern int olog;
-
-void child(char *, char *, char *const *);
-void parent(int, int);
 
 #endif /* LUIT_LUIT_H */

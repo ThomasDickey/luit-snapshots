@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.13 2010/05/31 22:02:40 tom Exp $
+.\" $XTermId: luit.man,v 1.15 2010/11/23 15:52:37 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -8,6 +8,9 @@
 .el       .ds `` ``
 .ie \n(.g .ds '' \(rq
 .el       .ds '' ''
+.de bP
+.IP \(bu 4
+..
 .TH LUIT 1 __vendorversion__
 .SH NAME
 luit \- Locale and ISO\ 2022 support for Unicode terminals
@@ -18,7 +21,7 @@ luit \- Locale and ISO\ 2022 support for Unicode terminals
 ] [
 .B \-\-
 ] [
-.I program 
+.I program
 [
 .I args
 ] ]
@@ -28,12 +31,12 @@ is a filter that can be run between an arbitrary application and a
 UTF-8 terminal emulator.  It will convert application output from the
 locale's encoding into UTF-8, and convert terminal input from UTF-8
 into the locale's encoding.
-
+.PP
 An application may also request switching to a different output
 encoding using ISO\ 2022 and ISO\ 6429 escape sequences.  Use of this
 feature is discouraged: multilingual applications should be modified
 to directly generate UTF-8 instead.
-
+.PP
 .B Luit
 is usually invoked transparently by the terminal emulator.  For
 information about running
@@ -116,7 +119,7 @@ The default depends on the locale, but is usually
 .TP
 .BI \-gr " gk"
 Set the initial assignment of GR.  The default depends on the locale,
-and is usually 
+and is usually
 .B g2
 except for EUC locales, where it is
 .BR g1 .
@@ -160,7 +163,7 @@ The most typical use of
 .B luit
 is to adapt an instance of
 .B XTerm
-to the locale's encoding.  Current versions of 
+to the locale's encoding.  Current versions of
 .B XTerm
 invoke
 .B luit
@@ -205,7 +208,7 @@ On systems with SVR4 (\*(``Unix-98\*('') ptys (Linux version 2.2 and later,
 SVR4),
 .B luit
 should be run as the invoking user.
-
+.PP
 On systems without SVR4 (\*(``Unix-98\*('') ptys (notably BSD variants),
 running
 .B luit
@@ -218,24 +221,34 @@ suid root;
 should drop privileges sufficiently early to make this safe.  However,
 the startup code has not been exhaustively audited, and the author
 takes no responsibility for any resulting security issues.
-
+.PP
 .B Luit
 will refuse to run if it is installed setuid and cannot safely drop
 privileges.
 .SH BUGS
 None of this complexity should be necessary.  Stateless UTF-8
 throughout the system is the way to go.
-
+.PP
 Charsets with a non-trivial intermediary byte are not yet supported.
-
+.PP
 Selecting alternate sets of control characters is not supported and
 will never be.
 .SH SEE ALSO
-xterm(__mansuffix__), unicode(7), utf-8(7), charsets(7).
+xterm(__mansuffix__).
+.PP
+These are Linux-specific:
+.bP
+unicode(__miscmansuffix__),
+.bP
+utf-8(__miscmansuffix__),
+.bP
+charsets(__miscmansuffix__).
+.PP
+These are more generally useful:
 .nf
-.br
+.bP
 .I Character Code Structure and Extension Techniques (ISO\ 2022, ECMA-35).
-.br
+.bP
 .I Control Functions for Coded Character Sets (ISO\ 6429, ECMA-48).
 .fi
 .SH AUTHOR

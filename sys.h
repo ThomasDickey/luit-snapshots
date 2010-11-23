@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.9 2010/05/31 22:48:13 tom Exp $ */
+/* $XTermId: sys.h,v 1.10 2010/11/23 15:00:50 tom Exp $ */
 
 /* $XFree86: xc/programs/luit/sys.h,v 1.3 2003/10/24 20:38:12 tsi Exp $ */
 /*
@@ -39,7 +39,6 @@ int waitForInput(int fd1, int fd2);
 int setWindowSize(int sfd, int dfd);
 int installHandler(int signum, void (*handler) (int));
 int copyTermios(int sfd, int dfd);
-int saveTermios(void);
 int restoreTermios(void);
 int setRawTermios(void);
 char *my_basename(char *path);

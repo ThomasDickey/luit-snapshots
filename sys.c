@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.24 2010/06/03 00:44:00 tom Exp $ */
+/* $XTermId: sys.c,v 1.25 2010/11/23 15:00:37 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -227,7 +227,7 @@ copyTermios(int sfd, int dfd)
     return 0;
 }
 
-int
+static int
 saveTermios(void)
 {
     int rc;

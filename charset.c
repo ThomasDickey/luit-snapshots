@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.14 2010/05/29 13:19:33 tom Exp $ */
+/* $XTermId: charset.c,v 1.15 2010/11/23 15:10:35 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -574,7 +574,7 @@ static void
 destroyCharset(CharsetPtr p)
 {
     if (!isUnknownCharsetPtr(p)) {
-	destroyFontencCharsetPtr(p->data);
+	destroyFontencCharsetPtr((FontencCharsetPtr) p->data);
 	free(p);
     }
 }

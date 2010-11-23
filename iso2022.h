@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.h,v 1.12 2010/05/29 13:13:40 tom Exp $ */
+/* $XTermId: iso2022.h,v 1.13 2010/11/23 15:02:48 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -91,13 +91,14 @@ typedef struct _Iso2022 {
 #define BUFFER_SIZE 512
 
 Iso2022Ptr allocIso2022(void);
-void destroyIso2022(Iso2022Ptr);
 int initIso2022(const char *, const char *, Iso2022Ptr);
 int mergeIso2022(Iso2022Ptr, Iso2022Ptr);
 void reportIso2022(Iso2022Ptr);
-void terminate(Iso2022Ptr, int);
-void terminateEsc(Iso2022Ptr, int, unsigned char *, unsigned);
 void copyIn(Iso2022Ptr, int, unsigned char *, int);
 void copyOut(Iso2022Ptr, int, unsigned char *, unsigned);
+
+#ifdef NO_LEAKS
+void destroyIso2022(Iso2022Ptr);
+#endif
 
 #endif /* LUIT_ISO2022_H */

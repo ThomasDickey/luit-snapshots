@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.25 2010/06/01 07:56:16 tom Exp $ */
+/* $XTermId: luit.c,v 1.26 2010/11/23 15:03:53 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -44,6 +44,8 @@ THE SOFTWARE.
 #include "parser.h"
 #include "iso2022.h"
 
+static void parent(int, int);
+
 static int pipe_option = 0;
 static int p2c_waitpipe[2];
 static int c2p_waitpipe[2];
@@ -59,13 +61,14 @@ const char *locale_alias = LOCALE_ALIAS_FILE;
 
 int ilog = -1;
 int olog = -1;
-int verbose = 0;
+static int verbose = 0;
 
-volatile int sigwinch_queued = 0;
-volatile int sigchld_queued = 0;
+static volatile int sigwinch_queued = 0;
+static volatile int sigchld_queued = 0;
 
 static int convert(int, int);
 static int condom(int, char **);
+static void child(char *, char *, char *const *);
 
 static void
 ErrorF(const char *f,...)
@@ -603,7 +606,7 @@ condom(int argc, char **argv)
     return 0;
 }
 
-void
+static void
 child(char *line, char *path, char *const argv[])
 {
     int tty;
@@ -648,7 +651,7 @@ child(char *line, char *path, char *const argv[])
     ExitProgram(1);
 }
 
-void
+static void
 parent(int pid GCC_UNUSED, int pty)
 {
     unsigned char buf[BUFFER_SIZE];
