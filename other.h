@@ -1,4 +1,4 @@
-/* $XTermId: other.h,v 1.7 2010/05/29 13:20:25 tom Exp $ */
+/* $XTermId: other.h,v 1.10 2010/11/24 21:42:50 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -31,9 +31,16 @@ THE SOFTWARE.
 #define GCC_UNUSED		/* ARGSUSED */
 #endif
 
-#include <X11/fonts/fontenc.h>
+#include <luitconv.h>
+#include <trace.h>
 
-#define UChar(n) ((unsigned char)(n))
+#undef UCHAR
+#define UCHAR unsigned char
+
+#undef UINT
+#define UINT unsigned int
+
+#define UChar(n) ((UCHAR)(n))
 
 typedef struct {
     FontMapPtr mapping;
@@ -42,7 +49,7 @@ typedef struct {
 } aux_gbk;
 
 typedef struct {
-    unsigned char buf[4];
+    UCHAR buf[4];
     int buf_ptr, len;
 } aux_utf8;
 
@@ -81,28 +88,28 @@ typedef union {
 } OtherState, *OtherStatePtr;
 
 int init_gbk(OtherStatePtr);
-unsigned int mapping_gbk(unsigned int, OtherStatePtr);
-unsigned int reverse_gbk(unsigned int, OtherStatePtr);
-int stack_gbk(unsigned, OtherStatePtr);
+UINT mapping_gbk(UINT, OtherStatePtr);
+UINT reverse_gbk(UINT, OtherStatePtr);
+int stack_gbk(UINT, OtherStatePtr);
 
 int init_utf8(OtherStatePtr);
-unsigned int mapping_utf8(unsigned int, OtherStatePtr);
-unsigned int reverse_utf8(unsigned int, OtherStatePtr);
-int stack_utf8(unsigned, OtherStatePtr);
+UINT mapping_utf8(UINT, OtherStatePtr);
+UINT reverse_utf8(UINT, OtherStatePtr);
+int stack_utf8(UINT, OtherStatePtr);
 
 int init_sjis(OtherStatePtr);
-unsigned int mapping_sjis(unsigned int, OtherStatePtr);
-unsigned int reverse_sjis(unsigned int, OtherStatePtr);
-int stack_sjis(unsigned, OtherStatePtr);
+UINT mapping_sjis(UINT, OtherStatePtr);
+UINT reverse_sjis(UINT, OtherStatePtr);
+int stack_sjis(UINT, OtherStatePtr);
 
 int init_hkscs(OtherStatePtr);
-unsigned int mapping_hkscs(unsigned int, OtherStatePtr);
-unsigned int reverse_hkscs(unsigned int, OtherStatePtr);
-int stack_hkscs(unsigned, OtherStatePtr);
+UINT mapping_hkscs(UINT, OtherStatePtr);
+UINT reverse_hkscs(UINT, OtherStatePtr);
+int stack_hkscs(UINT, OtherStatePtr);
 
 int init_gb18030(OtherStatePtr);
-unsigned int mapping_gb18030(unsigned int, OtherStatePtr);
-unsigned int reverse_gb18030(unsigned int, OtherStatePtr);
-int stack_gb18030(unsigned, OtherStatePtr);
+UINT mapping_gb18030(UINT, OtherStatePtr);
+UINT reverse_gb18030(UINT, OtherStatePtr);
+int stack_gb18030(UINT, OtherStatePtr);
 
 #endif /* LUIT_OTHER_H */

@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.15 2010/11/23 15:10:35 tom Exp $ */
+/* $XTermId: charset.c,v 1.19 2010/11/25 01:42:22 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -108,7 +108,7 @@ typedef struct _FontencCharset {
 static FontencCharsetRec fontencCharsets[] =
 {
     {"ISO 646 (1973)", T_94,    '@', "iso646.1973-0",    0x00,   0, 0},
-    {"ASCII",          T_94,    'B', "iso8859-1",        0x00,   0, 0},
+    {"ASCII",          T_94,    'B', "iso8859-1",        0x00,   0, 0},	/* bug */
     {"JIS X 0201:GL",  T_94,    'J', "jisx0201.1976-0",  0x00,   0, 0},
     {"JIS X 0201:GR",  T_94,    'I', "jisx0201.1976-0",  0x80,   0, 0},
     {"DEC Special",    T_94,    '0', "dec-special",      0x00,   0, 0},
@@ -199,7 +199,7 @@ FontencCharsetRecode(unsigned int n, const CharsetRec * self)
 {
     const FontencCharsetRec *fc = (const FontencCharsetRec *) (self->data);
 
-    return FontEncRecode(n + fc->shift, fc->mapping);
+    return MapCodeValue(n + fc->shift, fc->mapping);
 }
 
 static int
@@ -291,13 +291,13 @@ getFontencCharset(unsigned final, int type, const char *name)
     if (c == NULL)
 	return NULL;
 
-    mapping = FontEncMapFind(fc->xlfd, FONT_ENCODING_UNICODE, -1, -1, NULL);
+    mapping = LookupMapping(fc->xlfd);
     if (!mapping) {
 	fc->type = T_FAILED;
 	return NULL;
     }
 
-    reverse = FontMapReverse(mapping);
+    reverse = LookupReverse(mapping);
     if (!reverse) {
 	fc->type = T_FAILED;
 	return NULL;
@@ -548,6 +548,11 @@ isUnknownCharsetPtr(CharsetPtr p)
 static void
 destroyFontencCharsetPtr(FontencCharsetPtr p)
 {
+#ifdef USE_ICONV
+    if (p->reverse) {
+	luitDestroyReverse(p->reverse);
+    }
+#else
     p->mapping = 0;
 
     /*
@@ -568,6 +573,7 @@ destroyFontencCharsetPtr(FontencCharsetPtr p)
 	free(p->reverse);
 	p->reverse = 0;
     }
+#endif
 }
 
 static void
@@ -588,4 +594,4 @@ charset_leaks(void)
 	cachedCharsets = next;
     }
 }
-#endif
+#endif /* NO_LEAKS */

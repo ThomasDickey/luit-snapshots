@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.16 2010/06/01 23:44:45 tom Exp $
+## $XTermId: Makefile.in,v 1.18 2010/11/23 18:47:31 tom Exp $
 ##
 ## Copyright 2006-2009,2010 by Thomas E. Dickey
 ##
@@ -74,8 +74,8 @@ MANDIR		= $(DESTDIR)$(mandir)
 INSTALL_DIRS    = $(BINDIR) $(MANDIR)
 
 SRCS		= luit.c iso2022.c charset.c parser.c sys.c other.c
-OBJS		= luit$o iso2022$o charset$o parser$o sys$o other$o
-HDRS		= charset.h config.h iso2022.h luit.h other.h parser.h sys.h
+OBJS		= luit$o iso2022$o charset$o parser$o sys$o other$o @EXTRAOBJS@
+HDRS		= charset.h config.h iso2022.h luit.h luitconv.h other.h parser.h sys.h
 
        PROGRAMS = luit$x
 

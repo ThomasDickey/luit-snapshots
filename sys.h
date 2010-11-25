@@ -1,7 +1,7 @@
-/* $XTermId: sys.h,v 1.10 2010/11/23 15:00:50 tom Exp $ */
+/* $XTermId: sys.h,v 1.12 2010/11/23 23:42:22 tom Exp $ */
 
-/* $XFree86: xc/programs/luit/sys.h,v 1.3 2003/10/24 20:38:12 tsi Exp $ */
 /*
+Copyright 2010 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,6 +33,8 @@ extern int ignore_unused;
 #else
 #define IGNORE_RC(func) (void) func
 #endif /* gcc workarounds */
+
+#define TypeCalloc(type) (type *) calloc(1, sizeof(type))
 
 int waitForOutput(int fd);
 int waitForInput(int fd1, int fd2);
