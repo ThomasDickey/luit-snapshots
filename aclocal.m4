@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.24 2010/11/23 14:24:14 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.27 2010/11/24 22:20:42 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -24,6 +24,78 @@ dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl ---------------------------------------------------------------------------
+dnl ---------------------------------------------------------------------------
+dnl AM_ICONV version: 12 updated: 2007/07/30 19:12:03
+dnl --------
+dnl Inserted as requested by gettext 0.10.40
+dnl File from /usr/share/aclocal
+dnl iconv.m4
+dnl ====================
+dnl serial AM2
+dnl
+dnl From Bruno Haible.
+dnl
+dnl ====================
+dnl Modified to use CF_FIND_LINKAGE and CF_ADD_SEARCHPATH, to broaden the
+dnl range of locations searched.  Retain the same cache-variable naming to
+dnl allow reuse with the other gettext macros -Thomas E Dickey
+AC_DEFUN([AM_ICONV],
+[
+  dnl Some systems have iconv in libc, some have it in libiconv (OSF/1 and
+  dnl those with the standalone portable GNU libiconv installed).
+
+  AC_ARG_WITH([libiconv-prefix],
+[  --with-libiconv-prefix=DIR
+                          search for libiconv in DIR/include and DIR/lib], [
+    CF_ADD_OPTIONAL_PATH($withval, libiconv)
+   ])
+
+  AC_CACHE_CHECK(for iconv, am_cv_func_iconv, [
+    CF_FIND_LINKAGE(CF__ICONV_HEAD,
+      CF__ICONV_BODY,
+      iconv,
+      am_cv_func_iconv=yes,
+      am_cv_func_iconv=["no, consider installing GNU libiconv"])])
+
+  if test "$am_cv_func_iconv" = yes; then
+    AC_DEFINE(HAVE_ICONV, 1, [Define if you have the iconv() function.])
+
+    AC_CACHE_CHECK([if the declaration of iconv() needs const.],
+		   am_cv_proto_iconv_const,[
+      AC_TRY_COMPILE(CF__ICONV_HEAD [
+extern
+#ifdef __cplusplus
+"C"
+#endif
+#if defined(__STDC__) || defined(__cplusplus)
+size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
+#else
+size_t iconv();
+#endif
+],[], am_cv_proto_iconv_const=no,
+      am_cv_proto_iconv_const=yes)])
+
+    if test "$am_cv_proto_iconv_const" = yes ; then
+      am_cv_proto_iconv_arg1="const"
+    else
+      am_cv_proto_iconv_arg1=""
+    fi
+
+    AC_DEFINE_UNQUOTED(ICONV_CONST, $am_cv_proto_iconv_arg1,
+      [Define as const if the declaration of iconv() needs const.])
+  fi
+
+  LIBICONV=
+  if test "$cf_cv_find_linkage_iconv" = yes; then
+    CF_ADD_INCDIR($cf_cv_header_path_iconv)
+    if test -n "$cf_cv_library_file_iconv" ; then
+      LIBICONV="-liconv"
+      CF_ADD_LIBDIR($cf_cv_library_path_iconv)
+    fi
+  fi
+
+  AC_SUBST(LIBICONV)
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ADD_CFLAGS version: 10 updated: 2010/05/26 05:38:42
 dnl -------------
@@ -178,14 +250,6 @@ dnl $1 = library to add, without the "-l"
 dnl $2 = variable to update (default $LIBS)
 AC_DEFUN([CF_ADD_LIB],[CF_ADD_LIBS(-l$1,ifelse($2,,LIBS,[$2]))])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_LIBS version: 1 updated: 2010/06/02 05:03:05
-dnl -----------
-dnl Add one or more libraries, used to enforce consistency.
-dnl
-dnl $1 = libraries to add, with the "-l", etc.
-dnl $2 = variable to update (default $LIBS)
-AC_DEFUN([CF_ADD_LIBS],[ifelse($2,,LIBS,[$2])="$1 [$]ifelse($2,,LIBS,[$2])"])dnl
-dnl ---------------------------------------------------------------------------
 dnl CF_ADD_LIBDIR version: 9 updated: 2010/05/26 16:44:57
 dnl -------------
 dnl	Adds to the library-path
@@ -221,6 +285,14 @@ if test -n "$1" ; then
   done
 fi
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ADD_LIBS version: 1 updated: 2010/06/02 05:03:05
+dnl -----------
+dnl Add one or more libraries, used to enforce consistency.
+dnl
+dnl $1 = libraries to add, with the "-l", etc.
+dnl $2 = variable to update (default $LIBS)
+AC_DEFUN([CF_ADD_LIBS],[ifelse($2,,LIBS,[$2])="$1 [$]ifelse($2,,LIBS,[$2])"])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ADD_OPTIONAL_PATH version: 1 updated: 2007/07/29 12:33:33
 dnl --------------------
@@ -549,6 +621,29 @@ AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_DISABLE_LEAKS version: 6 updated: 2010/07/23 04:14:32
+dnl ----------------
+dnl Combine no-leak checks with the libraries or tools that are used for the
+dnl checks.
+AC_DEFUN([CF_DISABLE_LEAKS],[
+
+AC_REQUIRE([CF_WITH_DMALLOC])
+AC_REQUIRE([CF_WITH_DBMALLOC])
+AC_REQUIRE([CF_WITH_VALGRIND])
+
+AC_MSG_CHECKING(if you want to perform memory-leak testing)
+AC_ARG_ENABLE(leaks,
+	[  --disable-leaks         test: free permanent memory, analyze leaks],
+	[if test "x$enableval" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi],
+	: ${with_no_leaks:=no})
+AC_MSG_RESULT($with_no_leaks)
+
+if test "$with_no_leaks" = yes ; then
+	AC_DEFINE(NO_LEAKS)
+	AC_DEFINE(YY_NO_LEAKS)
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_DISABLE_RPATH_HACK version: 1 updated: 2010/04/11 10:54:00
 dnl ---------------------
 dnl The rpath-hack makes it simpler to build programs, particularly with the
@@ -567,6 +662,21 @@ if test "$cf_disable_rpath_hack" = no ; then
 	CF_RPATH_HACK
 fi
 ])
+dnl ---------------------------------------------------------------------------
+dnl CF_ENABLE_TRACE version: 1 updated: 2010/07/24 08:23:48
+dnl ---------------
+AC_DEFUN([CF_ENABLE_TRACE],[
+AC_MSG_CHECKING(if you want to enable debugging trace)
+CF_ARG_ENABLE(trace,
+	[  --enable-trace          test: turn on debug-tracing],
+	[with_trace=yes],
+	[with_trace=])
+AC_MSG_RESULT($with_trace)
+if test "$with_trace" = "yes"
+then
+	AC_DEFINE(OPT_TRACE)
+fi
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ERRNO version: 5 updated: 1997/11/30 12:44:39
 dnl --------
@@ -1327,6 +1437,35 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "${as_me:-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_NO_LEAKS_OPTION version: 4 updated: 2006/12/16 14:24:05
+dnl ------------------
+dnl see CF_WITH_NO_LEAKS
+AC_DEFUN([CF_NO_LEAKS_OPTION],[
+AC_MSG_CHECKING(if you want to use $1 for testing)
+AC_ARG_WITH($1,
+	[$2],
+	[AC_DEFINE($3)ifelse([$4],,[
+	 $4
+])
+	: ${with_cflags:=-g}
+	: ${with_no_leaks:=yes}
+	 with_$1=yes],
+	[with_$1=])
+AC_MSG_RESULT(${with_$1:-no})
+
+case .$with_cflags in #(vi
+.*-g*)
+	case .$CFLAGS in #(vi
+	.*-g*) #(vi
+		;;
+	*)
+		CF_ADD_CFLAGS([-g])
+		;;
+	esac
+	;;
+esac
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_PATHSEP version: 5 updated: 2010/05/26 05:38:42
 dnl ----------
 dnl Provide a value for the $PATH and similar separator
@@ -2065,6 +2204,36 @@ AC_DEFUN([CF_VERBOSE],
 CF_MSG_LOG([$1])
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_DBMALLOC version: 7 updated: 2010/06/21 17:26:47
+dnl ----------------
+dnl Configure-option for dbmalloc.  The optional parameter is used to override
+dnl the updating of $LIBS, e.g., to avoid conflict with subsequent tests.
+AC_DEFUN([CF_WITH_DBMALLOC],[
+CF_NO_LEAKS_OPTION(dbmalloc,
+	[  --with-dbmalloc         test: use Conor Cahill's dbmalloc library],
+	[USE_DBMALLOC])
+
+if test "$with_dbmalloc" = yes ; then
+	AC_CHECK_HEADER(dbmalloc.h,
+		[AC_CHECK_LIB(dbmalloc,[debug_malloc]ifelse([$1],,[],[,$1]))])
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_DMALLOC version: 7 updated: 2010/06/21 17:26:47
+dnl ---------------
+dnl Configure-option for dmalloc.  The optional parameter is used to override
+dnl the updating of $LIBS, e.g., to avoid conflict with subsequent tests.
+AC_DEFUN([CF_WITH_DMALLOC],[
+CF_NO_LEAKS_OPTION(dmalloc,
+	[  --with-dmalloc          test: use Gray Watson's dmalloc library],
+	[USE_DMALLOC])
+
+if test "$with_dmalloc" = yes ; then
+	AC_CHECK_HEADER(dmalloc.h,
+		[AC_CHECK_LIB(dmalloc,[dmalloc_debug]ifelse([$1],,[],[,$1]))])
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_WITH_LOCALE_ALIAS version: 5 updated: 2010/06/01 20:06:13
 dnl --------------------
 dnl Configure option to specify the location of locale.alias, for programs that
@@ -2127,6 +2296,14 @@ CF_PATH_SYNTAX(withval)
 fi
 $3="$withval"
 AC_SUBST($3)dnl
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_VALGRIND version: 1 updated: 2006/12/14 18:00:21
+dnl ----------------
+AC_DEFUN([CF_WITH_VALGRIND],[
+CF_NO_LEAKS_OPTION(valgrind,
+	[  --with-valgrind         test: use valgrind],
+	[USE_VALGRIND])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_ZLIB version: 3 updated: 2007/07/29 13:19:54
@@ -2337,3 +2514,20 @@ else
 	AC_MSG_ERROR(No libraries found for font-encoding)
 fi
 ])
+dnl ---------------------------------------------------------------------------
+dnl CF__ICONV_BODY version: 2 updated: 2007/07/26 17:35:47
+dnl --------------
+dnl Test-code needed for iconv compile-checks
+define([CF__ICONV_BODY],[
+	iconv_t cd = iconv_open("","");
+	iconv(cd,NULL,NULL,NULL,NULL);
+	iconv_close(cd);]
+)dnl
+dnl ---------------------------------------------------------------------------
+dnl CF__ICONV_HEAD version: 1 updated: 2007/07/26 15:57:03
+dnl --------------
+dnl Header-files needed for iconv compile-checks
+define([CF__ICONV_HEAD],[
+#include <stdlib.h>
+#include <iconv.h>]
+)dnl

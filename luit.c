@@ -1,6 +1,7 @@
-/* $XTermId: luit.c,v 1.26 2010/11/23 15:03:53 tom Exp $ */
+/* $XTermId: luit.c,v 1.27 2010/11/24 20:59:13 tom Exp $ */
 
 /*
+Copyright 2010 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

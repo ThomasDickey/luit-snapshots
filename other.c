@@ -1,4 +1,4 @@
-/* $XTermId: other.c,v 1.8 2010/05/29 13:36:19 tom Exp $ */
+/* $XTermId: other.c,v 1.10 2010/11/23 20:26:24 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -39,12 +39,11 @@ THE SOFTWARE.
 int
 init_gbk(OtherStatePtr s)
 {
-    s->gbk.mapping =
-	FontEncMapFind("gbk-0", FONT_ENCODING_UNICODE, -1, -1, NULL);
+    s->gbk.mapping = LookupMapping("gbk-0");
     if (!s->gbk.mapping)
 	return 0;
 
-    s->gbk.reverse = FontMapReverse(s->gbk.mapping);
+    s->gbk.reverse = LookupReverse(s->gbk.mapping);
     if (!s->gbk.reverse)
 	return 0;
 
@@ -60,7 +59,7 @@ mapping_gbk(unsigned int n, OtherStatePtr s)
 	return n;
     if (n == 128)
 	return EURO_10646;
-    r = FontEncRecode(n, s->gbk.mapping);
+    r = MapCodeValue(n, s->gbk.mapping);
     return r;
 }
 
@@ -194,21 +193,19 @@ stack_utf8(unsigned c, OtherStatePtr s)
 int
 init_sjis(OtherStatePtr s)
 {
-    s->sjis.x0208mapping =
-	FontEncMapFind("jisx0208.1990-0", FONT_ENCODING_UNICODE, -1, -1, NULL);
+    s->sjis.x0208mapping = LookupMapping("jisx0208.1990-0");
     if (!s->sjis.x0208mapping)
 	return 0;
 
-    s->sjis.x0208reverse = FontMapReverse(s->sjis.x0208mapping);
+    s->sjis.x0208reverse = LookupReverse(s->sjis.x0208mapping);
     if (!s->sjis.x0208reverse)
 	return 0;
 
-    s->sjis.x0201mapping =
-	FontEncMapFind("jisx0201.1976-0", FONT_ENCODING_UNICODE, -1, -1, NULL);
+    s->sjis.x0201mapping = LookupMapping("jisx0201.1976-0");
     if (!s->sjis.x0201mapping)
 	return 0;
 
-    s->sjis.x0201reverse = FontMapReverse(s->sjis.x0201mapping);
+    s->sjis.x0201reverse = LookupReverse(s->sjis.x0201mapping);
     if (!s->sjis.x0201reverse)
 	return 0;
 
@@ -227,7 +224,7 @@ mapping_sjis(unsigned int n, OtherStatePtr s)
     if (n < 0x80)
 	return n;
     if (n >= 0xA0 && n <= 0xDF)
-	return FontEncRecode(n, s->sjis.x0201mapping);
+	return MapCodeValue(n, s->sjis.x0201mapping);
     s1 = ((n >> 8) & 0xFF);
     s2 = (n & 0xFF);
     j1 = (s1 << 1)
@@ -237,7 +234,7 @@ mapping_sjis(unsigned int n, OtherStatePtr s)
 	- 0x1F
 	- (unsigned) (s2 >= 0x7F ? 1 : 0)
 	- (unsigned) (s2 >= 0x9F ? 0x5E : 0);
-    return FontEncRecode((j1 << 8) + j2, s->sjis.x0208mapping);
+    return MapCodeValue((j1 << 8) + j2, s->sjis.x0208mapping);
 }
 
 unsigned int
@@ -288,12 +285,11 @@ stack_sjis(unsigned c, OtherStatePtr s)
 int
 init_hkscs(OtherStatePtr s)
 {
-    s->hkscs.mapping =
-	FontEncMapFind("big5hkscs-0", FONT_ENCODING_UNICODE, -1, -1, NULL);
+    s->hkscs.mapping = LookupMapping("big5hkscs-0");
     if (!s->hkscs.mapping)
 	return 0;
 
-    s->hkscs.reverse = FontMapReverse(s->hkscs.mapping);
+    s->hkscs.reverse = LookupReverse(s->hkscs.mapping);
     if (!s->hkscs.reverse)
 	return 0;
 
@@ -309,7 +305,7 @@ mapping_hkscs(unsigned int n, OtherStatePtr s)
 	return n;
     if (n == 128)
 	return EURO_10646;
-    r = FontEncRecode(n, s->hkscs.mapping);
+    r = MapCodeValue(n, s->hkscs.mapping);
     return r;
 }
 
@@ -365,21 +361,19 @@ stack_hkscs(unsigned c, OtherStatePtr s)
 int
 init_gb18030(OtherStatePtr s)
 {
-    s->gb18030.cs0_mapping =
-	FontEncMapFind("gb18030.2000-0", FONT_ENCODING_UNICODE, -1, -1, NULL);
+    s->gb18030.cs0_mapping = LookupMapping("gb18030.2000-0");
     if (!s->gb18030.cs0_mapping)
 	return 0;
 
-    s->gb18030.cs0_reverse = FontMapReverse(s->gb18030.cs0_mapping);
+    s->gb18030.cs0_reverse = LookupReverse(s->gb18030.cs0_mapping);
     if (!s->gb18030.cs0_reverse)
 	return 0;
 
-    s->gb18030.cs1_mapping =
-	FontEncMapFind("gb18030.2000-1", FONT_ENCODING_UNICODE, -1, -1, NULL);
+    s->gb18030.cs1_mapping = LookupMapping("gb18030.2000-1");
     if (!s->gb18030.cs1_mapping)
 	return 0;
 
-    s->gb18030.cs1_reverse = FontMapReverse(s->gb18030.cs1_mapping);
+    s->gb18030.cs1_reverse = LookupReverse(s->gb18030.cs1_mapping);
     if (!s->gb18030.cs1_reverse)
 	return 0;
 
@@ -396,8 +390,10 @@ mapping_gb18030(unsigned int n, OtherStatePtr s)
     if (n >= 0xFFFF)
 	return '?';
 
-    return FontEncRecode(n,
-			 (s->gb18030.linear) ? s->gb18030.cs1_mapping : s->gb18030.cs0_mapping);
+    return MapCodeValue(n,
+			((s->gb18030.linear)
+			 ? s->gb18030.cs1_mapping
+			 : s->gb18030.cs0_mapping));
 }
 
 unsigned int

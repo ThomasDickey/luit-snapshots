@@ -1,4 +1,29 @@
-dnl $XTermId: configure.in,v 1.20 2010/06/01 23:39:34 tom Exp $
+dnl $XTermId: configure.in,v 1.26 2010/11/24 22:20:57 tom Exp $
+dnl
+dnl ---------------------------------------------------------------------------
+dnl
+dnl Copyright 2006-2009,2010 by Thomas E. Dickey
+dnl
+dnl                         All Rights Reserved
+dnl
+dnl Permission to use, copy, modify, and distribute this software and its
+dnl documentation for any purpose and without fee is hereby granted,
+dnl provided that the above copyright notice appear in all copies and that
+dnl both that copyright notice and this permission notice appear in
+dnl supporting documentation, and that the name of the above listed
+dnl copyright holder(s) not be used in advertising or publicity pertaining
+dnl to distribution of the software without specific, written prior
+dnl permission.
+dnl
+dnl THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
+dnl TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+dnl AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
+dnl LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+dnl WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+dnl
+dnl ---------------------------------------------------------------------------
 
 AC_PREREQ(2.52.20030208)
 AC_INIT(luit.c)
@@ -76,10 +101,50 @@ fi
 
 CF_SYS_TIME_SELECT 
 CF_FUNC_POLL
-CF_WITH_ZLIB
-CF_X_FONTENC
+
+AC_MSG_CHECKING(if you want to use fontenc)
+CF_ARG_DISABLE(fontenc,
+	[  --enable-fontenc         enable/disable use of fontenc],
+	[with_fontenc=no],
+	[with_fontenc=yes])
+AC_MSG_RESULT($with_fontenc)
+
+AC_MSG_CHECKING(if you want to use iconv)
+CF_ARG_ENABLE(iconv,
+	[  --enable-iconv           enable/disable use of iconv],
+	[with_iconv=yes],
+	[with_iconv=no])
+AC_MSG_RESULT($with_iconv)
+
+if test "$with_iconv" != no || test "$with_fontenc" = no
+then
+	if test "$with_fontenc" != no
+	then
+		AC_MSG_WARN(ignoring fontenc since iconv was requested)
+	fi
+	AM_ICONV
+	AC_DEFINE(USE_ICONV)
+	EXTRAOBJS="$EXTRAOBJS luitconv\$o"
+elif test "$with_fontenc" != no
+then
+	CF_WITH_ZLIB
+	CF_X_FONTENC
+	AC_DEFINE(USE_FONTENC)
+else
+	AC_MSG_ERROR(luit requires either fontenc or iconv)
+fi
 
 CF_WITH_LOCALE_ALIAS
+
+CF_DISABLE_LEAKS
+CF_ENABLE_TRACE
+
+if test "$with_trace" != no
+then
+	EXTRAOBJS="$EXTRAOBJS trace\$o"
+fi
+
 CF_DISABLE_RPATH_HACK
 
+AC_SUBST(EXTRAOBJS)
 AC_OUTPUT(Makefile,,,cat)
