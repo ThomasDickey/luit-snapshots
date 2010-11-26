@@ -1,6 +1,7 @@
-/* $XTermId: iso2022.h,v 1.13 2010/11/23 15:02:48 tom Exp $ */
+/* $XTermId: iso2022.h,v 1.15 2010/11/25 13:09:08 tom Exp $ */
 
 /*
+Copyright 2010 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,6 +25,8 @@ THE SOFTWARE.
 
 #ifndef LUIT_ISO2022_H
 #define LUIT_ISO2022_H 1
+
+#include <sys/types.h>
 
 #include "charset.h"
 
@@ -93,7 +96,7 @@ typedef struct _Iso2022 {
 Iso2022Ptr allocIso2022(void);
 int initIso2022(const char *, const char *, Iso2022Ptr);
 int mergeIso2022(Iso2022Ptr, Iso2022Ptr);
-void reportIso2022(Iso2022Ptr);
+void reportIso2022(const char *, Iso2022Ptr);
 void copyIn(Iso2022Ptr, int, unsigned char *, int);
 void copyOut(Iso2022Ptr, int, unsigned char *, unsigned);
 

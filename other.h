@@ -1,4 +1,4 @@
-/* $XTermId: other.h,v 1.10 2010/11/24 21:42:50 tom Exp $ */
+/* $XTermId: other.h,v 1.11 2010/11/26 01:58:15 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -25,11 +25,7 @@ THE SOFTWARE.
 #ifndef LUIT_OTHER_H
 #define LUIT_OTHER_H 1
 
-#include "config.h"		/* include this, for self-contained headers */
-
-#ifndef GCC_UNUSED
-#define GCC_UNUSED		/* ARGSUSED */
-#endif
+#include "luit.h"		/* include this, for self-contained headers */
 
 #include <luitconv.h>
 #include <trace.h>

@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.15 2010/11/23 15:52:37 tom Exp $
+.\" $XTermId: luit.man,v 1.17 2010/11/26 00:57:41 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -49,12 +49,21 @@ Display some summary help and quit.
 .TP
 .B \-list
 List the supported charsets and encodings, then quit.
+.IP
+To make scripting simpler,
+.B luit
+ignores spaces, underscores and ASCII minus-signs (dash) embedded in the names.
+.B Luit
+also ignores case when matching charset and encoding names.
 .TP
 .B \-V
 Print luit's version and quit.
 .TP
 .B \-v
 Be verbose.
+Repeating the option, e.g., "\fB\-v\ \-v\fP" makes it more verbose.
+.B Luit
+does not use \fIgetopt\fP, so "\fB\-vv\fP" does not work. 
 .TP
 .B \-c
 Function as a simple converter from standard input to standard output.

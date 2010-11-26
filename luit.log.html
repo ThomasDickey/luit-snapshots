@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.53 2010/11/24 22:21:45 tom Exp $
+  $XTermId: luit.log.html,v 1.60 2010/11/25 23:44:57 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -36,21 +36,46 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
 <p>
-2010/11/24 -
+<a id="t20101125">2010/11/25</a> -
 <ul>
+<li>make <code>-g0</code> and similar options actually work,
+by adding checks in <code>initIso2022</code>.
+<li>add messages for the repeated <code>-v</code> option, to
+show which parts of the font-encoding configuration fail,
+for troubleshooting.
 <li>add configure option <code>--disable-leaks</code>, etc.
 <li>add configure option <code>--enable-trace</code>.
-<li>add configure option <code>--enable-iconv</code>.
+<li>add configure option <code>--enable-iconv</code>, to use GNU iconv,
+which is far more portable than fontenc.
+<ul>
+<li>Initially, this supports single-byte encodings such as ISO-8859-x.
+<li>DEC special and technical character sets are supported via custom tables.
+</ul>
 <li>use static variables and functions consistently, where external linkage
 is not required.
+<li>updated configure script macros, e.g., to deprecate shell syntax
+no longer supported by bash.
 <li>modify manpage to use "misc" category for the miscellaneous Linux manpages
 cited in the "SEE ALSO" section,
 prompted by xorg change for 1.1.0 version.
-<li>updated configure script macros, e.g., to deprecate shell syntax
-no longer supported by bash.
+<p>
+Aside from that (and some cosmetic changes to C source,
+as well as providing a different configure script), 
+and omitting this change-log,
+the xorg 1.1.0 is the same as the <a href="#t20100601">2010/6/1 version</a>.
+Its release notes
+<a href="http://www.mail-archive.com/xorg-announce@lists.freedesktop.org/msg01206.html">state</a>:
+<blockquote>
+This release includes these changes from Thomas Dickey's luit-20100601:
+<ul>
+<li>add -alias option to allow override of locale.alias pathname.
+<li>improve fix waitForInput as suggested in Freedesktop #26383.
+<li>fix warnings from clang --analyze
+</ul>
+</blockquote>
 </ul>
 <p>
-2010/6/5 -
+<a id="t20100605">2010/6/5</a> -
 <ul>
 <li>fix a typo in ifdef for <code>&lt;sys/param.h&gt;</code> which
 made setuid feature not work properly for FreeBSD.
@@ -60,7 +85,7 @@ modified configure script to normally supply an rpath option
 if possible to simplify linkage to libraries in unusual places.
 </ul>
 <p>
-2010/6/1 -
+<a id="t20100601">2010/6/1</a> -
 <ul>
 <li>add makefile rules for generating pdf, etc., for manpage.
 <li>modify <code>minstall.sh</code> to update program name if the configure
@@ -82,7 +107,7 @@ initialization fixes.
 <li>update config.guess, config.sub
 </ul>
 <p>
-2009/10/14 -
+<a id="t20091014">2009/10/14</a> -
 <ul>
 <li>add <code>-V</code> version option.
 <li>work around defective implementation of gcc attribute warn_unused_return.
@@ -93,7 +118,7 @@ definitions for <code>O_NOCTTY</code> and <code>TIOCSCTTY</code>
 (adapted from patch by Yaakov Selkowitz).
 </ul>
 <p>
-2009/8/16 -
+<a id="t20090816">2009/8/16</a> -
 <ul>
 <li>reset connection to blocking mode on exit.
 <li>modify <code>poll</code>-flavor of <code>waitForInput</code> to also
@@ -130,17 +155,17 @@ CF_XOPEN_SOURCE
 CF_X_FONTENC
 <li>update configure utility scripts (config.guess, config.sub, install-sh, mkdirs.sh).
 </ul>
-2008/8/29 -
+<a id="t20080829">2008/8/29</a> -
 <ul>
 <li>add <code>-p</code> option, to make the wait-pipe workaround from XFree86
 optional.  The default behavior is the older one.
 </ul>
-2008/8/24 -
+<a id="t20080824">2008/8/24</a> -
 <ul>
 <li>add ifdef for <code>NO_LEAKS</code>, to check for memory leaks.
 Found none in luit; font encoding library does have leaks.
 </ul>
-2008/8/23 -
+<a id="t20080823">2008/8/23</a> -
 <ul>
 <li>update <code>minstall.sh</code> from xterm to fix possible scripting
 dependency upon locale.
@@ -149,7 +174,7 @@ to simplify use of line-drawing characters in <code>luit</code>.
 <li>improve default value for <code>locale.alias</code> pathname
 by checking in the more common X11 locations.
 </ul>
-2008/8/21 -
+<a id="t20080821">2008/8/21</a> -
 <ul>
 <li>use codepage change from luit 1.0.2
 <li>modify configure script so
@@ -177,7 +202,7 @@ CF_WITH_ZLIB,
 CF_XOPEN_SOURCE.
 <li>update configure utility scripts (config.guess, config.sub, install-sh, mkdirs.sh).
 </ul>
-2006/8/20 -
+<a id="t20080820">2006/8/20</a> -
 <ul>
 <li>import snapshot from XFree86 (last change 2005/2/9).
 <li>inspected Xorg sources, found no newer changes of note.

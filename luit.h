@@ -1,6 +1,7 @@
-/* $XTermId: luit.h,v 1.6 2010/11/23 15:03:58 tom Exp $ */
+/* $XTermId: luit.h,v 1.11 2010/11/26 01:59:11 tom Exp $ */
 
 /*
+Copyright 2010 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,10 +26,28 @@ THE SOFTWARE.
 #ifndef LUIT_LUIT_H
 #define LUIT_LUIT_H 1
 
+#include "config.h"
+
+#ifndef GCC_UNUSED
+#define GCC_UNUSED		/* ARGSUSED */
+#endif
+
+#ifndef GCC_PRINTFLIKE
+#define GCC_PRINTFLIKE(a,b)	/* nothing */
+#endif
+
 extern const char *locale_alias;
 extern int iso2022;
 extern int sevenbit;
 extern int ilog;
 extern int olog;
+extern int verbose;
+
+void Message(const char *f,...) GCC_PRINTFLIKE(1,2);
+void FatalError(const char *f,...) GCC_PRINTFLIKE(1,2);
+
+#define VERBOSE(level,params) if (verbose >= level) Message params
+
+#define NonNull(s) ((s) ? (s) : "<null>")
 
 #endif /* LUIT_LUIT_H */

@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.27 2010/11/24 20:59:13 tom Exp $ */
+/* $XTermId: luit.c,v 1.31 2010/11/26 01:55:49 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "config.h"
+#include "luit.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +39,6 @@ THE SOFTWARE.
 #include <signal.h>
 
 #include "version.h"
-#include "luit.h"
 #include "sys.h"
 #include "other.h"
 #include "parser.h"
@@ -62,7 +61,7 @@ const char *locale_alias = LOCALE_ALIAS_FILE;
 
 int ilog = -1;
 int olog = -1;
-static int verbose = 0;
+int verbose = 0;
 
 static volatile int sigwinch_queued = 0;
 static volatile int sigchld_queued = 0;
@@ -71,8 +70,8 @@ static int convert(int, int);
 static int condom(int, char **);
 static void child(char *, char *, char *const *);
 
-static void
-ErrorF(const char *f,...)
+void
+Message(const char *f,...)
 {
     va_list args;
     va_start(args, f);
@@ -80,7 +79,7 @@ ErrorF(const char *f,...)
     va_end(args);
 }
 
-static void
+void
 FatalError(const char *f,...)
 {
     va_list args;
@@ -93,8 +92,7 @@ FatalError(const char *f,...)
 static void
 help(void)
 {
-    fprintf(stderr,
-	    "luit\n"
+    Message("luit\n"
 	    "  [ -V ] [ -h ] [ -list ] [ -v ] [ -argv0 name ]\n"
 	    "  [ -gl gn ] [-gr gk] "
 	    "[ -g0 set ] [ -g1 set ] "
@@ -387,7 +385,7 @@ main(int argc, char **argv)
 
     l = setlocale(LC_ALL, "");
     if (!l)
-	ErrorF("Warning: couldn't set locale.\n");
+	Message("Warning: couldn't set locale.\n");
 
     inputState = allocIso2022();
     if (!inputState)
@@ -410,7 +408,7 @@ main(int argc, char **argv)
     }
 
     if (locale_name == NULL) {
-	ErrorF("Couldn't get locale name -- using C\n");
+	Message("Couldn't get locale name -- using C\n");
 	locale_name = "C";
     }
 
@@ -423,6 +421,9 @@ main(int argc, char **argv)
 	FatalError("Couldn't init output state\n");
 
     rc = mergeIso2022(inputState, outputState);
+    if (verbose) {
+	reportIso2022("Input", inputState);
+    }
     if (rc < 0)
 	FatalError("Couldn't init input state\n");
 
@@ -664,7 +665,7 @@ parent(int pid GCC_UNUSED, int pty)
     }
 
     if (verbose) {
-	reportIso2022(outputState);
+	reportIso2022("Output", outputState);
     }
     setup_io(pty);
 
