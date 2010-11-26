@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.19 2010/11/25 01:42:22 tom Exp $ */
+/* $XTermId: charset.c,v 1.26 2010/11/26 02:04:47 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -30,13 +30,10 @@ THE SOFTWARE.
 #include <ctype.h>
 
 #include "sys.h"
+#include "luit.h"
 #include "other.h"
 #include "charset.h"
 #include "parser.h"
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 static unsigned int
 IdentityRecode(unsigned int n, const CharsetRec * self GCC_UNUSED)
@@ -104,6 +101,11 @@ typedef struct _FontencCharset {
     FontMapPtr mapping;
     FontMapReversePtr reverse;
 } FontencCharsetRec, *FontencCharsetPtr;
+
+/*
+ * The "name" given is useful on the command-line.
+ * The "xlfd" column is the name given in the X font-encoding package.
+ */
 /* *INDENT-OFF* */
 static FontencCharsetRec fontencCharsets[] =
 {
@@ -152,6 +154,7 @@ static FontencCharsetRec fontencCharsets[] =
 
     {"CP 437",         T_128,   0,   "ibm-cp437",        0x80,   0, 0},
     {"CP 850",         T_128,   0,   "ibm-cp850",        0x80,   0, 0},
+    {"CP 852",         T_128,   0,   "ibm-cp852",        0x80,   0, 0},
     {"CP 866",         T_128,   0,   "ibm-cp866",        0x80,   0, 0},
 
     {"Big 5",          T_94192, 0,   "big5.eten-0",      0x8000, 0, 0},
@@ -198,8 +201,16 @@ static unsigned int
 FontencCharsetRecode(unsigned int n, const CharsetRec * self)
 {
     const FontencCharsetRec *fc = (const FontencCharsetRec *) (self->data);
+    unsigned result;
 
-    return MapCodeValue(n + fc->shift, fc->mapping);
+    result = MapCodeValue(n + fc->shift, fc->mapping);
+
+    TRACE(("FontencCharsetRecode %#x ->%#x%s\n",
+	   n,
+	   result,
+	   (n != result) ? " map" : ""));
+
+    return result;
 }
 
 static int
@@ -265,6 +276,7 @@ cacheCharset(CharsetPtr c)
 {
     c->next = cachedCharsets;
     cachedCharsets = c;
+    VERBOSE(2, ("cachedCharset '%s'\n", c->name));
 }
 
 static CharsetPtr
@@ -284,21 +296,25 @@ getFontencCharset(unsigned final, int type, const char *name)
 	fc++;
     }
 
-    if (!fc->name)
+    if (!fc->name) {
+	VERBOSE(2, ("...no match for '%s'\n", NonNull(name)));
 	return NULL;
+    }
 
-    c = malloc(sizeof(CharsetRec));
+    c = TypeCalloc(CharsetRec);
     if (c == NULL)
 	return NULL;
 
     mapping = LookupMapping(fc->xlfd);
     if (!mapping) {
+	VERBOSE(2, ("...lookup mapping %s (%s) failed\n", NonNull(name), fc->xlfd));
 	fc->type = T_FAILED;
 	return NULL;
     }
 
     reverse = LookupReverse(mapping);
     if (!reverse) {
+	VERBOSE(2, ("...lookup reverse %s failed\n", NonNull(name)));
 	fc->type = T_FAILED;
 	return NULL;
     }
@@ -334,11 +350,11 @@ getOtherCharset(const char *name)
     if (!fc->name)
 	return NULL;
 
-    c = malloc(sizeof(CharsetRec));
+    c = TypeCalloc(CharsetRec);
     if (c == NULL)
 	return NULL;
 
-    s = malloc(sizeof(OtherState));
+    s = TypeCalloc(OtherState);
     if (s == NULL) {
 	free(c);
 	return NULL;
@@ -367,14 +383,19 @@ getUnknownCharset(int type)
 {
     switch (type) {
     case T_94:
+	VERBOSE(2, ("using unknown 94-charset\n"));
 	return &Unknown94Charset;
     case T_96:
+	VERBOSE(2, ("using unknown 96-charset\n"));
 	return &Unknown96Charset;
     case T_9494:
+	VERBOSE(2, ("using unknown 9494-charset\n"));
 	return &Unknown9494Charset;
     case T_9696:
+	VERBOSE(2, ("using unknown 9696-charset\n"));
 	return &Unknown9696Charset;
     default:
+	VERBOSE(2, ("using unknown 94-charset\n"));
 	return &Unknown94Charset;
     }
 }
@@ -400,6 +421,7 @@ getCharsetByName(const char *name)
 {
     const CharsetRec *c;
 
+    VERBOSE(2, ("getCharsetByName(%s)\n", NonNull(name)));
     if (name == NULL)
 	return getUnknownCharset(T_94);
 

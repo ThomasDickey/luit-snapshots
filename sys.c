@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.26 2010/11/24 21:08:34 tom Exp $ */
+/* $XTermId: sys.c,v 1.27 2010/11/25 12:42:36 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "config.h"
+#include "luit.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -304,8 +304,7 @@ fix_pty_perms(char *line)
     if (s.st_uid != getuid() || s.st_gid != getgid()) {
 	rc = chown(line, getuid(), getgid());
 	if (rc < 0) {
-	    fprintf(stderr,
-		    "Warning: could not change ownership of tty -- "
+	    Message("Warning: could not change ownership of tty -- "
 		    "pty is insecure!\n");
 	    return 0;
 	}
@@ -313,8 +312,7 @@ fix_pty_perms(char *line)
     if ((s.st_mode & 0777) != (S_IRUSR | S_IWUSR | S_IWGRP)) {
 	rc = chmod(line, S_IRUSR | S_IWUSR | S_IWGRP);
 	if (rc < 0) {
-	    fprintf(stderr,
-		    "Warning: could not change permissions of tty -- "
+	    Message("Warning: could not change permissions of tty -- "
 		    "pty is insecure!\n");
 	    return 0;
 	}

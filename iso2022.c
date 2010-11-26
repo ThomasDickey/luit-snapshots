@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.22 2010/11/23 15:11:18 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.28 2010/11/26 01:58:31 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "config.h"
+#include "iso2022.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,10 +32,10 @@ THE SOFTWARE.
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
+
 #include "luit.h"
 #include "sys.h"
 #include "other.h"
-#include "iso2022.h"
 
 #define BUFFERED_INPUT_SIZE 4
 static unsigned char buffered_input[BUFFERED_INPUT_SIZE];
@@ -43,25 +43,6 @@ static int buffered_input_count = 0;
 
 static void terminateEsc(Iso2022Ptr, int, unsigned char *, unsigned);
 static void terminate(Iso2022Ptr, int);
-
-static void
-FatalError(const char *f,...)
-{
-    va_list args;
-    va_start(args, f);
-    vfprintf(stderr, f, args);
-    va_end(args);
-    ExitProgram(1);
-}
-
-static void
-ErrorF(const char *f,...)
-{
-    va_list args;
-    va_start(args, f);
-    vfprintf(stderr, f, args);
-    va_end(args);
-}
 
 #define OUTBUF_FREE(is, count) ((is)->outbuf_count + (count) <= BUFFER_SIZE)
 #define OUTBUF_MAKE_FREE(is, fd, count) \
@@ -178,7 +159,7 @@ Iso2022Ptr
 allocIso2022(void)
 {
     Iso2022Ptr is;
-    is = malloc(sizeof(Iso2022Rec));
+    is = TypeCalloc(Iso2022Rec);
     if (!is)
 	return NULL;
     is->glp = is->grp = NULL;
@@ -235,19 +216,22 @@ identifyCharset(Iso2022Ptr i, const CharsetRec * *p)
     }
 }
 
+#define G_name(n) ((i != 0 && i->g[n] != 0) ? NonNull(i->g[n]->name) : "unset")
+
 void
-reportIso2022(Iso2022Ptr i)
+reportIso2022(const char *tag, Iso2022Ptr i)
 {
+    Message("%s: ", tag);
     if (OTHER(i) != NULL) {
-	fprintf(stderr, "%s, non-ISO-2022 encoding.\n", OTHER(i)->name);
+	Message("%s, non-ISO-2022 encoding.\n", OTHER(i)->name);
 	return;
     }
-    fprintf(stderr, "G0 is %s, ", G0(i)->name);
-    fprintf(stderr, "G1 is %s, ", G1(i)->name);
-    fprintf(stderr, "G2 is %s, ", G2(i)->name);
-    fprintf(stderr, "G3 is %s.\n", G3(i)->name);
-    fprintf(stderr, "GL is G%d, ", identifyCharset(i, i->glp));
-    fprintf(stderr, "GR is G%d.\n", identifyCharset(i, i->grp));
+    Message("G0 is %s, ", G_name(0));
+    Message("G1 is %s, ", G_name(1));
+    Message("G2 is %s, ", G_name(2));
+    Message("G3 is %s.\n", G_name(3));
+    Message("GL is G%d, ", identifyCharset(i, i->glp));
+    Message("GR is G%d.\n", identifyCharset(i, i->grp));
 }
 
 int
@@ -264,40 +248,55 @@ initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
     rc = getLocaleState(locale, charset, &gl, &gr, &g0, &g1, &g2, &g3, &other);
     if (rc < 0) {
 	if (charset)
-	    ErrorF("Warning: couldn't find charset %s; "
-		   "using ISO 8859-1.\n", charset);
+	    Message("Warning: couldn't find charset %s; "
+		    "using ISO 8859-1.\n", charset);
 	else
-	    ErrorF("Warning: couldn't find charset data for locale %s; "
-		   "using ISO 8859-1.\n", locale);
+	    Message("Warning: couldn't find charset data for locale %s; "
+		    "using ISO 8859-1.\n", locale);
     }
 
-    if (g0)
-	G0(i) = g0;
-    else
-	G0(i) = getCharsetByName("ASCII");
+    if (G0(i) == NULL) {
+	if (g0)
+	    G0(i) = g0;
+	else
+	    G0(i) = getCharsetByName("ASCII");
+    }
 
-    if (g1)
-	G1(i) = g1;
-    else
-	G1(i) = getUnknownCharset(T_94);
+    if (G1(i) == NULL) {
+	if (g1)
+	    G1(i) = g1;
+	else
+	    G1(i) = getUnknownCharset(T_94);
+    }
 
-    if (g2)
-	G2(i) = g2;
-    else
-	G2(i) = getCharsetByName("ISO 8859-1");
+    if (G2(i) == NULL) {
+	if (g2)
+	    G2(i) = g2;
+	else
+	    G2(i) = getCharsetByName("ISO 8859-1");
+    }
 
-    if (g3)
-	G3(i) = g3;
-    else
-	G3(i) = getUnknownCharset(T_94);
+    if (G3(i) == NULL) {
+	if (g3)
+	    G3(i) = g3;
+	else
+	    G3(i) = getUnknownCharset(T_94);
+    }
 
-    if (other)
-	OTHER(i) = other;
-    else
-	OTHER(i) = NULL;
+    if (OTHER(i) == NULL) {
+	if (other)
+	    OTHER(i) = other;
+	else
+	    OTHER(i) = NULL;
+    }
 
-    i->glp = &i->g[gl];
-    i->grp = &i->g[gr];
+    if (i->glp == NULL) {
+	i->glp = &i->g[gl];
+    }
+
+    if (i->grp == NULL) {
+	i->grp = &i->g[gr];
+    }
     return 0;
 }
 

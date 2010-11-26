@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.12 2010/11/23 23:42:22 tom Exp $ */
+/* $XTermId: sys.h,v 1.13 2010/11/25 17:47:54 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -35,6 +35,8 @@ extern int ignore_unused;
 #endif /* gcc workarounds */
 
 #define TypeCalloc(type) (type *) calloc(1, sizeof(type))
+
+#define SizeOf(v)        (sizeof(v) / sizeof(v[0]))
 
 int waitForOutput(int fd);
 int waitForInput(int fd1, int fd2);
