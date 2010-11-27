@@ -1,5 +1,5 @@
 /*
- * $XTermId: trace.h,v 1.4 2010/11/26 01:54:40 tom Exp $
+ * $XTermId: trace.h,v 1.5 2010/11/26 20:29:20 tom Exp $
  *
  * Copyright 2010 by Thomas E. Dickey
  *
@@ -25,7 +25,7 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#include "luit.h"
+#include <luit.h>
 
 void Trace(const char *fmt,...) GCC_PRINTFLIKE(1,2);
 

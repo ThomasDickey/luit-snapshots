@@ -1,4 +1,4 @@
-/* $XTermId: other.c,v 1.12 2010/11/26 02:04:43 tom Exp $ */
+/* $XTermId: other.c,v 1.14 2010/11/26 20:48:29 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -22,12 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "other.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+#include <other.h>
 
 #define EURO_10646 0x20AC
 

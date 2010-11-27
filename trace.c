@@ -1,5 +1,5 @@
 /*
- * $XTermId: trace.c,v 1.1 2010/11/24 20:29:20 tom Exp $
+ * $XTermId: trace.c,v 1.3 2010/11/26 20:50:20 tom Exp $
  *
  * Copyright 2010 by Thomas E. Dickey
  *
@@ -22,11 +22,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-
-#include "trace.h"
+#include <trace.h>
 
 void
 Trace(const char *fmt,...)

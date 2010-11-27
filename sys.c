@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.27 2010/11/25 12:42:36 tom Exp $ */
+/* $XTermId: sys.c,v 1.29 2010/11/26 20:50:07 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -23,12 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "luit.h"
+#include <luit.h>
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -81,7 +77,7 @@ THE SOFTWARE.
 #endif
 #endif /* HAVE_OPENPTY */
 
-#include "sys.h"
+#include <sys.h>
 
 #ifdef USE_IGNORE_RC
 int ignore_unused;

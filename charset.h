@@ -1,4 +1,4 @@
-/* $XTermId: charset.h,v 1.8 2010/11/24 23:23:48 tom Exp $ */
+/* $XTermId: charset.h,v 1.9 2010/11/26 20:31:33 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -25,7 +25,7 @@ THE SOFTWARE.
 #ifndef LUIT_CHARSET_H
 #define LUIT_CHARSET_H 1
 
-#include "other.h"
+#include <other.h>
 
 #define T_FAILED 0
 #define T_94 1

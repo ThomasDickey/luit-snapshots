@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.28 2010/11/26 01:58:31 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.30 2010/11/26 20:49:21 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -22,20 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "iso2022.h"
+#include <iso2022.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
 
-#include "luit.h"
-#include "sys.h"
-#include "other.h"
+#include <sys.h>
 
 #define BUFFERED_INPUT_SIZE 4
 static unsigned char buffered_input[BUFFERED_INPUT_SIZE];
