@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.18 2010/11/26 01:29:30 tom Exp $
+ * $XTermId: luitconv.c,v 1.23 2010/11/27 01:02:11 tom Exp $
  *
  * Copyright 2010 by Thomas E. Dickey
  *
@@ -22,15 +22,12 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <iconv.h>
-#include <ctype.h>
-#include <string.h>		/* strcasecmp */
 
-#include "sys.h"
-#include "other.h"
+#include <other.h>
+
+#include <iconv.h>
+
+#include <sys.h>
 
 /*
  * This uses a similar approach to vile's support for wide/narrow locales.
@@ -47,6 +44,8 @@
 #define UCS_REPL        0xfffd
 #define DEC_REPL	0x2426	/* SYMBOL FOR SUBSTITUTE FORM TWO */
 
+#define MAX8		256
+
 #define NO_ICONV  (iconv_t)(-1)
 
 /******************************************************************************/
@@ -56,12 +55,20 @@ typedef struct {
     unsigned ucs;		/* corresponding Unicode value */
 } MappingData;
 
+typedef struct {
+    unsigned ucs;
+    unsigned ch;
+} ReverseData;
+
 typedef struct _LuitConv {
     struct _LuitConv *next;
     char *encoding_name;
     iconv_t iconv_desc;
-    /* UTF-8 equivalents of the 8-bit codes */
-    MappingData table_utf8[256];
+    /* internal tables for input/output */
+    MappingData table_utf8[MAX8];	/* UTF-8 equivalents of 8-bit codes */
+    ReverseData rev_index[MAX8];	/* reverse-index */
+    size_t len_index;		/* index length */
+    /* data expected by caller */
     FontMapRec mapping;
     FontMapReverseRec reverse;
 } LuitConv;
@@ -368,12 +375,23 @@ ConvToUTF8(UCHAR * target, UINT source, size_t limit)
 }
 
 /******************************************************************************/
+
+static int
+cmp_rindex(const void *a, const void *b)
+{
+    const ReverseData *p = (const ReverseData *) a;
+    const ReverseData *q = (const ReverseData *) b;
+    return (int) (p)->ucs - (int) (q)->ucs;
+}
+
 static void
 initializeIconvTable(LuitConv * data)
 {
-    int n;
+    unsigned n;
 
-    for (n = 0; n < 256; ++n) {
+    data->len_index = 0;
+
+    for (n = 0; n < MAX8; ++n) {
 	size_t converted;
 	char input[80];
 	ICONV_CONST char *ip = input;
@@ -409,6 +427,10 @@ initializeIconvTable(LuitConv * data)
 		   data->table_utf8[n].ucs,
 		   (int) data->table_utf8[n].size,
 		   data->table_utf8[n].text));
+
+	    data->rev_index[data->len_index].ucs = data->table_utf8[n].ucs;
+	    data->rev_index[data->len_index].ch = n;
+	    data->len_index++;
 	}
     }
 }
@@ -423,8 +445,28 @@ luitRecode(unsigned code, void *client_data GCC_UNUSED)
 static unsigned
 luitReverse(unsigned code, void *client_data GCC_UNUSED)
 {
-    TRACE(("luitReverse 0x%04X %p\n", code, client_data));
-    return code;
+    unsigned result = code;
+    LuitConv *data = (LuitConv *) client_data;
+
+    TRACE(("luitReverse 0x%04X %p\n", code, data));
+
+    if (data != 0) {
+	ReverseData *p;
+	ReverseData key;
+
+	key.ucs = (UINT) code;
+	p = (ReverseData *) bsearch(&key,
+				    data->rev_index,
+				    data->len_index,
+				    sizeof(data->rev_index[0]),
+				    cmp_rindex);
+
+	if (p != 0) {
+	    result = p->ch;
+	    TRACE(("...mapped %#x\n", result));
+	}
+    }
+    return result;
 }
 
 /*
@@ -477,14 +519,16 @@ initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
 
     TRACE(("initializing built-in '%s'\n", builtIn->name));
 
-    for (n = 0; n < 256; ++n) {
+    data->len_index = 0;
+
+    for (n = 0; n < MAX8; ++n) {
 	data->table_utf8[n].ucs = (builtIn->fill
 				   ? builtIn->fill
 				   : n);
     }
 
     for (n = 0; n < builtIn->length; ++n) {
-	if (builtIn->table[n].source < 256) {
+	if (builtIn->table[n].source < MAX8) {
 	    size_t j = builtIn->table[n].source;
 
 	    data->table_utf8[j].ucs = builtIn->table[n].target;
@@ -502,6 +546,10 @@ initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
 		   data->table_utf8[j].ucs,
 		   (int) data->table_utf8[j].size,
 		   data->table_utf8[j].text));
+
+	    data->rev_index[data->len_index].ucs = data->table_utf8[j].ucs;
+	    data->rev_index[data->len_index].ch = j;
+	    data->len_index++;
 	}
     }
 }
@@ -566,6 +614,7 @@ luitLookupMapping(const char *encoding_name)
 		initializeIconvTable(latest);
 		latest->mapping.recode = luitRecode;
 		latest->reverse.reverse = luitReverse;
+		latest->reverse.data = latest;
 		all_conversions = latest;
 
 		result = &(latest->mapping);
@@ -580,10 +629,19 @@ luitLookupMapping(const char *encoding_name)
 		initializeBuiltInTable(latest, builtIn);
 		latest->mapping.recode = luitRecode;
 		latest->reverse.reverse = luitReverse;
+		latest->reverse.data = latest;
 		all_conversions = latest;
 
 		result = &(latest->mapping);
 	    }
+	}
+
+	/* sort the reverse-index, to allow using bsearch */
+	if (result != 0) {
+	    qsort(latest->rev_index,
+		  latest->len_index,
+		  sizeof(latest->rev_index[0]),
+		  cmp_rindex);
 	}
     }
 
@@ -615,7 +673,7 @@ luitMapCodeValue(unsigned code, FontMapPtr fontmap_ptr)
     LuitConv *search;
 
     result = code;
-    if (code < 256) {
+    if (code < MAX8) {
 	for (search = all_conversions; search != 0; search = search->next) {
 	    if (&(search->mapping) == fontmap_ptr) {
 		result = search->table_utf8[code].ucs;
@@ -648,7 +706,7 @@ luitDestroyReverse(FontMapReversePtr reverse)
 	    free(p->encoding_name);
 	    iconv_close(p->iconv_desc);
 
-	    for (n = 0; n < 256; ++n) {
+	    for (n = 0; n < MAX8; ++n) {
 		if (p->table_utf8[n].text) {
 		    free(p->table_utf8[n].text);
 		}

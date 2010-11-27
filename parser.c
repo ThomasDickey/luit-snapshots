@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.10 2010/11/26 01:57:51 tom Exp $ */
+/* $XTermId: parser.c,v 1.12 2010/11/26 20:49:56 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -22,14 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "luit.h"
+#include <luit.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "parser.h"
-#include "sys.h"
+#include <parser.h>
+#include <sys.h>
 
 static char keyword[MAX_KEYWORD_LENGTH];
 

@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.31 2010/11/26 01:55:49 tom Exp $ */
+/* $XTermId: luit.c,v 1.33 2010/11/26 20:49:36 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -23,26 +23,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "luit.h"
+#include <luit.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <locale.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
-#include <stdarg.h>
 #include <sys/ioctl.h>
 #include <signal.h>
 
-#include "version.h"
-#include "sys.h"
-#include "other.h"
-#include "parser.h"
-#include "iso2022.h"
+#include <version.h>
+#include <sys.h>
+#include <parser.h>
+#include <iso2022.h>
 
 static void parent(int, int);
 

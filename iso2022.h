@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.h,v 1.15 2010/11/25 13:09:08 tom Exp $ */
+/* $XTermId: iso2022.h,v 1.16 2010/11/26 20:30:49 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -26,9 +26,9 @@ THE SOFTWARE.
 #ifndef LUIT_ISO2022_H
 #define LUIT_ISO2022_H 1
 
-#include <sys/types.h>
+#include <charset.h>
 
-#include "charset.h"
+#include <sys/types.h>
 
 #define ESC    0x1B
 #define CSI    0x9B

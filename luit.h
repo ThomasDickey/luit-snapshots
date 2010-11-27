@@ -1,4 +1,4 @@
-/* $XTermId: luit.h,v 1.11 2010/11/26 01:59:11 tom Exp $ */
+/* $XTermId: luit.h,v 1.13 2010/11/26 20:49:13 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -26,7 +26,15 @@ THE SOFTWARE.
 #ifndef LUIT_LUIT_H
 #define LUIT_LUIT_H 1
 
-#include "config.h"
+#include <config.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <assert.h>
+#include <stdarg.h>
+#include <sys/types.h>
 
 #ifndef GCC_UNUSED
 #define GCC_UNUSED		/* ARGSUSED */

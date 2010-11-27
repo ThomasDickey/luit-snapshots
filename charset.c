@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.26 2010/11/26 02:04:47 tom Exp $ */
+/* $XTermId: charset.c,v 1.30 2010/11/26 21:08:22 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -22,60 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "config.h"
+#include <charset.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-
-#include "sys.h"
-#include "luit.h"
-#include "other.h"
-#include "charset.h"
-#include "parser.h"
+#include <sys.h>
+#include <parser.h>
 
 static unsigned int
 IdentityRecode(unsigned int n, const CharsetRec * self GCC_UNUSED)
 {
     return n;
 }
-
-#ifdef UNUSED
-static int
-IdentityReverse(unsigned int n, const CharsetRec * self)
-{
-#define IS_GL(n) ((n) >= 0x20 && (n) < 0x80)
-    switch (self->type) {
-    case T_94:
-    case T_96:
-	if (IS_GL(n))
-	    return n;
-	else
-	    return -1;
-    case T_128:
-	if (n < 0x80)
-	    return n;
-	else
-	    return -1;
-    case T_9494:
-    case T_9696:
-	if (IS_GL(n >> 8) && IS_GL(n & 0xFF))
-	    return n;
-	else
-	    return -1;
-    case T_94192:
-	if (IS_GL(n >> 8) && IS_GL(n & 0x7F))
-	    return n;
-	else
-	    return -1;
-    default:
-	abort();
-	/* NOTREACHED */
-    }
-#undef IS_GL
-}
-#endif
 
 static int
 NullReverse(unsigned int n GCC_UNUSED, const CharsetRec * self GCC_UNUSED)
@@ -218,42 +174,45 @@ FontencCharsetReverse(unsigned int i, const CharsetRec * self)
 {
     const FontencCharsetRec *fc = (const FontencCharsetRec *) (self->data);
     unsigned n;
+    int result = -1;
 
     n = fc->reverse->reverse(i, fc->reverse->data);
-    if (n == 0 || n < fc->shift)
-	return -1;
-    else
+    if (n != 0 && n >= fc->shift) {
 	n -= fc->shift;
 
 #define IS_GL(n) ((n) >= 0x20 && (n) < 0x80)
-    switch (self->type) {
-    case T_94:
-    case T_96:
-	if (IS_GL(n))
-	    return (int) n;
-	else
-	    return -1;
-    case T_128:
-	if (n < 0x80)
-	    return (int) n;
-	else
-	    return -1;
-    case T_9494:
-    case T_9696:
-	if (IS_GL(n >> 8) && IS_GL(n & 0xFF))
-	    return (int) n;
-	else
-	    return -1;
-    case T_94192:
-	if (IS_GL(n >> 8) && IS_GL(n & 0x7F))
-	    return (int) n;
-	else
-	    return -1;
-    default:
-	abort();
-	/* NOTREACHED */
-    }
+	switch (self->type) {
+	case T_94:
+	case T_96:
+	    if (IS_GL(n))
+		result = (int) n;
+	    break;
+	case T_128:
+	    if (n < 0x80)
+		result = (int) n;
+	    break;
+	case T_9494:
+	case T_9696:
+	    if (IS_GL(n >> 8) && IS_GL(n & 0xFF))
+		result = (int) n;
+	    break;
+	case T_94192:
+	    if (IS_GL(n >> 8) && IS_GL(n & 0x7F))
+		result = (int) n;
+	    break;
+	default:
+	    abort();
+	    /* NOTREACHED */
+	}
 #undef IS_GL
+    }
+
+    TRACE(("FontencCharsetReverse %#x ->%#x%s\n",
+	   i,
+	   result,
+	   ((int) i != result) ? " map" : ""));
+
+    return result;
 }
 
 static CharsetPtr cachedCharsets = NULL;
