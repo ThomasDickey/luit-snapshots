@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.13 2010/11/25 17:47:54 tom Exp $ */
+/* $XTermId: sys.h,v 1.14 2010/11/28 20:14:09 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -34,7 +34,7 @@ extern int ignore_unused;
 #define IGNORE_RC(func) (void) func
 #endif /* gcc workarounds */
 
-#define TypeCalloc(type) (type *) calloc(1, sizeof(type))
+#define TypeCalloc(type) (type *) calloc((size_t) 1, sizeof(type))
 
 #define SizeOf(v)        (sizeof(v) / sizeof(v[0]))
 

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.18 2010/11/23 18:47:31 tom Exp $
+## $XTermId: Makefile.in,v 1.19 2010/11/28 23:56:36 tom Exp $
 ##
 ## Copyright 2006-2009,2010 by Thomas E. Dickey
 ##
@@ -109,7 +109,7 @@ all :	$(PROGRAMS)
 $(OBJS) : $(HDRS)
 
 luit$x : $(OBJS)
-	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 actual_luit  = `echo luit|    sed '$(transform)'`
 binary_luit  = $(actual_luit)$x

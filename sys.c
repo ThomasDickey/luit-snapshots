@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.29 2010/11/26 20:50:07 tom Exp $ */
+/* $XTermId: sys.c,v 1.30 2010/11/28 20:30:24 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -103,7 +103,7 @@ waitForOutput(int fd)
     pfd[0].events = POLLOUT;
     pfd[0].revents = 0;
 
-    rc = poll(pfd, 1, -1);
+    rc = poll(pfd, (nfds_t) 1, -1);
     if (rc < 0)
 	ret = -1;
     else if (pfd[0].revents & (POLLOUT | POLLERR | POLLHUP))
@@ -142,7 +142,7 @@ waitForInput(int fd1, int fd2)
     pfd[0].events = pfd[1].events = POLLIN;
     pfd[0].revents = pfd[1].revents = 0;
 
-    rc = poll(pfd, 2, -1);
+    rc = poll(pfd, (nfds_t) 2, -1);
     if (rc < 0) {
 	ret = -1;
     } else {

@@ -1,6 +1,6 @@
-bluit (20101126) unstable; urgency=low
+bluit (20101128) unstable; urgency=low
 
-  * cleanup
+  * add support for iconv, as a configure alternative to fontenc.
 
  -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 23 Nov 2010 09:25:48 -0500
 

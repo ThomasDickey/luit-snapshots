@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.27 2010/11/24 22:20:42 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.29 2010/11/28 21:28:35 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -584,6 +584,39 @@ fi
 
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_CHECK_TYPE version: 2 updated: 2008/01/06 14:56:47
+dnl -------------
+dnl Add a 3rd parameter to AC_CHECK_TYPE, working around autoconf 2.5x's
+dnl deliberate incompatibility.
+dnl	$1 = name of type to check for
+dnl	$2 = default type
+dnl	$3 = additional #include's and related preprocessor lines.
+ifdef([m4_HAS_AC_CT_FOURARGS], [m4_undefine([m4_HAS_AC_CT_FOURARGS])])dnl
+ifelse(m4_PACKAGE_VERSION, [fnord_acsalt], [],
+[ifdef([m4_version_compare],[m4_define([m4_HAS_AC_CT_FOURARGS])])])dnl
+AC_DEFUN([CF_CHECK_TYPE],
+[
+ifdef([m4_HAS_AC_CT_FOURARGS],[
+	AC_CHECK_TYPE([$1],ac_cv_type_$1=yes,ac_cv_type_$1=no,[$3])
+	],[
+	AC_MSG_CHECKING(for $1)
+	AC_TRY_COMPILE([
+#if STDC_HEADERS
+#include <stdlib.h>
+#include <stddef.h>
+#endif
+$3
+],[
+	static $1 dummy; if (sizeof(dummy)) return 0; else return 1;],
+	ac_cv_type_$1=yes,
+	ac_cv_type_$1=no)
+	AC_MSG_RESULT($ac_cv_type_$1)
+])dnl
+if test $ac_cv_type_$1 = no; then
+	AC_DEFINE($1, $2)
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_DISABLE_ECHO version: 11 updated: 2009/12/13 13:16:57
 dnl ---------------
 dnl You can always use "make -n" to see the actual options, but it's hard to
@@ -663,14 +696,14 @@ if test "$cf_disable_rpath_hack" = no ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_ENABLE_TRACE version: 1 updated: 2010/07/24 08:23:48
+dnl CF_ENABLE_TRACE version: 2 updated: 2010/11/28 16:26:20
 dnl ---------------
 AC_DEFUN([CF_ENABLE_TRACE],[
 AC_MSG_CHECKING(if you want to enable debugging trace)
 CF_ARG_ENABLE(trace,
 	[  --enable-trace          test: turn on debug-tracing],
 	[with_trace=yes],
-	[with_trace=])
+	[with_trace=no])
 AC_MSG_RESULT($with_trace)
 if test "$with_trace" = "yes"
 then
