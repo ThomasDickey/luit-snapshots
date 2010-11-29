@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.23 2010/11/27 01:02:11 tom Exp $
+ * $XTermId: luitconv.c,v 1.24 2010/11/28 20:54:51 tom Exp $
  *
  * Copyright 2010 by Thomas E. Dickey
  *
@@ -524,7 +524,7 @@ initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
     for (n = 0; n < MAX8; ++n) {
 	data->table_utf8[n].ucs = (builtIn->fill
 				   ? builtIn->fill
-				   : n);
+				   : (unsigned) n);
     }
 
     for (n = 0; n < builtIn->length; ++n) {
@@ -548,7 +548,7 @@ initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
 		   data->table_utf8[j].text));
 
 	    data->rev_index[data->len_index].ucs = data->table_utf8[j].ucs;
-	    data->rev_index[data->len_index].ch = j;
+	    data->rev_index[data->len_index].ch = (unsigned) j;
 	    data->len_index++;
 	}
     }

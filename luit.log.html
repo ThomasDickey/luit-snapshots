@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.62 2010/11/26 20:52:57 tom Exp $
+  $XTermId: luit.log.html,v 1.64 2010/11/28 23:58:13 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -36,8 +36,10 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
 <p>
-<a id="t20101126">2010/11/26</a> -
+<a id="t20101128">2010/11/28</a> -
 <ul>
+<li>use <code>plink.sh</code> script from xterm to reduce unneeded library
+dependencies, e.g., from fontenc's buggy package script.
 <li>eliminate quoted- and duplicate-includes.
 <li>make <code>-g0</code> and similar options actually work,
 by adding checks in <code>initIso2022</code>.

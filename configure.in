@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.26 2010/11/24 22:20:57 tom Exp $
+dnl $XTermId: configure.in,v 1.29 2010/11/28 22:43:10 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -86,6 +86,13 @@ select \
 strdup \
 )
 
+CF_CHECK_TYPE([nfds_t],[unsigned long],[
+#include <sys/types.h>
+#ifdef HAVE_SYS_POLL_H
+#include <sys/poll.h>
+#endif
+])
+
 if test "x$ac_cv_func_grantpt" != "xyes" ; then
 	AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])
 	if test "$cf_have_openpty" = yes ; then
@@ -124,6 +131,7 @@ then
 	fi
 	AM_ICONV
 	AC_DEFINE(USE_ICONV)
+	CF_ADD_LIBS($LIBICONV)
 	EXTRAOBJS="$EXTRAOBJS luitconv\$o"
 elif test "$with_fontenc" != no
 then
