@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 2006-2009,2010 by Thomas E. Dickey                              *
+ * Copyright 2006-2010,2011 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.64 2010/11/28 23:58:13 tom Exp $
+  $XTermId: luit.log.html,v 1.69 2011/10/23 21:07:35 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -30,12 +30,32 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright 2006-2009,2010 by <A
+Copyright 2006-2010,2011 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
 <p>
+<a id="t20111023">2011/10/23</a> -
+<ul>
+<li>improve configure script so that it does not error-out if fontenc is
+unavailable, using iconv instead.
+<li>bump version to 1.2, noting xorg hackers having marked 
+(with only cosmetic changes) the <a href="#t20100601">2010/6/1</a>
+snapshot as "1.1.0".
+<li>add/use configure check for <code>posix_openpt</code>,
+prompted by FreeBSD ports/161480.
+<li>updated configure script macros:
+CF_ANSI_CC_CHECK
+CF_DISABLE_RPATH_HACK
+CF_LD_RPATH_OPT
+CF_PKG_CONFIG
+CF_RPATH_HACK
+CF_SVR4
+CF_WITH_ZLIB
+CF_XOPEN_SOURCE
+<li>update config.guess, config.sub
+</ul>
 <a id="t20101128">2010/11/28</a> -
 <ul>
 <li>use <code>plink.sh</code> script from xterm to reduce unneeded library

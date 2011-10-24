@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.30 2010/11/28 20:30:24 tom Exp $ */
+/* $XTermId: sys.c,v 1.34 2011/10/21 10:45:14 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -316,6 +316,15 @@ fix_pty_perms(char *line)
     return 1;
 }
 
+/*
+ * APUE2 notes that some systems lack posix_openpt(), which should be provided
+ * when grantpt() is available.
+ */
+#ifndef HAVE_POSIX_OPENPT
+#undef posix_openpt
+#define posix_openpt(mode) open("/dev/ptmx", mode)
+#endif
+
 int
 allocatePty(int *pty_return, char **line_return)
 {
@@ -330,7 +339,7 @@ allocatePty(int *pty_return, char **line_return)
 #if defined(HAVE_GRANTPT)
     int rc;
 
-    pty = open("/dev/ptmx", O_RDWR);
+    pty = posix_openpt(O_RDWR);
     if (pty < 0)
 	goto bsd;
 

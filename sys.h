@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.14 2010/11/28 20:14:09 tom Exp $ */
+/* $XTermId: sys.h,v 1.15 2011/10/20 21:38:38 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -55,7 +55,7 @@ char *strmalloc(const char *value);
 void luit_leaks(void);
 void charset_leaks(void);
 void iso2022_leaks(void);
-void ExitProgram(int code);
+void ExitProgram(int code) GCC_NORETURN;
 #else
 #define ExitProgram(code) exit(code)
 #endif
