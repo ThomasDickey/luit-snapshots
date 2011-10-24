@@ -1,4 +1,4 @@
-/* $XTermId: luit.h,v 1.13 2010/11/26 20:49:13 tom Exp $ */
+/* $XTermId: luit.h,v 1.15 2011/10/21 10:16:07 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -40,6 +40,10 @@ THE SOFTWARE.
 #define GCC_UNUSED		/* ARGSUSED */
 #endif
 
+#ifndef GCC_NORETURN
+#define GCC_NORETURN		/* nothing */
+#endif
+
 #ifndef GCC_PRINTFLIKE
 #define GCC_PRINTFLIKE(a,b)	/* nothing */
 #endif
@@ -52,7 +56,7 @@ extern int olog;
 extern int verbose;
 
 void Message(const char *f,...) GCC_PRINTFLIKE(1,2);
-void FatalError(const char *f,...) GCC_PRINTFLIKE(1,2);
+void FatalError(const char *f,...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
 
 #define VERBOSE(level,params) if (verbose >= level) Message params
 
