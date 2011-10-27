@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.35 2011/10/23 23:46:31 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.37 2011/10/26 08:41:20 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -95,6 +95,29 @@ size_t iconv();
   fi
 
   AC_SUBST(LIBICONV)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl AM_LANGINFO_CODESET version: 3 updated: 2002/10/27 23:21:42
+dnl -------------------
+dnl Inserted as requested by gettext 0.10.40
+dnl File from /usr/share/aclocal
+dnl codeset.m4
+dnl ====================
+dnl serial AM1
+dnl
+dnl From Bruno Haible.
+AC_DEFUN([AM_LANGINFO_CODESET],
+[
+  AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
+    [AC_TRY_LINK([#include <langinfo.h>],
+      [char* cs = nl_langinfo(CODESET);],
+      am_cv_langinfo_codeset=yes,
+      am_cv_langinfo_codeset=no)
+    ])
+  if test $am_cv_langinfo_codeset = yes; then
+    AC_DEFINE(HAVE_LANGINFO_CODESET, 1,
+      [Define if you have <langinfo.h> and nl_langinfo(CODESET).])
+  fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ACVERSION_CHECK version: 2 updated: 2011/05/08 11:22:03
@@ -2370,7 +2393,7 @@ if test "$with_dmalloc" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_LOCALE_ALIAS version: 5 updated: 2010/06/01 20:06:13
+dnl CF_WITH_LOCALE_ALIAS version: 6 updated: 2011/10/26 04:23:30
 dnl --------------------
 dnl Configure option to specify the location of locale.alias, for programs that
 dnl must read it directly.
@@ -2385,30 +2408,30 @@ AC_ARG_WITH(locale-alias,
 CF_VERBOSE()
 case "x$LOCALE_ALIAS_FILE" in #(vi
 xauto|xyes|xno)
-    LOCALE_ALIAS_FILE=unknown
-    for cf_path in \
+	LOCALE_ALIAS_FILE=unknown
+	for cf_path in \
 		/usr/openwin/lib/locale \
-        /usr/lib/X11/locale \
-        /usr/share/X11/locale \
-        /usr/X11R7/lib/X11/locale \
-        /usr/X11R6/lib/X11/locale \
-        /usr/X11R5/lib/X11/locale \
-        /usr/X11/lib/X11/locale \
-        /usr/X11/share/X11/locale
-        do
-            cf_alias_file=$cf_path/locale.alias
-            CF_VERBOSE(testing $cf_alias_file)
-            if test -f $cf_alias_file ; then
-                LOCALE_ALIAS_FILE=$cf_alias_file
-                break
-            fi
-        done
-    ;; #(vi
+		/usr/lib/X11/locale \
+		/usr/share/X11/locale \
+		/usr/X11R7/lib/X11/locale \
+		/usr/X11R6/lib/X11/locale \
+		/usr/X11R5/lib/X11/locale \
+		/usr/X11/lib/X11/locale \
+		/usr/X11/share/X11/locale
+		do
+			cf_alias_file=$cf_path/locale.alias
+			CF_VERBOSE(testing $cf_alias_file)
+			if test -f $cf_alias_file ; then
+				LOCALE_ALIAS_FILE=$cf_alias_file
+				break
+			fi
+		done
+	;; #(vi
 *)
-    if test ! -f "$LOCALE_ALIAS_FILE" ; then
-        AC_MSG_WARN(Alias file not found: $LOCALE_ALIAS_FILE)
-    fi
-    ;;
+	if test ! -f "$LOCALE_ALIAS_FILE" ; then
+		AC_MSG_WARN(Alias file not found: $LOCALE_ALIAS_FILE)
+	fi
+	;;
 esac
 AC_MSG_RESULT($LOCALE_ALIAS_FILE)
 AC_SUBST(LOCALE_ALIAS_FILE)

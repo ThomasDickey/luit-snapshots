@@ -1,5 +1,5 @@
 /*
- * $XTermId: trace.h,v 1.5 2010/11/26 20:29:20 tom Exp $
+ * $XTermId: trace.h,v 1.6 2011/10/24 21:17:59 tom Exp $
  *
  * Copyright 2010 by Thomas E. Dickey
  *
@@ -40,5 +40,7 @@ void Trace(const char *fmt,...) GCC_PRINTFLIKE(1,2);
 #define TRACE(params)		/* nothing */
 #define TRACE2(params)		/* nothing */
 #endif
+
+#define TRACE_ERR(msg) TRACE((msg ": %s\n", strerror(errno)))
 
 #endif /* TRACE_H */

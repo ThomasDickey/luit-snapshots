@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.69 2011/10/23 21:07:35 tom Exp $
+  $XTermId: luit.log.html,v 1.74 2011/10/27 00:58:42 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -36,8 +36,20 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
 <p>
-<a id="t20111023">2011/10/23</a> -
+<a id="t20111026">2011/10/26</a> -
 <ul>
+<li>add entries to the locale-charset table to make it possible to
+define custom locales with legacy charsets
+(reported by Andrey Ivanov,
+also reported in Freedesktop #41857).
+<li>modify the lookup by locale charset to help match results from
+<code>nl_langinfo(CODESET)</code> by mapping commonly used prefixes
+into the prefixes used by luit.
+<li>check for, and use <code>nl_langinfo(CODESET)</code> to augment
+X's <code>locale.aliases</code> file for determining the encoding to use.
+<li>workaround limitation in
+copying terminal settings on Solaris from original tty to pty.
+<li>add /usr/openwin/lib/locale to search-list of locale.alias for Solaris 10.
 <li>improve configure script so that it does not error-out if fontenc is
 unavailable, using iconv instead.
 <li>bump version to 1.2, noting xorg hackers having marked 

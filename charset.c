@@ -1,6 +1,7 @@
-/* $XTermId: charset.c,v 1.30 2010/11/26 21:08:22 tom Exp $ */
+/* $XTermId: charset.c,v 1.32 2011/10/27 00:06:10 tom Exp $ */
 
 /*
+Copyright 2010,2011 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -125,21 +126,40 @@ typedef struct _OtherCharset {
     unsigned int (*reverse) (unsigned int, OtherStatePtr);
     int (*stack) (unsigned, OtherStatePtr);
 } OtherCharsetRec, *OtherCharsetPtr;
-
+/* *INDENT-OFF* */
 static const OtherCharsetRec otherCharsets[] =
 {
-    {"GBK", init_gbk, mapping_gbk, reverse_gbk, stack_gbk},
-    {"UTF-8", init_utf8, mapping_utf8, reverse_utf8, stack_utf8},
-    {"SJIS", init_sjis, mapping_sjis, reverse_sjis, stack_sjis},
-    {"BIG5-HKSCS", init_hkscs, mapping_hkscs, reverse_hkscs, stack_hkscs},
-    {"GB18030", init_gb18030, mapping_gb18030, reverse_gb18030, stack_gb18030},
+    {"GBK",        init_gbk,     mapping_gbk,     reverse_gbk,     stack_gbk},
+    {"UTF-8",      init_utf8,    mapping_utf8,    reverse_utf8,    stack_utf8},
+    {"SJIS",       init_sjis,    mapping_sjis,    reverse_sjis,    stack_sjis},
+    {"BIG5-HKSCS", init_hkscs,   mapping_hkscs,   reverse_hkscs,   stack_hkscs},
+    {"GB18030",    init_gb18030, mapping_gb18030, reverse_gb18030, stack_gb18030},
     {0, 0, 0, 0, 0}
 };
+/* *INDENT-ON* */
 
 static int
 compare(const char *s, const char *t)
 {
     while (*s || *t) {
+	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
+	    s++;
+	else if (*t && (isspace(UChar(*t)) || *t == '-' || *t == '_'))
+	    t++;
+	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
+	    s++;
+	    t++;
+	} else
+	    return 1;
+    }
+    return 0;
+}
+
+static int
+compare1(const char *s, const char *t, size_t n)
+{
+    while (n && (*s || *t)) {
+	--n;
 	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
 	    s++;
 	else if (*t && (isspace(UChar(*t)) || *t == '-' || *t == '_'))
@@ -403,6 +423,7 @@ static const LocaleCharsetRec localeCharsets[] =
 {
     {"C",          0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
     {"POSIX",      0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
+
     {"ISO8859-1",  0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
     {"ISO8859-2",  0, 2, "ASCII", NULL,         "ISO 8859-2",    NULL,         NULL},
     {"ISO8859-3",  0, 2, "ASCII", NULL,         "ISO 8859-3",    NULL,         NULL},
@@ -419,20 +440,32 @@ static const LocaleCharsetRec localeCharsets[] =
     {"ISO8859-14", 0, 2, "ASCII", NULL,         "ISO 8859-14",   NULL,         NULL},
     {"ISO8859-15", 0, 2, "ASCII", NULL,         "ISO 8859-15",   NULL,         NULL},
     {"ISO8859-16", 0, 2, "ASCII", NULL,         "ISO 8859-16",   NULL,         NULL},
+
     {"KOI8-R",     0, 2, "ASCII", NULL,         "KOI8-R",        NULL,         NULL},
+    {"KOI8-U",     0, 2, "ASCII", NULL,         "KOI8-U",        NULL,         NULL},
+    {"KOI8-RU",    0, 2, "ASCII", NULL,         "KOI8-RU",       NULL,         NULL},
+    {"CP1250",     0, 2, "ASCII", NULL,         "CP 1250",       NULL,         NULL},
     {"CP1251",     0, 2, "ASCII", NULL,         "CP 1251",       NULL,         NULL},
+    {"CP1252",     0, 2, "ASCII", NULL,         "CP 1252",       NULL,         NULL},
+    {"CP437",      0, 2, "ASCII", NULL,         "CP 437",        NULL,         NULL},
+    {"CP850",      0, 2, "ASCII", NULL,         "CP 850",        NULL,         NULL},
+    {"CP852",      0, 2, "ASCII", NULL,         "CP 852",        NULL,         NULL},
+    {"CP866",      0, 2, "ASCII", NULL,         "CP 866",        NULL,         NULL},
     {"TCVN",       0, 2, "ASCII", NULL,         "TCVN",          NULL,         NULL},
+
     {"eucCN",      0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
     {"GB2312",     0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
     {"eucJP",      0, 1, "ASCII", "JIS X 0208", "JIS X 0201:GR", "JIS X 0212", NULL},
     {"eucKR",      0, 1, "ASCII", "KSC 5601",   NULL,            NULL,         NULL},
     {"eucCN",      0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
     {"Big5",       0, 1, "ASCII", "Big 5",      NULL,            NULL,         NULL},
+
     {"gbk",        0, 1, NULL,    NULL,         NULL,            NULL,         "GBK"},
     {"UTF-8",      0, 1, NULL,    NULL,         NULL,            NULL,         "UTF-8"},
     {"SJIS",       0, 1, NULL,    NULL,         NULL,            NULL,         "SJIS"},
     {"Big5-HKSCS", 0, 1, NULL,    NULL,         NULL,            NULL,         "BIG5-HKSCS"},
     {"gb18030",    0, 1, NULL,    NULL,         NULL,            NULL,         "GB18030"},
+
     {0,            0, 0, 0,       0,            0,               0,            0}
 };
 /* *INDENT-ON* */
@@ -466,6 +499,62 @@ reportCharsets(void)
 	       q->name, q->final ? " (ISO 2022)" : "");
 }
 
+static const LocaleCharsetRec *
+findLocaleCharset(const char *charset)
+{
+    const LocaleCharsetRec *p;
+
+    for (p = localeCharsets; p->name; p++) {
+	if (compare(p->name, charset) == 0)
+	    break;
+    }
+    return p->name ? p : 0;
+}
+
+static const LocaleCharsetRec *
+matchLocaleCharset(const char *charset)
+{
+    static const struct {
+	const char *source;
+	const char *target;
+	size_t source_len;
+	size_t target_len;
+    } prefixes[] = {
+#define DATA(source, target) { source, target, sizeof(source)-1, sizeof(target)-1 }
+	DATA("ISO-", "ISO "),
+	    DATA("IBM", "CP "),
+	    DATA("CP-", "CP "),
+#undef DATA
+    };
+
+    const LocaleCharsetRec *p = 0;
+
+    if (*charset != '\0') {
+	p = findLocaleCharset(charset);
+
+	if (p == 0) {
+	    size_t have = strlen(charset);
+	    size_t n;
+	    char target[MAX_KEYWORD_LENGTH + 8];
+
+	    for (n = 0; n < SizeOf(prefixes); ++n) {
+		if (have > prefixes[n].source_len
+		    && !compare1(charset,
+				 prefixes[n].source,
+				 prefixes[n].source_len)) {
+		    strcpy(target, prefixes[n].target);
+		    strcpy(target + prefixes[n].target_len,
+			   charset + prefixes[n].source_len);
+		    if ((p = findLocaleCharset(target)) != 0) {
+			break;
+		    }
+		}
+	    }
+	}
+    }
+    return p;
+}
+
 int
 getLocaleState(const char *locale,
 	       const char *charset,
@@ -491,15 +580,7 @@ getLocaleState(const char *locale,
 	    charset = resolved;
     }
 
-    for (p = localeCharsets; p->name; p++) {
-	if (compare(p->name, charset) == 0)
-	    break;
-    }
-
-    if (p->name == NULL) {
-	result = -1;
-    } else {
-
+    if ((p = matchLocaleCharset(charset)) != 0) {
 	*gl_return = p->gl;
 	*gr_return = p->gr;
 	*g0_return = getCharsetByName(p->g0);
@@ -510,7 +591,10 @@ getLocaleState(const char *locale,
 	    *other_return = getCharsetByName(p->other);
 	else
 	    *other_return = NULL;
+    } else {
+	result = -1;
     }
+
     if (resolved != 0)
 	free(resolved);
     return result;
