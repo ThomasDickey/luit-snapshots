@@ -1,3 +1,10 @@
+bluit (20111026) unstable; urgency=low
+
+  * improve ability to use custom-defined locales
+  * portability fixes
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Fri, 21 Oct 2011 07:47:33 -0400
+
 bluit (20101128) unstable; urgency=low
 
   * add support for iconv, as a configure alternative to fontenc.

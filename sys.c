@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.34 2011/10/21 10:45:14 tom Exp $ */
+/* $XTermId: sys.c,v 1.36 2011/10/26 01:11:09 tom Exp $ */
 
 /*
 Copyright 2010 by Thomas E. Dickey
@@ -78,6 +78,7 @@ THE SOFTWARE.
 #endif /* HAVE_OPENPTY */
 
 #include <sys.h>
+#include <trace.h>
 
 #ifdef USE_IGNORE_RC
 int ignore_unused;
@@ -85,6 +86,10 @@ int ignore_unused;
 
 #if defined(HAVE_OPENPTY)
 static int opened_tty = -1;
+#endif
+
+#if defined(I_PUSH) && (defined(SVR4) || defined(__SVR4))
+#define USE_STREAMS 1
 #endif
 
 static int saved_tio_valid = 0;
@@ -213,15 +218,21 @@ copyTermios(int sfd, int dfd)
     struct termios tio;
     int rc;
 
+    TRACE(("copyTermios(sfd %d, dfd %d)\n", sfd, dfd));
     rc = tcgetattr(sfd, &tio);
-    if (rc < 0)
-	return -1;
+    if (rc < 0) {
+	TRACE_ERR("copyTermios - tcgetattr");
+    } else {
+	rc = tcsetattr(dfd, TCSAFLUSH, &tio);
+	if (rc < 0) {
+	    TRACE_ERR("copyTermios - tcsetattr");
+#ifdef USE_STREAMS
+	    rc = 0;		/* workaround for Solaris */
+#endif
+	}
+    }
 
-    rc = tcsetattr(dfd, TCSAFLUSH, &tio);
-    if (rc < 0)
-	return -1;
-
-    return 0;
+    return rc;
 }
 
 static int
@@ -297,6 +308,11 @@ fix_pty_perms(char *line)
     rc = stat(line, &s);
     if (rc < 0)
 	return -1;
+
+    TRACE(("fix_pty_perms sees %s\n", line));
+    TRACE(("..pty owned by %ld/%ld\n", (long) s.st_uid, (long) s.st_gid));
+    TRACE(("...but you are %ld/%ld\n", (long) getuid(), (long) getgid()));
+
     if (s.st_uid != getuid() || s.st_gid != getgid()) {
 	rc = chown(line, getuid(), getgid());
 	if (rc < 0) {
@@ -339,28 +355,40 @@ allocatePty(int *pty_return, char **line_return)
 #if defined(HAVE_GRANTPT)
     int rc;
 
+    /*
+     * hmm - xterm does open(/dev/ptmx), grant, unlock, open(ptsname)
+     * The second open is in child().
+     * xterm puts the streams setup after the second open().
+     */
     pty = posix_openpt(O_RDWR);
-    if (pty < 0)
+    if (pty < 0) {
+	TRACE_ERR("allocatePty - posix_openpt");
 	goto bsd;
+    }
 
     rc = grantpt(pty);
     if (rc < 0) {
+	TRACE_ERR("allocatePty - grantpt");
 	close(pty);
 	goto bsd;
     }
 
     rc = unlockpt(pty);
     if (rc < 0) {
+	TRACE_ERR("allocatePty - unlockpt");
 	close(pty);
 	goto bsd;
     }
 
+    /* if ptsname follows the streams setup, it returns null */
     line = strmalloc(ptsname(pty));
     if (!line) {
+	TRACE_ERR("allocatePty - ptsname");
 	close(pty);
 	goto bsd;
     }
 
+    TRACE(("ptsname '%s'\n", line));
     fix_pty_perms(line);
 
     *pty_return = pty;
@@ -431,6 +459,7 @@ openTty(char *line)
     int rc;
     int tty = -1;
 
+    TRACE(("openTty(%s)\n", line));
     tty = open(line, O_RDWR
 #if defined(TIOCSCTTY) && defined(O_NOCTTY)
     /*
@@ -462,22 +491,30 @@ openTty(char *line)
      */
     rc = ioctl(tty, TIOCSCTTY, (char *) 0);
     if (rc < 0) {
+	TRACE_ERR("openTty - ioctl(TIOCSCTTY)");
 	goto bail;
     }
 #endif
 
-#if defined(I_PUSH) && (defined(SVR4) || defined(__SVR4))
+#ifdef USE_STREAMS
+    TRACE(("...setup stream\n"));
     rc = ioctl(tty, I_PUSH, "ptem");
-    if (rc < 0)
+    if (rc < 0) {
+	TRACE_ERR("openTty - push ptem");
 	goto bail;
+    }
 
     rc = ioctl(tty, I_PUSH, "ldterm");
-    if (rc < 0)
+    if (rc < 0) {
+	TRACE_ERR("openTty - push ldterm");
 	goto bail;
+    }
 
     rc = ioctl(tty, I_PUSH, "ttcompat");
-    if (rc < 0)
+    if (rc < 0) {
+	TRACE_ERR("openTty - push ttcompat");
 	goto bail;
+    }
 #endif
 
     return tty;

@@ -1,5 +1,5 @@
 /*
- * $XTermId: trace.c,v 1.3 2010/11/26 20:50:20 tom Exp $
+ * $XTermId: trace.c,v 1.5 2011/10/26 00:05:42 tom Exp $
  *
  * Copyright 2010 by Thomas E. Dickey
  *
@@ -22,16 +22,25 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include <config.h>
+
+#include <unistd.h>
 #include <trace.h>
 
 void
 Trace(const char *fmt,...)
 {
+    static pid_t first_pid;
     static FILE *fp = 0;
     va_list ap;
+    if (first_pid == 0)
+	first_pid = getpid();
     if (fp == 0)
 	fp = fopen("Trace.out", "w");
     va_start(ap, fmt);
+    if (getpid() != first_pid)
+	fprintf(fp, "child:");
     vfprintf(fp, fmt, ap);
+    fflush(fp);
     va_end(ap);
 }

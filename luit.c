@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.33 2010/11/26 20:49:36 tom Exp $ */
+/* $XTermId: luit.c,v 1.36 2011/10/26 10:54:54 tom Exp $ */
 
 /*
-Copyright 2010 by Thomas E. Dickey
+Copyright 2010,2011 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -379,6 +379,7 @@ main(int argc, char **argv)
     l = setlocale(LC_ALL, "");
     if (!l)
 	Message("Warning: couldn't set locale.\n");
+    TRACE(("setlocale ->%s\n", l));
 
     inputState = allocIso2022();
     if (!inputState)
@@ -477,6 +478,7 @@ setup_io(int pty)
     int rc;
     int val;
 
+    TRACE(("setup_io pty %d (isatty:%d)\n", pty, isatty(pty)));
 #ifdef SIGWINCH
     installHandler(SIGWINCH, sigwinchHandler);
 #endif
@@ -611,6 +613,7 @@ child(char *line, char *path, char *const argv[])
     close(1);
     close(2);
 
+    TRACE(("child %s\n", path));
     pgrp = setsid();
     if (pgrp < 0) {
 	kill(getppid(), SIGABRT);
@@ -622,6 +625,7 @@ child(char *line, char *path, char *const argv[])
 	kill(getppid(), SIGABRT);
 	ExitProgram(1);
     }
+
     if (pipe_option) {
 	write_waitpipe(c2p_waitpipe);
     }

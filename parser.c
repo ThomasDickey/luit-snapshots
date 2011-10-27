@@ -1,6 +1,7 @@
-/* $XTermId: parser.c,v 1.12 2010/11/26 20:49:56 tom Exp $ */
+/* $XTermId: parser.c,v 1.13 2011/10/26 10:52:00 tom Exp $ */
 
 /*
+Copyright 2011 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,6 +27,11 @@ THE SOFTWARE.
 
 #include <parser.h>
 #include <sys.h>
+#include <trace.h>
+
+#ifdef HAVE_LANGINFO_CODESET
+#include <langinfo.h>
+#endif
 
 static char keyword[MAX_KEYWORD_LENGTH];
 
@@ -134,46 +140,54 @@ getToken(FILE *f, int c, int parse_assignments, int *c_return)
 static int
 parseTwoTokenLine(FILE *f, char *first, char *second)
 {
+    int rc = 0;
     int c = 0;
     int tok;
+    size_t len;
 
-  again:
+    do {
+	tok = getToken(f, c, 0, &c);
+	if (tok == TOK_EOF)
+	    return -1;
+    } while (tok == TOK_EOL);
 
-    tok = getToken(f, c, 0, &c);
-    if (tok == TOK_EOF)
-	return -1;
-    else if (tok == TOK_EOL)
-	goto again;
-    else if (tok == TOK_KEYWORD) {
-	size_t len = strlen(keyword);
+    if (tok != TOK_KEYWORD) {
+	rc = -2;
+    } else {
+	len = strlen(keyword);
 	if (keyword[len - 1] == ':')
 	    keyword[len - 1] = '\0';
 	strcpy(first, keyword);
-    } else
-	return -2;
 
-    tok = getToken(f, c, 0, &c);
-    if (tok == TOK_KEYWORD) {
-	strcpy(second, keyword);
-    } else
-	return -2;
+	tok = getToken(f, c, 0, &c);
+	if (tok != TOK_KEYWORD) {
+	    rc = -2;
+	} else {
+	    strcpy(second, keyword);
 
-    tok = getToken(f, c, 0, &c);
-    if (tok != TOK_EOL)
-	return -2;
+	    tok = getToken(f, c, 0, &c);
+	    if (tok != TOK_EOL) {
+		rc = -2;
+	    }
+	}
+    }
 
-    return 0;
+    return rc;
 }
 
 char *
 resolveLocale(const char *locale)
 {
     FILE *f;
-    char first[MAX_KEYWORD_LENGTH], second[MAX_KEYWORD_LENGTH];
+    char first[MAX_KEYWORD_LENGTH];
+    char second[MAX_KEYWORD_LENGTH];
     char *resolved = NULL;
     int rc;
     int found = 0;
 
+    TRACE(("resolveLocale(%s)\n", NonNull(locale)));
+
+    TRACE(("...looking in %s\n", locale_alias));
     f = fopen(locale_alias, "r");
 
     if (f != NULL) {
@@ -190,14 +204,24 @@ resolveLocale(const char *locale)
 
 	if (!found) {
 	    if (resolved == NULL) {
+		TRACE(("...not found in %s\n", locale_alias));
 		resolved = strmalloc(locale);
 	    }
 	}
 
 	fclose(f);
-    } else {
-	perror(locale_alias);
     }
 
+    if (!found) {
+#ifdef HAVE_LANGINFO_CODESET
+	if ((resolved = nl_langinfo(CODESET)) != 0) {
+	    TRACE(("...nl_langinfo ->%s\n", resolved));
+	    resolved = strmalloc(resolved);
+	} else if (f == 0 && (fopen(locale_alias, "r") == 0))
+#endif
+	    perror(locale_alias);
+    }
+
+    TRACE(("...resolveLocale ->%s\n", resolved));
     return resolved;
 }

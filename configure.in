@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.31 2011/10/21 11:34:04 tom Exp $
+dnl $XTermId: configure.in,v 1.32 2011/10/26 08:41:42 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -130,6 +130,8 @@ else
 	AC_MSG_WARN(luit requires either fontenc or iconv)
 	with_iconv=maybe
 fi
+
+AM_LANGINFO_CODESET
 
 # Since iconv is widely available, fallback to using it if fontenc is neither
 # requested nor available.
