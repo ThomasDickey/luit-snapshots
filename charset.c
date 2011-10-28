@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.32 2011/10/27 00:06:10 tom Exp $ */
+/* $XTermId: charset.c,v 1.34 2011/10/28 00:54:45 tom Exp $ */
 
 /*
 Copyright 2010,2011 by Thomas E. Dickey
@@ -524,27 +524,37 @@ matchLocaleCharset(const char *charset)
 	DATA("ISO-", "ISO "),
 	    DATA("IBM", "CP "),
 	    DATA("CP-", "CP "),
+	    DATA("ANSI", "CP "),	/* e.g., Solaris ANSI1251 */
 #undef DATA
     };
 
     const LocaleCharsetRec *p = 0;
 
     if (*charset != '\0') {
-	p = findLocaleCharset(charset);
+	char *euro;
+	char source[MAX_KEYWORD_LENGTH];
+
+	strcpy(source, charset);
+	if ((euro = strrchr(source, '@')) != 0 && !strcmp(euro, "@euro")) {
+	    Warning("the euro character may not be supported\n");
+	    *euro = 0;
+	}
+
+	p = findLocaleCharset(source);
 
 	if (p == 0) {
-	    size_t have = strlen(charset);
+	    size_t have = strlen(source);
 	    size_t n;
 	    char target[MAX_KEYWORD_LENGTH + 8];
 
 	    for (n = 0; n < SizeOf(prefixes); ++n) {
 		if (have > prefixes[n].source_len
-		    && !compare1(charset,
+		    && !compare1(source,
 				 prefixes[n].source,
 				 prefixes[n].source_len)) {
 		    strcpy(target, prefixes[n].target);
 		    strcpy(target + prefixes[n].target_len,
-			   charset + prefixes[n].source_len);
+			   source + prefixes[n].source_len);
 		    if ((p = findLocaleCharset(target)) != 0) {
 			break;
 		    }

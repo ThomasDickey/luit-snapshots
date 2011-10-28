@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.32 2011/10/26 08:41:42 tom Exp $
+dnl $XTermId: configure.in,v 1.33 2011/10/28 01:01:34 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2009,2010 by Thomas E. Dickey
+dnl Copyright 2006-2010,2011 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl

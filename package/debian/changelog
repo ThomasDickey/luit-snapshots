@@ -1,4 +1,4 @@
-bluit (20111026) unstable; urgency=low
+bluit (20111027) unstable; urgency=low
 
   * improve ability to use custom-defined locales
   * portability fixes

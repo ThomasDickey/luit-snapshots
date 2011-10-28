@@ -1,6 +1,7 @@
-/* $XTermId: iso2022.c,v 1.30 2010/11/26 20:49:21 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.32 2011/10/28 01:01:13 tom Exp $ */
 
 /*
+Copyright 2011 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -240,10 +241,10 @@ initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
     rc = getLocaleState(locale, charset, &gl, &gr, &g0, &g1, &g2, &g3, &other);
     if (rc < 0) {
 	if (charset)
-	    Message("Warning: couldn't find charset %s; "
+	    Warning("couldn't find charset %s; "
 		    "using ISO 8859-1.\n", charset);
 	else
-	    Message("Warning: couldn't find charset data for locale %s; "
+	    Warning("couldn't find charset data for locale %s; "
 		    "using ISO 8859-1.\n", locale);
     }
 
