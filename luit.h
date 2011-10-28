@@ -1,7 +1,7 @@
-/* $XTermId: luit.h,v 1.15 2011/10/21 10:16:07 tom Exp $ */
+/* $XTermId: luit.h,v 1.17 2011/10/28 01:01:21 tom Exp $ */
 
 /*
-Copyright 2010 by Thomas E. Dickey
+Copyright 2010,2011 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -56,6 +56,7 @@ extern int olog;
 extern int verbose;
 
 void Message(const char *f,...) GCC_PRINTFLIKE(1,2);
+void Warning(const char *f,...) GCC_PRINTFLIKE(1,2);
 void FatalError(const char *f,...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
 
 #define VERBOSE(level,params) if (verbose >= level) Message params

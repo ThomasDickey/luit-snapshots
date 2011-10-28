@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.36 2011/10/26 10:54:54 tom Exp $ */
+/* $XTermId: luit.c,v 1.37 2011/10/27 23:10:18 tom Exp $ */
 
 /*
 Copyright 2010,2011 by Thomas E. Dickey
@@ -49,6 +49,8 @@ static char *child_argv0 = NULL;
 static const char *locale_name = NULL;
 static int exitOnChild = 0;
 static int converter = 0;
+static int testonly = 0;
+static int warnings = 0;
 
 const char *locale_alias = LOCALE_ALIAS_FILE;
 
@@ -70,6 +72,17 @@ Message(const char *f,...)
     va_start(args, f);
     vfprintf(stderr, f, args);
     va_end(args);
+}
+
+void
+Warning(const char *f,...)
+{
+    va_list args;
+    va_start(args, f);
+    fputs("Warning: ", stderr);
+    vfprintf(stderr, f, args);
+    va_end(args);
+    ++warnings;
 }
 
 void
@@ -98,6 +111,7 @@ help(void)
 	    "  [ -k7 ] [ +kss ] [ +kssgr ] [ -kls ]\n"
 	    "  [ -c ] "
 	    "[ -p ] "
+	    "[ -t ] "
 	    "[ -x ] "
 	    "[ -ilog filename ] "
 	    "[ -olog filename ] "
@@ -300,6 +314,9 @@ parseOptions(int argc, char **argv)
 	} else if (!strcmp(argv[i], "-p")) {
 	    pipe_option = 1;
 	    i += 1;
+	} else if (!strcmp(argv[i], "-t")) {
+	    ++testonly;
+	    i += 1;
 	} else {
 	    FatalError("Unknown option %s\n", argv[i]);
 	}
@@ -378,8 +395,8 @@ main(int argc, char **argv)
 
     l = setlocale(LC_ALL, "");
     if (!l)
-	Message("Warning: couldn't set locale.\n");
-    TRACE(("setlocale ->%s\n", l));
+	Warning("couldn't set locale.\n");
+    TRACE(("setlocale ->%s\n", NonNull(l)));
 
     inputState = allocIso2022();
     if (!inputState)
@@ -421,10 +438,16 @@ main(int argc, char **argv)
     if (rc < 0)
 	FatalError("Couldn't init input state\n");
 
-    if (converter)
-	rc = convert(0, 1);
-    else
-	rc = condom(argc - i, argv + i);
+    if (testonly) {
+	if (testonly > 1) {
+	    rc += warnings;
+	}
+    } else {
+	if (converter)
+	    rc = convert(0, 1);
+	else
+	    rc = condom(argc - i, argv + i);
+    }
 
 #ifdef NO_LEAKS
     ExitProgram(rc);

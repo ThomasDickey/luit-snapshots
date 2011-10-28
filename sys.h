@@ -1,7 +1,7 @@
-/* $XTermId: sys.h,v 1.15 2011/10/20 21:38:38 tom Exp $ */
+/* $XTermId: sys.h,v 1.16 2011/10/28 01:01:58 tom Exp $ */
 
 /*
-Copyright 2010 by Thomas E. Dickey
+Copyright 2010,2011 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

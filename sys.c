@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.36 2011/10/26 01:11:09 tom Exp $ */
+/* $XTermId: sys.c,v 1.38 2011/10/28 01:00:36 tom Exp $ */
 
 /*
-Copyright 2010 by Thomas E. Dickey
+Copyright 2010,2011 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -316,7 +316,7 @@ fix_pty_perms(char *line)
     if (s.st_uid != getuid() || s.st_gid != getgid()) {
 	rc = chown(line, getuid(), getgid());
 	if (rc < 0) {
-	    Message("Warning: could not change ownership of tty -- "
+	    Warning("could not change ownership of tty -- "
 		    "pty is insecure!\n");
 	    return 0;
 	}
@@ -324,7 +324,7 @@ fix_pty_perms(char *line)
     if ((s.st_mode & 0777) != (S_IRUSR | S_IWUSR | S_IWGRP)) {
 	rc = chmod(line, S_IRUSR | S_IWUSR | S_IWGRP);
 	if (rc < 0) {
-	    Message("Warning: could not change permissions of tty -- "
+	    Warning("could not change permissions of tty -- "
 		    "pty is insecure!\n");
 	    return 0;
 	}

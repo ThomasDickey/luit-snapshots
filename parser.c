@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.13 2011/10/26 10:52:00 tom Exp $ */
+/* $XTermId: parser.c,v 1.16 2011/10/27 23:41:08 tom Exp $ */
 
 /*
 Copyright 2011 by Thomas E. Dickey
@@ -175,6 +175,24 @@ parseTwoTokenLine(FILE *f, char *first, char *second)
     return rc;
 }
 
+/*
+ * Check if the result from locale.alias has the encoding specified.
+ */
+static int
+has_encoding(const char *locale)
+{
+    int result = 0;
+
+    if (locale != 0 && *locale != 0) {
+	char *dot = strchr(locale, '.');
+	result = (dot != 0
+		  && dot != locale
+		  && dot[1] != 0
+		  && strchr(dot + 1, '.') == 0);
+    }
+    return result;
+}
+
 char *
 resolveLocale(const char *locale)
 {
@@ -212,9 +230,16 @@ resolveLocale(const char *locale)
 	fclose(f);
     }
 
-    if (!found) {
+    /*
+     * If we did not find the data in the locale.alias file (or as happens with
+     * some, the right column does not appear to specify a valid locale), see
+     * if we can get a better result from the system's locale tables.
+     */
+    if (!found || !has_encoding(resolved)) {
 #ifdef HAVE_LANGINFO_CODESET
-	if ((resolved = nl_langinfo(CODESET)) != 0) {
+	if (strcmp(locale, "C")
+	    && strcmp(locale, "POSIX")
+	    && (resolved = nl_langinfo(CODESET)) != 0) {
 	    TRACE(("...nl_langinfo ->%s\n", resolved));
 	    resolved = strmalloc(resolved);
 	} else if (f == 0 && (fopen(locale_alias, "r") == 0))
