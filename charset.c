@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.34 2011/10/28 00:54:45 tom Exp $ */
+/* $XTermId: charset.c,v 1.35 2011/10/28 20:46:57 tom Exp $ */
 
 /*
 Copyright 2010,2011 by Thomas E. Dickey
@@ -423,6 +423,7 @@ static const LocaleCharsetRec localeCharsets[] =
 {
     {"C",          0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
     {"POSIX",      0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
+    {"US-ASCII",   0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
 
     {"ISO8859-1",  0, 2, "ASCII", NULL,         "ISO 8859-1",    NULL,         NULL},
     {"ISO8859-2",  0, 2, "ASCII", NULL,         "ISO 8859-2",    NULL,         NULL},
