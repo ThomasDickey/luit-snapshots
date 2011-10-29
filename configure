@@ -7307,7 +7307,7 @@ LIBS="$cf_save_LIBS"
 CPPFLAGS="$cf_save_INCS"
 
 if test $cf_have_fontenc_libs = yes ; then
-	LIBS="$cf_cv_x_fontenc_libs $LIBS"
+	LIBS="$cf_cv_x_fontenc_libs $LIBS $X_LIBS"
 
 cf_fix_cppflags=no
 cf_new_cflags=

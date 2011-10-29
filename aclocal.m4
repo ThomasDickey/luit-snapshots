@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.37 2011/10/26 08:41:20 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.38 2011/10/28 23:44:54 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2588,7 +2588,7 @@ if test -n "$cf_xopen_source" ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTENC version: 6 updated: 2011/10/21 07:48:19
+dnl CF_X_FONTENC version: 7 updated: 2011/10/28 18:48:08
 dnl ------------
 dnl
 dnl First check for the appropriate config program, since the developers for
@@ -2675,7 +2675,7 @@ LIBS="$cf_save_LIBS"
 CPPFLAGS="$cf_save_INCS"
 
 if test $cf_have_fontenc_libs = yes ; then
-	LIBS="$cf_cv_x_fontenc_libs $LIBS"
+	LIBS="$cf_cv_x_fontenc_libs $LIBS $X_LIBS"
 	CF_ADD_CFLAGS($cf_cv_x_fontenc_incs)
 else
 	AC_MSG_WARN(No libraries found for font-encoding)
