@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.77 2011/10/28 21:00:51 tom Exp $
+  $XTermId: luit.log.html,v 1.79 2011/10/30 14:41:39 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -36,8 +36,11 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
 <p>
-<a id="t20111028">2011/10/28</a> -
+<a id="t20111030">2011/10/30</a> -
 <ul>
+<li>modify configure script to add <code>X_LIBS</code> symbol after
+resolving fontenc library, to use the associated <code>-L</code> option
+in subsequent configure-checks.
 <li>add <code>-t</code> to simplify testing available locales versus
 luit's tables and the <code>locale.alias</code> file.
 <li>add "US-ASCII" for C/POSIX to the locale-charset table.
