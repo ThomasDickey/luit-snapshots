@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.38 2011/10/28 23:44:54 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.39 2011/10/30 00:54:26 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2483,7 +2483,7 @@ AC_CHECK_FUNCS( \
 )
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 37 updated: 2011/08/06 20:32:05
+dnl CF_XOPEN_SOURCE version: 38 updated: 2011/10/29 08:35:34
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -2549,10 +2549,7 @@ nto-qnx*) #(vi
 sco*) #(vi
 	# setting _XOPEN_SOURCE breaks Lynx on SCO Unix / OpenServer
 	;;
-solaris2.1[[0-9]]) #(vi
-	cf_xopen_source="-D__EXTENSIONS__ -D_XOPEN_SOURCE=$cf_XOPEN_SOURCE"
-	;;
-solaris2.[[1-9]]) #(vi
+solaris2.*) #(vi
 	cf_xopen_source="-D__EXTENSIONS__"
 	;;
 *)
