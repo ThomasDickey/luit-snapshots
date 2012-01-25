@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 2006-2010,2011 by Thomas E. Dickey                              *
+ * Copyright 2006-2011,2012 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.79 2011/10/30 14:41:39 tom Exp $
+  $XTermId: luit.log.html,v 1.81 2012/01/25 01:08:58 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -30,11 +30,26 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright 2006-2010,2011 by <A
+Copyright 2006-2011,2012 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
+<p>
+<a id="t20120124">2012/1/24</a> -
+<ul>
+<li>updated configure script macros:
+<dl>
+<dt>CF_FUNC_GRANTPT
+<dd>modify check to exclude Darwin 9.x and lower from using posix_openpt.
+Bug report for xterm by Christian Ebert for 9.8.0 says screensize does
+not work for the pty.
+<dt>CF_XOPEN_SOURCE
+fixes for redefinition of _XOPEN_SOURCE on a few platforms:
+Mac OS X, IRIX64.
+Also workarounds for header inconsistencies with OpenBSD and MirBSD.
+</dl>
+</ul>
 <p>
 <a id="t20111030">2011/10/30</a> -
 <ul>
