@@ -1,7 +1,7 @@
 /*
- * $XTermId: luitconv.c,v 1.24 2010/11/28 20:54:51 tom Exp $
+ * $XTermId: luitconv.c,v 1.26 2012/01/27 01:25:30 tom Exp $
  *
- * Copyright 2010 by Thomas E. Dickey
+ * Copyright 2010,2012 by Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -377,6 +377,133 @@ ConvToUTF8(UCHAR * target, UINT source, size_t limit)
 /******************************************************************************/
 
 static int
+compare(const char *s, const char *t)
+{
+    while (*s || *t) {
+	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
+	    s++;
+	else if (*t && (isspace(UChar(*t)) || *t == '-' || *t == '_'))
+	    t++;
+	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
+	    s++;
+	    t++;
+	} else
+	    return 1;
+    }
+    return 0;
+}
+
+/*
+ * Try to open a conversion from UTF-8 to the given encoding name.  This is
+ * iconv(), and different implementations expect different syntax for the
+ * name.  So if we do not at first succeed, try permuting the common
+ * variations.
+ */
+static iconv_t
+try_iconv_open(const char **guess)
+{
+    int chcase;
+    int mkcase;
+    char *encoding_name = malloc(strlen(*guess) + 2);
+    char *encoding_temp = malloc(strlen(*guess) + 2);
+    char *p;
+    iconv_t result;
+
+    strcpy(encoding_name, *guess);
+    result = iconv_open("UTF-8", encoding_name);
+
+    /*
+     * If the first try did not succeed, retry after changing the case of
+     * the name and/or inserting a marker between the leading alphabetic
+     * prefix and number.
+     */
+    if (result == NO_ICONV) {
+	for (chcase = 0; chcase <= 2; ++chcase) {
+	    strcpy(encoding_name, *guess);
+
+	    switch (chcase) {
+	    case 0:		/* no change */
+		break;
+	    case 1:		/* uppercase */
+		for (p = encoding_name; *p != '\0'; ++p) {
+		    *p = (char) toupper(UChar(*p));
+		}
+		break;
+	    case 2:		/* lowercase */
+		for (p = encoding_name; *p != '\0'; ++p) {
+		    *p = (char) tolower(UChar(*p));
+		}
+		break;
+	    }
+
+	    for (mkcase = 0; mkcase <= 3; ++mkcase) {
+
+		switch (mkcase) {
+		case 0:	/* no change */
+		    break;
+		case 1:	/* remove delimiter */
+		    for (p = encoding_name; *p != '\0'; ++p) {
+			if (*p == ' ' || *p == '-') {
+			    if (p != encoding_name &&
+				isalpha(UChar(p[-1])) &&
+				isdigit(UChar(p[1]))) {
+				while ((p[0] = p[1]) != '\0') {
+				    ++p;
+				}
+			    }
+			    break;
+			}
+		    }
+		    break;
+		case 2:	/* insert '-' */
+		    for (p = encoding_name; *p != '\0'; ++p) {
+			if (*p == '-')
+			    break;
+			if (isalpha(UChar(p[0])) &&
+			    isdigit(UChar(p[1]))) {
+			    strcpy(encoding_temp, p + 1);
+			    p[1] = '-';
+			    strcpy(p + 2, encoding_temp);
+			    break;
+			}
+		    }
+		    break;
+		case 3:	/* change to ' ' */
+		    for (p = encoding_name; *p != '\0'; ++p) {
+			if (*p == '-') {
+			    *p = ' ';
+			    break;
+			}
+		    }
+		    break;
+		}
+
+		result = iconv_open("UTF-8", encoding_name);
+		if (result != NO_ICONV) {
+		    TRACE(("...iconv_open'd with different name \"%s\"\n",
+			   encoding_name));
+		    break;
+		}
+	    }
+	    if (result != NO_ICONV) {
+		break;
+	    }
+	}
+    }
+
+    if (strcmp(encoding_name, *guess)) {
+	*guess = encoding_name;
+    } else {
+	free(encoding_name);
+    }
+
+    free(encoding_temp);
+    return result;
+}
+
+/******************************************************************************/
+
+static int
 cmp_rindex(const void *a, const void *b)
 {
     const ReverseData *p = (const ReverseData *) a;
@@ -502,7 +629,7 @@ findEncodingAlias(const char *encoding_name)
     const char *result = 0;
 
     for (n = 0; n < SizeOf(table); ++n) {
-	if (!strcasecmp(encoding_name, table[n].luit_name)) {
+	if (!compare(encoding_name, table[n].luit_name)) {
 	    result = table[n].iconv_name;
 	    break;
 	}
@@ -541,7 +668,7 @@ initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
 		memcpy(data->table_utf8[j].text, buffer, need);
 	    }
 
-	    TRACE(("convert %4X:%d:%04X:%.*s\n", j,
+	    TRACE(("convert %4X:%d:%04X:%.*s\n", (unsigned) j,
 		   (int) data->table_utf8[j].size,
 		   data->table_utf8[j].ucs,
 		   (int) data->table_utf8[j].size,
@@ -566,7 +693,7 @@ findBuiltinEncoding(const char *encoding_name)
     const BuiltInCharsetRec *result = 0;
 
     for (n = 0; n < SizeOf(table); ++n) {
-	if (!strcasecmp(encoding_name, table[n].name)) {
+	if (!compare(encoding_name, table[n].name)) {
 	    result = &(table[n]);
 	    break;
 	}
@@ -587,7 +714,7 @@ luitLookupMapping(const char *encoding_name)
     TRACE(("luitLookupMapping '%s'\n", encoding_name));
 
     for (latest = all_conversions; latest != 0; latest = latest->next) {
-	if (!strcasecmp(encoding_name, latest->encoding_name)) {
+	if (!compare(encoding_name, latest->encoding_name)) {
 	    TRACE(("...found mapping in cache\n"));
 	    result = &(latest->mapping);
 	    break;
@@ -595,13 +722,13 @@ luitLookupMapping(const char *encoding_name)
     }
 
     if (latest == 0) {
-	my_desc = iconv_open("UTF-8", encoding_name);
+	my_desc = try_iconv_open(&encoding_name);
 	if (my_desc == NO_ICONV) {
 	    const char *alias = findEncodingAlias(encoding_name);
 	    if (alias != 0) {
 		encoding_name = alias;
 		TRACE(("...retry '%s'\n", encoding_name));
-		my_desc = iconv_open("UTF-8", encoding_name);
+		my_desc = try_iconv_open(&encoding_name);
 	    }
 	}
 	if (my_desc != NO_ICONV) {

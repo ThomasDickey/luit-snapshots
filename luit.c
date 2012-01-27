@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.37 2011/10/27 23:10:18 tom Exp $ */
+/* $XTermId: luit.c,v 1.38 2012/01/25 23:02:14 tom Exp $ */
 
 /*
-Copyright 2010,2011 by Thomas E. Dickey
+Copyright 2010-2011,2012 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -706,14 +706,17 @@ parent(int pid GCC_UNUSED, int pty)
 	    break;
 
 	if (rc > 0) {
-	    if (rc & 2) {
+	    if (rc & IO_Closed) {
+		break;
+	    }
+	    if (rc & IO_CanWrite) {
 		i = (int) read(pty, buf, (size_t) BUFFER_SIZE);
 		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
 		    break;
 		if (i > 0)
 		    copyOut(outputState, 0, buf, (unsigned) i);
 	    }
-	    if (rc & 1) {
+	    if (rc & IO_CanRead) {
 		i = (int) read(0, buf, (size_t) BUFFER_SIZE);
 		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
 		    break;

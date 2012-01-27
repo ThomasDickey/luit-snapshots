@@ -1,7 +1,7 @@
-/* $XTermId: iso2022.c,v 1.32 2011/10/28 01:01:13 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.33 2012/01/25 23:02:28 tom Exp $ */
 
 /*
-Copyright 2011 by Thomas E. Dickey
+Copyright 2011,2012 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -58,7 +58,8 @@ outbuf_flush(Iso2022Ptr is, int fd)
 	    if (rc < 0 && errno == EINTR)
 		continue;
 	    else if ((rc == 0) || ((rc < 0) && (errno == EAGAIN))) {
-		waitForOutput(fd);
+		if (waitForOutput(fd) == IO_Closed)
+		    break;
 		continue;
 	    } else
 		break;

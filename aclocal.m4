@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.40 2012/01/24 23:14:36 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.44 2012/01/26 02:14:19 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -968,7 +968,7 @@ ifelse([$5],,AC_MSG_WARN(Cannot find $3 library),[$5])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 3 updated: 2012/01/12 08:07:51
+dnl CF_FUNC_GRANTPT version: 4 updated: 2012/01/25 21:11:48
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -985,6 +985,25 @@ esac
 
 AC_CHECK_FUNCS($cf_func_grantpt)
 
+if test "x$ac_cv_func_grantpt" = "xyes" ; then
+	AC_MSG_CHECKING(if grantpt really works)
+	AC_TRY_LINK(CF__GRANTPT_HEAD,CF__GRANTPT_BODY,[
+	AC_TRY_RUN(CF__GRANTPT_HEAD
+int main(void)
+{
+CF__GRANTPT_BODY
+}
+,
+,ac_cv_func_grantpt=no
+,ac_cv_func_grantpt=maybe)
+	],ac_cv_func_grantpt=no)
+	AC_MSG_RESULT($ac_cv_func_grantpt)
+
+	if test "x$ac_cv_func_grantpt" != "xno" ; then
+		AC_DEFINE(HAVE_WORKING_GRANTPT)
+	fi
+fi
+
 if test "x$ac_cv_func_grantpt" != "xyes" ; then
 	AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])
 	if test "$cf_have_openpty" = yes ; then
@@ -999,7 +1018,7 @@ if test "x$ac_cv_func_grantpt" != "xyes" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_POLL version: 4 updated: 2006/12/16 12:33:30
+dnl CF_FUNC_POLL version: 5 updated: 2012/01/25 17:55:38
 dnl ------------
 dnl See if the poll function really works.  Some platforms have poll(), but
 dnl it does not work for terminals or files.
@@ -1016,10 +1035,29 @@ int main() {
 	struct pollfd myfds;
 	int ret;
 
-	myfds.fd = 0;
+	/* check for Darwin bug with respect to "devices" */
+	myfds.fd = open("/dev/null", 1);
+	if (myfds.fd < 0)
+		myfds.fd = 0;
 	myfds.events = POLLIN;
+	myfds.revents = 0;
 
 	ret = poll(&myfds, 1, 100);
+
+	if (ret < 0 || (myfds.revents & POLLNVAL)) {
+		ret = -1;
+	} else {
+
+		/* also check with standard input */
+		myfds.fd = 0;
+		myfds.events = POLLIN;
+		myfds.revents = 0;
+
+		ret = poll(&myfds, 1, 100);
+		if (ret < 0) {
+			ret = 0;
+		}
+	}
 	${cf_cv_main_return:-return}(ret != 0);
 }],
 	[cf_cv_working_poll=yes],
@@ -1342,37 +1380,6 @@ dnl ---------------
 dnl Insert text into the help-message, for readability, from AC_ARG_WITH.
 AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
-])dnl
-dnl ---------------------------------------------------------------------------
-dnl CF_INPUT_METHOD version: 3 updated: 2000/04/11 23:46:57
-dnl ---------------
-dnl Check if the X libraries support input-method
-AC_DEFUN([CF_INPUT_METHOD],
-[
-AC_CACHE_CHECK([if X libraries support input-method],cf_cv_input_method,[
-AC_TRY_LINK([
-#include <X11/IntrinsicP.h>
-#include <X11/Xatom.h>
-#include <X11/Xutil.h>
-#include <X11/Xmu/Atoms.h>
-#include <X11/Xmu/Converters.h>
-#include <X11/Xaw/XawImP.h>
-],[
-{
-	XIM xim;
-	XIMStyles *xim_styles = 0;
-	XIMStyle input_style;
-	Widget w = 0;
-
-	XSetLocaleModifiers("@im=none");
-	xim = XOpenIM(XtDisplay(w), NULL, NULL, NULL);
-	XGetIMValues(xim, XNQueryInputStyle, &xim_styles, NULL);
-	XCloseIM(xim);
-	input_style = (XIMPreeditNothing | XIMStatusNothing);
-}
-],
-[cf_cv_input_method=yes],
-[cf_cv_input_method=no])])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_INTEL_COMPILER version: 4 updated: 2010/05/26 05:38:42
@@ -2738,6 +2745,56 @@ if test $cf_have_fontenc_libs = yes ; then
 else
 	AC_MSG_WARN(No libraries found for font-encoding)
 fi
+])
+dnl ---------------------------------------------------------------------------
+dnl CF__GRANTPT_BODY version: 1 updated: 2012/01/25 21:11:48
+dnl ----------------
+dnl Body for workability check of grantpt.
+define([CF__GRANTPT_BODY],[
+	int code = 0;
+	struct termios tio;
+	int rc;
+	int pty;
+
+	pty = posix_openpt(O_RDWR);
+	if (pty < 0) {
+		code = 1;
+	}
+
+	rc = grantpt(pty);
+	if (rc < 0) {
+		code = 2;
+	}
+
+	rc = unlockpt(pty);
+	if (rc < 0) {
+		code = 3;
+	}
+
+	if (!isatty(pty)) {
+		code = 4;
+	}
+
+	rc = tcgetattr(pty, &tio);
+	if (rc < 0) {
+		code = 5;
+	}
+
+	${cf_cv_main_return:-return}(code);
+])
+dnl ---------------------------------------------------------------------------
+dnl CF__GRANTPT_HEAD version: 1 updated: 2012/01/25 21:11:48
+dnl ----------------
+dnl Headers for workability check of grantpt.
+define([CF__GRANTPT_HEAD],[
+#include <stdlib.h>
+#include <termios.h>
+#include <fcntl.h>
+
+#ifndef HAVE_FUNC_POSIX_OPENPT
+#undef posix_openpt
+#define posix_openpt(mode) open("/dev/ptmx", mode)
+#endif
 ])
 dnl ---------------------------------------------------------------------------
 dnl CF__ICONV_BODY version: 2 updated: 2007/07/26 17:35:47

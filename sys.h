@@ -1,7 +1,7 @@
-/* $XTermId: sys.h,v 1.16 2011/10/28 01:01:58 tom Exp $ */
+/* $XTermId: sys.h,v 1.17 2012/01/25 23:02:35 tom Exp $ */
 
 /*
-Copyright 2010,2011 by Thomas E. Dickey
+Copyright 2010-2011,2012 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,6 +33,10 @@ extern int ignore_unused;
 #else
 #define IGNORE_RC(func) (void) func
 #endif /* gcc workarounds */
+
+#define IO_CanRead   1
+#define IO_CanWrite  2
+#define IO_Closed    4
 
 #define TypeCalloc(type) (type *) calloc((size_t) 1, sizeof(type))
 

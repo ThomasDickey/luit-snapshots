@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.38 2011/10/28 01:00:36 tom Exp $ */
+/* $XTermId: sys.c,v 1.40 2012/01/26 09:32:28 tom Exp $ */
 
 /*
-Copyright 2010,2011 by Thomas E. Dickey
+Copyright 2010-2011,2012 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -109,10 +109,13 @@ waitForOutput(int fd)
     pfd[0].revents = 0;
 
     rc = poll(pfd, (nfds_t) 1, -1);
-    if (rc < 0)
+    if (rc < 0) {
 	ret = -1;
-    else if (pfd[0].revents & (POLLOUT | POLLERR | POLLHUP))
-	ret = 1;
+    } else if (pfd[0].revents & (POLLOUT | POLLERR | POLLHUP)) {
+	ret = IO_CanWrite;
+    } else if (pfd[0].revents & (POLLNVAL)) {
+	ret = IO_Closed;
+    }
 
 #elif defined(HAVE_WORKING_SELECT)
     fd_set fds;
@@ -121,13 +124,16 @@ waitForOutput(int fd)
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
     rc = select(FD_SETSIZE, NULL, &fds, NULL, NULL);
-    if (rc < 0)
+    if (rc < 0) {
 	ret = -1;
-    else if (FD_ISSET(fd, &fds))
-	ret = 1;
+	if (errno == EBADF)
+	    ret = IO_Closed;
+    } else if (FD_ISSET(fd, &fds)) {
+	ret = IO_CanWrite;
+    }
 
 #else
-    ret = 1;
+    ret = IO_CanWrite;
 #endif
 
     return ret;
@@ -152,9 +158,13 @@ waitForInput(int fd1, int fd2)
 	ret = -1;
     } else {
 	if (pfd[0].revents & (POLLIN | POLLERR | POLLHUP))
-	    ret |= 1;
+	    ret |= IO_CanRead;
 	if (pfd[1].revents & (POLLIN | POLLERR | POLLHUP))
-	    ret |= 2;
+	    ret |= IO_CanWrite;
+	if (pfd[0].revents & (POLLNVAL))
+	    ret |= IO_Closed;
+	if (pfd[1].revents & (POLLNVAL))
+	    ret |= IO_Closed;
     }
 
 #elif defined(HAVE_WORKING_SELECT)
@@ -167,14 +177,16 @@ waitForInput(int fd1, int fd2)
     rc = select(FD_SETSIZE, &fds, NULL, NULL, NULL);
     if (rc < 0) {
 	ret = -1;
+	if (errno == EBADF)
+	    ret = IO_Closed;
     } else {
 	if (FD_ISSET(fd1, &fds))
-	    ret |= 1;
+	    ret |= IO_CanRead;
 	if (FD_ISSET(fd2, &fds))
-	    ret |= 2;
+	    ret |= IO_CanWrite;
     }
 #else
-    ret = (1 | 2);
+    ret = (IO_CanRead | IO_CanWrite);
 #endif
 
     return ret;
@@ -352,7 +364,7 @@ allocatePty(int *pty_return, char **line_return)
     const char *p1;
     char *p2;
 
-#if defined(HAVE_GRANTPT)
+#if defined(HAVE_GRANTPT) && defined(HAVE_WORKING_GRANTPT)
     int rc;
 
     /*
