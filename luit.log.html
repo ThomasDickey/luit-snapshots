@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.81 2012/01/25 01:08:58 tom Exp $
+  $XTermId: luit.log.html,v 1.85 2012/01/27 01:22:44 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -36,8 +36,18 @@ HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <H1>Contents</H1>
 This file contains a list of the changes that I have made for luit.
 <p>
-<a id="t20120124">2012/1/24</a> -
+<a id="t20120126">2012/1/26</a> -
 <ul>
+<li>improve portability of the iconv configuration by checking alternate
+forms for the encoding name passed to <code>iconv_open</code>.
+<li>add configure check for working <code>posix_openpt</code>,
+which may be broken in Mac OS X's current release 10.7 Lion
+(report by Kirby Zhou).
+<li>add some error checking for the <code>poll</code> and <code>select</code>
+logic to avoid looping when a file descriptor is no longer valid.
+<li>improve configure check for working <code>poll</code>
+function to avoid using Mac OS X's broken implementation
+(tested with Darwin 10.8.0).
 <li>updated configure script macros:
 <dl>
 <dt>CF_FUNC_GRANTPT
