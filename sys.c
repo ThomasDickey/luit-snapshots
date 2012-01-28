@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.40 2012/01/26 09:32:28 tom Exp $ */
+/* $XTermId: sys.c,v 1.42 2012/01/28 00:29:36 tom Exp $ */
 
 /*
 Copyright 2010-2011,2012 by Thomas E. Dickey
@@ -88,7 +88,7 @@ int ignore_unused;
 static int opened_tty = -1;
 #endif
 
-#if defined(I_PUSH) && (defined(SVR4) || defined(__SVR4))
+#if defined(I_PUSH) && defined(HAVE_STROPTS_H)
 #define USE_STREAMS 1
 #endif
 
@@ -116,7 +116,6 @@ waitForOutput(int fd)
     } else if (pfd[0].revents & (POLLNVAL)) {
 	ret = IO_Closed;
     }
-
 #elif defined(HAVE_WORKING_SELECT)
     fd_set fds;
     int rc;
@@ -131,7 +130,6 @@ waitForOutput(int fd)
     } else if (FD_ISSET(fd, &fds)) {
 	ret = IO_CanWrite;
     }
-
 #else
     ret = IO_CanWrite;
 #endif
@@ -230,6 +228,7 @@ copyTermios(int sfd, int dfd)
     struct termios tio;
     int rc;
 
+#if defined(HAVE_OPENPTY) || defined(HAVE_GRANTPT_TCSETATTR)
     TRACE(("copyTermios(sfd %d, dfd %d)\n", sfd, dfd));
     rc = tcgetattr(sfd, &tio);
     if (rc < 0) {
@@ -238,11 +237,14 @@ copyTermios(int sfd, int dfd)
 	rc = tcsetattr(dfd, TCSAFLUSH, &tio);
 	if (rc < 0) {
 	    TRACE_ERR("copyTermios - tcsetattr");
-#ifdef USE_STREAMS
-	    rc = 0;		/* workaround for Solaris */
-#endif
 	}
     }
+#else
+    (void) sfd;
+    (void) dfd;
+    (void) tio;
+    rc = 0;
+#endif
 
     return rc;
 }
@@ -472,6 +474,8 @@ openTty(char *line)
     int tty = -1;
 
     TRACE(("openTty(%s)\n", line));
+
+    (void) rc;
     tty = open(line, O_RDWR
 #if defined(TIOCSCTTY) && defined(O_NOCTTY)
     /*
@@ -508,20 +512,26 @@ openTty(char *line)
     }
 #endif
 
-#ifdef USE_STREAMS
+    /* HPUX and Solaris */
+#ifdef HAVE_GRANTPT_PTEM
     TRACE(("...setup stream\n"));
     rc = ioctl(tty, I_PUSH, "ptem");
     if (rc < 0) {
 	TRACE_ERR("openTty - push ptem");
 	goto bail;
     }
+#endif
 
+#ifdef HAVE_GRANTPT_LDTERM
     rc = ioctl(tty, I_PUSH, "ldterm");
     if (rc < 0) {
 	TRACE_ERR("openTty - push ldterm");
 	goto bail;
     }
+#endif
 
+    /* Solaris */
+#ifdef HAVE_GRANTPT_TTCOMPAT
     rc = ioctl(tty, I_PUSH, "ttcompat");
     if (rc < 0) {
 	TRACE_ERR("openTty - push ttcompat");
