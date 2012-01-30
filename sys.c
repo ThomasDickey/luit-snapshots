@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.42 2012/01/28 00:29:36 tom Exp $ */
+/* $XTermId: sys.c,v 1.43 2012/01/28 12:28:13 tom Exp $ */
 
 /*
 Copyright 2010-2011,2012 by Thomas E. Dickey
@@ -228,7 +228,7 @@ copyTermios(int sfd, int dfd)
     struct termios tio;
     int rc;
 
-#if defined(HAVE_OPENPTY) || defined(HAVE_GRANTPT_TCSETATTR)
+#if !defined(HAVE_GRANTPT) || defined(HAVE_GRANTPT_TCSETATTR)
     TRACE(("copyTermios(sfd %d, dfd %d)\n", sfd, dfd));
     rc = tcgetattr(sfd, &tio);
     if (rc < 0) {

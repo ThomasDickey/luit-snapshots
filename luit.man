@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.18 2011/10/27 23:19:20 tom Exp $
+.\" $XTermId: luit.man,v 1.19 2012/01/29 19:57:58 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -72,7 +72,8 @@ Function as a simple converter from standard input to standard output.
 .TP
 .B \-p
 In startup, establish a handshake between parent and child processes.
-This is needed for some systems, e.g., FreeBSD.
+This is needed for some older systems, e.g., to successfully copy
+the terminal settings to the pseudo-terminal.
 .TP
 .B \-t
 Initialize \fBluit\fP using the locale and command-line options,

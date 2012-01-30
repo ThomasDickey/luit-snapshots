@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.50 2012/01/28 01:16:20 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.60 2012/01/29 22:14:50 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -968,7 +968,7 @@ ifelse([$5],,AC_MSG_WARN(Cannot find $3 library),[$5])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 5 updated: 2012/01/27 20:14:10
+dnl CF_FUNC_GRANTPT version: 6 updated: 2012/01/29 17:13:14
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -1011,17 +1011,19 @@ CF__GRANTPT_BODY
 dnl if we have no stropts.h, skip the checks for streams modules
 			if test "x$ac_cv_header_stropts_h" = xyes
 			then
-				cf_pty_first=0
+				cf_pty_this=0
 			else
-				cf_pty_first=3
+				cf_pty_this=3
 			fi
 
 			cf_pty_defines=
-			while test $cf_pty_first != 5
+			while test $cf_pty_this != 5
 			do
 
 				cf_pty_feature=
-				AC_TRY_RUN(#define CONFTEST $cf_pty_first
+				cf_pty_next=`expr $cf_pty_this + 1`
+				CF_MSG_LOG(pty feature test $cf_pty_next:5)
+				AC_TRY_RUN(#define CONFTEST $cf_pty_this
 $cf_pty_defines
 CF__GRANTPT_HEAD
 int main(void)
@@ -1030,21 +1032,28 @@ CF__GRANTPT_BODY
 }
 ,
 [
-				case $cf_pty_first in #(vi
-				0) #(vi
+				case $cf_pty_next in #(vi
+				1) #(vi - streams
 					cf_pty_feature=ptem
 					;;
-				1) #(vi
+				2) #(vi - streams
 					cf_pty_feature=ldterm
 					;;
-				2) #(vi
+				3) #(vi - streams
 					cf_pty_feature=ttcompat
 					;;
-				3) #(vi
+				4) #(vi
 					cf_pty_feature=isatty
 					;;
-				4) #(vi
+				5) #(vi
 					cf_pty_feature=tcsetattr
+					;;
+				esac
+],[
+				case $cf_pty_next in #(vi
+				1|2|3)
+					CF_MSG_LOG(skipping remaining streams features $cf_pty_this..2)
+					cf_pty_next=3
 					;;
 				esac
 ])
@@ -1056,7 +1065,7 @@ CF__GRANTPT_BODY
 					cf_grantpt_opts="$cf_grantpt_opts $cf_pty_feature"
 				fi
 
-				cf_pty_first=`expr $cf_pty_first + 1`
+				cf_pty_this=$cf_pty_next
 			done
 			AC_MSG_RESULT($cf_grantpt_opts)
 			cf_grantpt_opts=`echo "$cf_grantpt_opts" | sed -e 's/ isatty//'`
@@ -1096,7 +1105,7 @@ then
 	done
 elif test "x$cf_have_openpty" = xno
 then
-	AC_MSG_WARN(pseudo-terminal I/O is incomplete)
+	CF_VERBOSE(will rely upon BSD-pseudoterminals)
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -2829,60 +2838,73 @@ else
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_BODY version: 2 updated: 2012/01/27 20:14:10
+dnl CF__GRANTPT_BODY version: 3 updated: 2012/01/29 17:13:14
 dnl ----------------
 dnl Body for workability check of grantpt.
 define([CF__GRANTPT_BODY],[
 	int code = 0;
 	int rc;
 	int pty;
+	int tty;
+	char *slave;
 	struct termios tio;
 
-	if ((pty = posix_openpt(O_RDWR)) < 0)
-		code = 1;
+	signal(SIGALRM, my_timeout);
+
+	if (alarm(2) == 9)
+		failed(9);
+	else if ((pty = posix_openpt(O_RDWR)) < 0)
+		failed(1);
 	else if ((rc = grantpt(pty)) < 0)
-		code = 2;
+		failed(2);
 	else if ((rc = unlockpt(pty)) < 0)
-		code = 3;
+		failed(3);
+	else if ((slave = ptsname(pty)) == 0)
+		failed(4);
+	else if ((tty = open(slave, O_RDWR)) < 0)
+		failed(5);
 #ifdef CONFTEST
 #ifdef I_PUSH
 #if (CONFTEST == 0) || defined(CONFTEST_ptem)
-    else if ((rc = ioctl(pty, I_PUSH, "ptem")) < 0)
-		code = 10;
+    else if ((rc = ioctl(tty, I_PUSH, "ptem")) < 0)
+		failed(10);
 #endif
 #if (CONFTEST == 1) || defined(CONFTEST_ldterm)
-    else if ((rc = ioctl(pty, I_PUSH, "ldterm")) < 0)
-		code = 11;
+    else if ((rc = ioctl(tty, I_PUSH, "ldterm")) < 0)
+		failed(11);
 #endif
 #if (CONFTEST == 2) || defined(CONFTEST_ttcompat)
-    else if ((rc = ioctl(pty, I_PUSH, "ttcompat")) < 0)
-		code = 12;
+    else if ((rc = ioctl(tty, I_PUSH, "ttcompat")) < 0)
+		failed(12);
 #endif
 #endif /* I_PUSH */
 #if (CONFTEST == 3) || defined(CONFTEST_isatty)
 	else if (!isatty(pty))
-		code = 4;
+		failed(4);
 #endif
 #if CONFTEST >= 4
-    else if ((rc = tcgetattr(0, &tio)) < 0)
-		code = 20;
+    else if ((rc = tcgetattr(pty, &tio)) < 0)
+		failed(20);
     else if ((rc = tcsetattr(pty, TCSAFLUSH, &tio)) < 0)
-		code = 21;
+		failed(21);
 #endif
 #endif /* CONFTEST */
 
 	${cf_cv_main_return:-return}(code);
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_HEAD version: 2 updated: 2012/01/27 20:14:10
+dnl CF__GRANTPT_HEAD version: 3 updated: 2012/01/29 17:13:14
 dnl ----------------
 dnl Headers for workability check of grantpt.
 define([CF__GRANTPT_HEAD],[
 #include <stdlib.h>
 #include <termios.h>
+#include <unistd.h>
+#include <signal.h>
 #include <fcntl.h>
+#include <errno.h>
 
-#ifndef HAVE_FUNC_POSIX_OPENPT
+#ifndef HAVE_POSIX_OPENPT
 #undef posix_openpt
 #define posix_openpt(mode) open("/dev/ptmx", mode)
 #endif
@@ -2890,6 +2912,17 @@ define([CF__GRANTPT_HEAD],[
 #ifdef HAVE_STROPTS_H
 #include <stropts.h>
 #endif
+
+static void failed(int code)
+{
+	perror("conftest");
+	exit(code);
+}
+
+static void my_timeout(int sig)
+{
+	exit(99);
+}
 ])
 dnl ---------------------------------------------------------------------------
 dnl CF__ICONV_BODY version: 2 updated: 2007/07/26 17:35:47
