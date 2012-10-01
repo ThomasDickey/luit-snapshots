@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.19 2010/11/28 23:56:36 tom Exp $
+## $XTermId: Makefile.in,v 1.20 2012/10/01 10:51:54 tom Exp $
 ##
-## Copyright 2006-2009,2010 by Thomas E. Dickey
+## Copyright 2006-2010,2012 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -49,6 +49,7 @@ transform	= @program_transform_name@
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
+datarootdir	= @datarootdir@
 
 manext		= 1
 bindir		= @bindir@
