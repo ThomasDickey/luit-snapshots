@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.19 2012/01/29 19:57:58 tom Exp $
+.\" $XTermId: luit.man,v 1.20 2012/10/06 01:02:25 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -180,6 +180,27 @@ the locale alias file
 .TP
 .B \-\-
 End of options.
+.SH ENVIRONMENT
+\fBLuit\fP uses these environment variables:
+.TP
+LC_ALL
+.TP
+LC_CTYPE
+.TP
+LANG
+During initialization,
+\fBluit\fP calls \fBsetlocale\fP to check if the user's locale is supported
+by the operating system.
+If \fBsetlocale\fP returns a failure,
+\fBluit\fP looks instead at these variables in succession to obtain
+any clues from the user's environment for locale preference.
+.TP
+SHELL
+This is normally set by shells other than the Bourne shell,
+as a convention.
+\fBLuit\fP will use this value (rather than the user's entry in /etc/passwd)
+to decide which shell to execute.
+If SHELL is not set, \fBluit\fP executes /bin/sh.
 .SH EXAMPLES
 The most typical use of
 .B luit
