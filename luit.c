@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.38 2012/01/25 23:02:14 tom Exp $ */
+/* $XTermId: luit.c,v 1.39 2012/10/06 00:27:18 tom Exp $ */
 
 /*
 Copyright 2010-2011,2012 by Thomas E. Dickey
@@ -57,6 +57,7 @@ const char *locale_alias = LOCALE_ALIAS_FILE;
 int ilog = -1;
 int olog = -1;
 int verbose = 0;
+int ignore_locale = 0;
 
 static volatile int sigwinch_queued = 0;
 static volatile int sigchld_queued = 0;
@@ -310,6 +311,7 @@ parseOptions(int argc, char **argv)
 	    if (i + 1 >= argc)
 		FatalError("-encoding requires an argument\n");
 	    locale_name = argv[i + 1];
+	    ignore_locale = 1;
 	    i += 2;
 	} else if (!strcmp(argv[i], "-p")) {
 	    pipe_option = 1;
