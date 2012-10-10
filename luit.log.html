@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.98 2012/10/06 01:09:44 tom Exp $
+  $XTermId: luit.log.html,v 1.100 2012/10/10 00:36:46 tom Exp $
   -->
 
 <html>
@@ -43,9 +43,12 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
-  <p><a id="t20121005" name="t20121005">2012/10/5</a> -</p>
+  <p><a id="t20121009" name="t20121009">2012/10/9</a> -</p>
 
   <ul>
+    <li>add a null-pointer check in <code>copyOut</code> in case a
+    non-8bit encoding was used with the iconv configuration.</li>
+
     <li>document environment variables used by luit in its
     manpage.</li>
 
@@ -77,6 +80,11 @@
         confdefs.h, since long-ago concern about the ability to
         pass-through parameterized macros appears to be not a
         problem, testing with 2.13 and 2.52</dd>
+
+        <dt>CF_GCC_VERSION</dt>
+
+        <dd>add workaround for Debian's modification of the version
+        message</dd>
 
         <dt>CF_GCC_WARNINGS</dt>
 

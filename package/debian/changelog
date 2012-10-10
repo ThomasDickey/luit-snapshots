@@ -1,6 +1,6 @@
-bluit (20121005) unstable; urgency=low
+bluit (20121009) unstable; urgency=low
 
-  * fix reported regression
+  * fix reported regression in -encoding option
 
  -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 01 Oct 2012 05:10:34 -0400
 
