@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.33 2012/01/25 23:02:28 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.34 2012/10/10 00:32:15 tom Exp $ */
 
 /*
 Copyright 2011,2012 by Thomas E. Dickey
@@ -696,7 +696,10 @@ copyOut(Iso2022Ptr is, int fd, unsigned char *buf, unsigned count)
 		if (*s == ESC) {
 		    buffer(is, *s++);
 		    is->parserState = P_ESC;
-		} else if (OTHER(is) != NULL) {
+		} else if (OTHER(is) != NULL
+			   && OTHER(is)->other_recode != NULL
+			   && OTHER(is)->other_stack != NULL
+			   && OTHER(is)->other_aux != NULL) {
 		    int c = OTHER(is)->other_stack(*s, OTHER(is)->other_aux);
 		    if (c >= 0) {
 			unsigned ucode = (unsigned) c;
