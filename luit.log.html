@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.100 2012/10/10 00:36:46 tom Exp $
+  $XTermId: luit.log.html,v 1.102 2012/10/15 00:27:25 tom Exp $
   -->
 
 <html>
@@ -43,10 +43,12 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
-  <p><a id="t20121009" name="t20121009">2012/10/9</a> -</p>
+  <p><a id="t20121014" name="t20121014">2012/10/14</a> -</p>
 
   <ul>
-    <li>add a null-pointer check in <code>copyOut</code> in case a
+  <li>review/improve no-leaks checking with valgrind.
+
+    <li>add null-pointer checks in <code>copyOut</code> in case a
     non-8bit encoding was used with the iconv configuration.</li>
 
     <li>document environment variables used by luit in its
