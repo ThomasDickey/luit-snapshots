@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.34 2012/10/04 09:21:23 tom Exp $
+dnl $XTermId: configure.in,v 1.36 2012/10/11 20:46:12 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2010,2011 by Thomas E. Dickey
+dnl Copyright 2006-2011,2012 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -137,6 +137,7 @@ then
 	AM_ICONV
 	AC_DEFINE(USE_ICONV,1,[Define to 1 if iconv-libraries should be used])
 	CF_ADD_LIBS($LIBICONV)
+	EXTRASRCS="$EXTRASRCS luitconv.c"
 	EXTRAOBJS="$EXTRAOBJS luitconv\$o"
 fi
 
@@ -147,10 +148,12 @@ CF_ENABLE_TRACE
 
 if test "$with_trace" != no
 then
+	EXTRASRCS="$EXTRASRCS trace.c"
 	EXTRAOBJS="$EXTRAOBJS trace\$o"
 fi
 
 CF_DISABLE_RPATH_HACK
 
+AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 AC_OUTPUT(Makefile,,,cat)

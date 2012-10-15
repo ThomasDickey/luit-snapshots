@@ -1,7 +1,7 @@
-/* $XTermId: charset.c,v 1.35 2011/10/28 20:46:57 tom Exp $ */
+/* $XTermId: charset.c,v 1.40 2012/10/14 23:58:23 tom Exp $ */
 
 /*
-Copyright 2010,2011 by Thomas E. Dickey
+Copyright 2010-2011,2012 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -262,9 +262,10 @@ static CharsetPtr
 getFontencCharset(unsigned final, int type, const char *name)
 {
     FontencCharsetPtr fc;
-    CharsetPtr c;
+    CharsetPtr c = NULL;
     FontMapPtr mapping;
     FontMapReversePtr reverse;
+    CharsetPtr result = NULL;
 
     fc = fontencCharsets;
     while (fc->name) {
@@ -277,47 +278,42 @@ getFontencCharset(unsigned final, int type, const char *name)
 
     if (!fc->name) {
 	VERBOSE(2, ("...no match for '%s'\n", NonNull(name)));
-	return NULL;
-    }
-
-    c = TypeCalloc(CharsetRec);
-    if (c == NULL)
-	return NULL;
-
-    mapping = LookupMapping(fc->xlfd);
-    if (!mapping) {
+    } else if ((c = TypeCalloc(CharsetRec)) == 0) {
+	VERBOSE(2, ("malloc failed\n"));
+    } else if ((mapping = LookupMapping(fc->xlfd)) == NULL) {
 	VERBOSE(2, ("...lookup mapping %s (%s) failed\n", NonNull(name), fc->xlfd));
 	fc->type = T_FAILED;
-	return NULL;
-    }
-
-    reverse = LookupReverse(mapping);
-    if (!reverse) {
+    } else if ((reverse = LookupReverse(mapping)) == NULL) {
 	VERBOSE(2, ("...lookup reverse %s failed\n", NonNull(name)));
 	fc->type = T_FAILED;
-	return NULL;
+    } else {
+	fc->mapping = mapping;
+	fc->reverse = reverse;
+
+	c->name = fc->name;
+	c->type = fc->type;
+	c->final = fc->final;
+	c->recode = FontencCharsetRecode;
+	c->reverse = FontencCharsetReverse;
+	c->data = fc;
+
+	cacheCharset(c);
+	result = c;
     }
 
-    fc->mapping = mapping;
-    fc->reverse = reverse;
+    if (result == NULL && c != NULL)
+	free(c);
 
-    c->name = fc->name;
-    c->type = fc->type;
-    c->final = fc->final;
-    c->recode = FontencCharsetRecode;
-    c->reverse = FontencCharsetReverse;
-    c->data = fc;
-
-    cacheCharset(c);
-    return c;
+    return result;
 }
 
 static CharsetPtr
 getOtherCharset(const char *name)
 {
     const OtherCharsetRec *fc;
-    CharsetPtr c;
-    OtherStatePtr s;
+    CharsetPtr c = NULL;
+    OtherStatePtr s = NULL;
+    CharsetPtr result = NULL;
 
     fc = otherCharsets;
     while (fc->name) {
@@ -326,40 +322,45 @@ getOtherCharset(const char *name)
 	fc++;
     }
 
-    if (!fc->name)
-	return NULL;
+    if (!fc->name) {
+	VERBOSE(2, ("...no match for '%s'\n", NonNull(name)));
+    } else if ((c = TypeCalloc(CharsetRec)) == NULL) {
+	VERBOSE(2, ("malloc failed\n"));
+    } else if ((s = TypeCalloc(OtherState)) == NULL) {
+	VERBOSE(2, ("malloc failed\n"));
+    } else {
+	c->name = fc->name;
+	c->type = T_OTHER;
+	c->final = 0;
+	c->data = fc;
+	c->other_recode = fc->mapping;
+	c->other_reverse = fc->reverse;
+	c->other_stack = fc->stack;
+	c->other_aux = s;
 
-    c = TypeCalloc(CharsetRec);
-    if (c == NULL)
-	return NULL;
-
-    s = TypeCalloc(OtherState);
-    if (s == NULL) {
-	free(c);
-	return NULL;
+	if (!fc->init(s)) {
+	    VERBOSE(2, ("...initialization %s failed\n", NonNull(name)));
+	    c->type = T_FAILED;
+	} else {
+	    cacheCharset(c);
+	    result = c;
+	}
     }
 
-    c->name = fc->name;
-    c->type = T_OTHER;
-    c->final = 0;
-    c->data = fc;
-    c->other_recode = fc->mapping;
-    c->other_reverse = fc->reverse;
-    c->other_stack = fc->stack;
-    c->other_aux = s;
-
-    if (!fc->init(s)) {
-	c->type = T_FAILED;
-	return NULL;
+    if (result == NULL) {
+	if (c != NULL)
+	    free(c);
+	if (s != NULL)
+	    free(s);
     }
 
-    cacheCharset(c);
-    return c;
+    return result;
 }
 
 const CharsetRec *
 getUnknownCharset(int type)
 {
+    TRACE(("getUnknownCharset(%d)\n", type));
     switch (type) {
     case T_94:
 	VERBOSE(2, ("using unknown 94-charset\n"));
@@ -384,6 +385,7 @@ getCharset(unsigned final, int type)
 {
     const CharsetRec *c;
 
+    TRACE(("getCharset(final=%c, type=%d)\n", final, type));
     c = getCachedCharset(final, type, NULL);
     if (c)
 	return c;
@@ -656,7 +658,11 @@ static void
 destroyCharset(CharsetPtr p)
 {
     if (!isUnknownCharsetPtr(p)) {
-	destroyFontencCharsetPtr((FontencCharsetPtr) p->data);
+	if (p->type == T_OTHER) {
+	    free(p->other_aux);
+	} else {
+	    destroyFontencCharsetPtr((FontencCharsetPtr) p->data);
+	}
 	free(p);
     }
 }

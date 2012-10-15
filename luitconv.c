@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.26 2012/01/27 01:25:30 tom Exp $
+ * $XTermId: luitconv.c,v 1.34 2012/10/12 10:54:17 tom Exp $
  *
  * Copyright 2010,2012 by Thomas E. Dickey
  *
@@ -410,6 +410,7 @@ try_iconv_open(const char **guess)
     iconv_t result;
 
     strcpy(encoding_name, *guess);
+    TRACE(("try_iconv_open(%s)\n", encoding_name));
     result = iconv_open("UTF-8", encoding_name);
 
     /*
@@ -511,6 +512,27 @@ cmp_rindex(const void *a, const void *b)
     return (int) (p)->ucs - (int) (q)->ucs;
 }
 
+#ifdef OPT_TRACE
+static void
+trace_convert(LuitConv * data, size_t which)
+{
+    size_t j;
+
+    TRACE(("convert %4X:%d:%04X:",
+	   (unsigned) which,
+	   (int) data->table_utf8[which].size,
+	   data->table_utf8[which].ucs));
+    if (data->table_utf8[which].size) {
+	for (j = 0; j < data->table_utf8[which].size; ++j) {
+	    TRACE(("%c", data->table_utf8[which].text[j]));
+	}
+    }
+    TRACE(("\n"));
+}
+#else
+#define trace_convert(data,n)	/* nothing */
+#endif
+
 static void
 initializeIconvTable(LuitConv * data)
 {
@@ -549,11 +571,7 @@ initializeIconvTable(LuitConv * data)
 	    } else {
 		data->table_utf8[n].ucs = UCS_REPL;
 	    }
-	    TRACE(("convert %4X:%d:%04X:%.*s\n", n,
-		   (int) data->table_utf8[n].size,
-		   data->table_utf8[n].ucs,
-		   (int) data->table_utf8[n].size,
-		   data->table_utf8[n].text));
+	    trace_convert(data, (size_t) n);
 
 	    data->rev_index[data->len_index].ucs = data->table_utf8[n].ucs;
 	    data->rev_index[data->len_index].ch = n;
@@ -619,8 +637,15 @@ findEncodingAlias(const char *encoding_name)
 	{ "microsoft-cp1252",   "windows-1252" },
 #if 0	/* FIXME - not 8-bit character sets */
 	{ "big5.eten-0",	"BIG-5" },
-	{ "ksc5601.1987-0",	"JOHAB" },
+	{ "big5hkscs-0",        "BIG5-HKSCS" },
+	{ "gb18030.2000-0",     "GB18030" },
+	{ "gb18030.2000-1",     "GB18030" },
 	{ "gb2312.1980-0",	"GB2312" },
+	{ "gbk-0",	        "GBK" },
+	{ "jisx0201.1976-0",    "EUC-JP" },
+	{ "jisx0208.1990-0",    "EUC-JP" },
+	{ "jisx0212.1990-0",    "EUC-JP" },
+	{ "ksc5601.1987-0",	"JOHAB" },
 #endif
     };
     /* *INDENT-ON* */
@@ -628,9 +653,11 @@ findEncodingAlias(const char *encoding_name)
     size_t n;
     const char *result = 0;
 
+    TRACE(("findEncodingAlias(%s)\n", encoding_name));
     for (n = 0; n < SizeOf(table); ++n) {
 	if (!compare(encoding_name, table[n].luit_name)) {
 	    result = table[n].iconv_name;
+	    TRACE(("... matched '%s'\n", result));
 	    break;
 	}
     }
@@ -668,11 +695,7 @@ initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
 		memcpy(data->table_utf8[j].text, buffer, need);
 	    }
 
-	    TRACE(("convert %4X:%d:%04X:%.*s\n", (unsigned) j,
-		   (int) data->table_utf8[j].size,
-		   data->table_utf8[j].ucs,
-		   (int) data->table_utf8[j].size,
-		   data->table_utf8[j].text));
+	    trace_convert(data, j);
 
 	    data->rev_index[data->len_index].ucs = data->table_utf8[j].ucs;
 	    data->rev_index[data->len_index].ch = (unsigned) j;
@@ -722,10 +745,14 @@ luitLookupMapping(const char *encoding_name)
     }
 
     if (latest == 0) {
+	const char *alias = 0;
 	my_desc = try_iconv_open(&encoding_name);
 	if (my_desc == NO_ICONV) {
-	    const char *alias = findEncodingAlias(encoding_name);
+	    alias = findEncodingAlias(encoding_name);
 	    if (alias != 0) {
+#ifdef NO_LEAKS
+		free((char *) encoding_name);
+#endif
 		encoding_name = alias;
 		TRACE(("...retry '%s'\n", encoding_name));
 		my_desc = try_iconv_open(&encoding_name);
@@ -762,6 +789,12 @@ luitLookupMapping(const char *encoding_name)
 		result = &(latest->mapping);
 	    }
 	}
+#ifdef NO_LEAKS
+	if (alias != encoding_name
+	    || alias != 0) {
+	    free((char *) encoding_name);
+	}
+#endif
 
 	/* sort the reverse-index, to allow using bsearch */
 	if (result != 0) {

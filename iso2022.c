@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.34 2012/10/10 00:32:15 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.36 2012/10/12 09:25:00 tom Exp $ */
 
 /*
 Copyright 2011,2012 by Thomas E. Dickey
@@ -40,6 +40,51 @@ static void terminate(Iso2022Ptr, int);
 #define OUTBUF_FREE(is, count) ((is)->outbuf_count + (count) <= BUFFER_SIZE)
 #define OUTBUF_MAKE_FREE(is, fd, count) \
     if(!OUTBUF_FREE((is), (count))) outbuf_flush((is), (fd))
+
+#ifdef OPT_TRACE
+static void
+trace_charset(const char *tag, const CharsetRec * ptr)
+{
+    if (ptr != NULL) {
+	TRACE(("%s:", tag));
+	TRACE((" name:%s", NonNull(ptr->name)));
+	TRACE((" type:%d", ptr->type));
+	if (ptr->final)
+	    TRACE((" final:%c", ptr->final));
+	if (ptr->data != NULL)
+	    TRACE((" data"));
+	if (ptr->recode != NULL)
+	    TRACE((" recode"));
+	if (ptr->reverse != NULL)
+	    TRACE((" reverse"));
+	if (ptr->other_stack != NULL)
+	    TRACE((" other_stack"));
+	if (ptr->other_aux != NULL)
+	    TRACE((" other_aux"));
+	if (ptr->other_recode != NULL)
+	    TRACE((" other_recode"));
+	if (ptr->other_reverse != NULL)
+	    TRACE((" other_reverse"));
+	TRACE(("\n"));
+    }
+}
+
+static void
+trace_iso2022(const char *tag, const Iso2022Ptr ptr)
+{
+    TRACE(("%s:\n", tag));
+    trace_charset("\tGL()", GL(ptr));
+    trace_charset("\tGR()", GR(ptr));
+    trace_charset("\tG0()", G0(ptr));
+    trace_charset("\tG1()", G1(ptr));
+    trace_charset("\tG2()", G2(ptr));
+    trace_charset("\tG3()", G3(ptr));
+    trace_charset("\tOTHER()", OTHER(ptr));
+}
+
+#else
+#define trace_iso2022(tag, ptr)	/* nothing */
+#endif
 
 static void
 outbuf_flush(Iso2022Ptr is, int fd)
@@ -239,6 +284,7 @@ initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
     const CharsetRec *other = NULL;
     int rc;
 
+    TRACE(("initIso2022(locale=%s, charset=%s)\n", locale, NonNull(charset)));
     rc = getLocaleState(locale, charset, &gl, &gr, &g0, &g1, &g2, &g3, &other);
     if (rc < 0) {
 	if (charset)
@@ -291,6 +337,7 @@ initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
     if (i->grp == NULL) {
 	i->grp = &i->g[gr];
     }
+    trace_iso2022("...initIso2022", i);
     return 0;
 }
 
@@ -311,6 +358,7 @@ mergeIso2022(Iso2022Ptr d, Iso2022Ptr s)
 	d->glp = &(d->g[identifyCharset(s, s->glp)]);
     if (d->grp == NULL)
 	d->grp = &(d->g[identifyCharset(s, s->grp)]);
+    trace_iso2022("...mergeIso2022", d);
     return 0;
 }
 
@@ -365,7 +413,7 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 
 #define NEXT do {c++; rem--;} while(0)
 
-    while (rem) {
+    while (rem > 0) {
 	codepoint = -1;
 	if (is->parserState == P_ESC) {
 	    assert(buffered_input_count == 0);
@@ -511,7 +559,8 @@ copyIn(Iso2022Ptr is, int fd, unsigned char *buf, int count)
 		WRITE_1(ucode);
 		continue;
 	    }
-	    if (OTHER(is) != NULL) {
+	    if (OTHER(is) != NULL
+		&& OTHER(is)->other_reverse != NULL) {
 		unsigned int c2;
 		c2 = OTHER(is)->other_reverse(ucode, OTHER(is)->other_aux);
 		if (c2 >> 24)

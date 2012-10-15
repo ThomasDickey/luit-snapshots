@@ -1,7 +1,7 @@
-/* $XTermId: parser.c,v 1.18 2012/10/06 00:25:04 tom Exp $ */
+/* $XTermId: parser.c,v 1.20 2012/10/11 23:25:42 tom Exp $ */
 
 /*
-Copyright 2011 by Thomas E. Dickey
+Copyright 2011,2012 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -203,7 +203,7 @@ resolveLocale(const char *locale)
     int rc;
     int found = 0;
 
-    TRACE(("resolveLocale(%s)\n", NonNull(locale)));
+    TRACE(("resolveLocale(%s)\n", locale));
 
     TRACE(("...looking in %s\n", locale_alias));
     f = fopen(locale_alias, "r");

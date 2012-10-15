@@ -1,4 +1,4 @@
-/* $XTermId: charset.h,v 1.9 2010/11/26 20:31:33 tom Exp $ */
+/* $XTermId: charset.h,v 1.10 2012/10/11 21:05:39 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -27,15 +27,17 @@ THE SOFTWARE.
 
 #include <other.h>
 
-#define T_FAILED 0
-#define T_94 1
-#define T_96 2
-#define T_128 3
-#define T_9494 4
-#define T_9696 5
-/* Big 5 */
-#define T_94192 6
-#define T_OTHER 7
+typedef enum {
+    T_FAILED = 0
+    ,T_94			/* 94 codepoints */
+    ,T_96			/* 96 codepoints */
+    ,T_128			/* 128 codepoints */
+    ,T_9494			/* 94x94 codepoints */
+    ,T_9696			/* 96x96 codepoints */
+    /* Big 5 */
+    ,T_94192			/* 94x192 codepoints */
+    ,T_OTHER			/* legal, but unused in practice */
+} T_CodePoints;
 
 /* True for charsets that pass control chars unchanged, at least in
    the first byte */
