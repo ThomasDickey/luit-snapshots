@@ -1,7 +1,7 @@
 /*
- * $XTermId: luitconv.c,v 1.34 2012/10/12 10:54:17 tom Exp $
+ * $XTermId: luitconv.c,v 1.36 2013/01/10 00:37:07 tom Exp $
  *
- * Copyright 2010,2012 by Thomas E. Dickey
+ * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -729,6 +729,9 @@ findBuiltinEncoding(const char *encoding_name)
 FontMapPtr
 luitLookupMapping(const char *encoding_name)
 {
+#ifdef NO_LEAKS
+    const char *original_name = encoding_name;
+#endif
     FontMapPtr result = 0;
     LuitConv *latest = 0;
     const BuiltInCharsetRec *builtIn;
@@ -788,10 +791,13 @@ luitLookupMapping(const char *encoding_name)
 
 		result = &(latest->mapping);
 	    }
+	} else {
+	    iconv_close(my_desc);
 	}
 #ifdef NO_LEAKS
-	if (alias != encoding_name
-	    || alias != 0) {
+	if (encoding_name != original_name
+	    && (alias != encoding_name
+		|| alias != 0)) {
 	    free((char *) encoding_name);
 	}
 #endif
