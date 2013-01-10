@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.43 2012/01/28 12:28:13 tom Exp $ */
+/* $XTermId: sys.c,v 1.46 2013/01/10 00:34:37 tom Exp $ */
 
 /*
-Copyright 2010-2011,2012 by Thomas E. Dickey
+Copyright 2010-2012,2013 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -459,11 +459,9 @@ allocatePty(int *pty_return, char **line_return)
 	return 0;
     }
 
+    close(pty);
+
   bail:
-    if (pty >= 0)
-	close(pty);
-    if (line)
-	free(line);
     return -1;
 }
 

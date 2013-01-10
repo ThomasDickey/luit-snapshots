@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.39 2012/10/06 00:27:18 tom Exp $ */
+/* $XTermId: luit.c,v 1.41 2013/01/10 00:31:38 tom Exp $ */
 
 /*
-Copyright 2010-2011,2012 by Thomas E. Dickey
+Copyright 2010-2012,2013 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -287,6 +287,8 @@ parseOptions(int argc, char **argv)
 	} else if (!strcmp(argv[i], "-ilog")) {
 	    if (i + 1 >= argc)
 		FatalError("-ilog requires an argument\n");
+	    if (ilog >= 0)
+		close(ilog);
 	    ilog = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	    if (ilog < 0) {
 		perror("Couldn't open input log");
@@ -296,6 +298,8 @@ parseOptions(int argc, char **argv)
 	} else if (!strcmp(argv[i], "-olog")) {
 	    if (i + 1 >= argc)
 		FatalError("-olog requires an argument\n");
+	    if (olog >= 0)
+		close(olog);
 	    olog = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	    if (olog < 0) {
 		perror("Couldn't open output log");
@@ -519,11 +523,11 @@ setup_io(int pty)
 
     val = fcntl(0, F_GETFL, 0);
     if (val >= 0) {
-	fcntl(0, F_SETFL, val | O_NONBLOCK);
+	(void) fcntl(0, F_SETFL, val | O_NONBLOCK);
     }
     val = fcntl(pty, F_GETFL, 0);
     if (val >= 0) {
-	fcntl(pty, F_SETFL, val | O_NONBLOCK);
+	(void) fcntl(pty, F_SETFL, val | O_NONBLOCK);
     }
 
     setWindowSize(0, pty);
@@ -543,11 +547,11 @@ cleanup_io(int pty)
 
     val = fcntl(0, F_GETFL, 0);
     if (val >= 0) {
-	fcntl(0, F_SETFL, val & ~O_NONBLOCK);
+	(void) fcntl(0, F_SETFL, val & ~O_NONBLOCK);
     }
     val = fcntl(pty, F_GETFL, 0);
     if (val >= 0) {
-	fcntl(pty, F_SETFL, val & ~O_NONBLOCK);
+	(void) fcntl(pty, F_SETFL, val & ~O_NONBLOCK);
     }
 }
 

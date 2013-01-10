@@ -1,3 +1,9 @@
+bluit (20130109) unstable; urgency=low
+
+  * code cleanup with Coverity and Clang
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 09 Jan 2013 20:02:46 -0500
+
 bluit (20121014) unstable; urgency=low
 
   * fix reported regression in -encoding option

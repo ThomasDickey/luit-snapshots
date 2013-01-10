@@ -1,7 +1,7 @@
-/* $XTermId: charset.c,v 1.40 2012/10/14 23:58:23 tom Exp $ */
+/* $XTermId: charset.c,v 1.41 2013/01/10 00:47:28 tom Exp $ */
 
 /*
-Copyright 2010-2011,2012 by Thomas E. Dickey
+Copyright 2010-2012,2013 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -548,10 +548,11 @@ matchLocaleCharset(const char *charset)
 	if (p == 0) {
 	    size_t have = strlen(source);
 	    size_t n;
-	    char target[MAX_KEYWORD_LENGTH + 8];
+	    char target[MAX_KEYWORD_LENGTH + 80];
 
 	    for (n = 0; n < SizeOf(prefixes); ++n) {
 		if (have > prefixes[n].source_len
+		    && have < MAX_KEYWORD_LENGTH
 		    && !compare1(source,
 				 prefixes[n].source,
 				 prefixes[n].source_len)) {

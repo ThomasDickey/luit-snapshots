@@ -1,7 +1,7 @@
-/* $XTermId: parser.c,v 1.20 2012/10/11 23:25:42 tom Exp $ */
+/* $XTermId: parser.c,v 1.21 2013/01/09 22:19:47 tom Exp $ */
 
 /*
-Copyright 2011,2012 by Thomas E. Dickey
+Copyright 2011-2012,2013 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -54,17 +54,16 @@ drainWhitespace(FILE *f, int c)
     if (c == 0)
 	c = getc(f);
 
-    while (c == '#' || c == ' ' || c == '\t') {
-	if (c <= 0)
-	    return 0;
+    while (c > 0 && (c == '#' || c == ' ' || c == '\t')) {
 	if (c == '#') {
 	    skipEndOfLine(f, c);
-	    return '\n';
+	    c = '\n';
+	    break;
 	}
 	c = getc(f);
     }
 
-    return c;
+    return (c > 0) ? c : 0;
 }
 
 static int
