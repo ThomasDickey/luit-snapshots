@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.103 2013/01/10 01:00:55 tom Exp $
+  $XTermId: luit.log.html,v 1.105 2013/01/11 11:51:54 tom Exp $
   -->
 
 <html>
@@ -43,9 +43,13 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
-  <p><a id="t20130109" name="t20130109">2013/01/09</a> -</p>
+  <p><a id="t20130111" name="t20130111">2013/01/11</a> -</p>
 
   <ul>
+    <li>apply workaround from xterm patch #279 to make window size
+    set for pty implementation such as Mac OS X which lose this
+    when opening the other side of the connection.</li>
+
     <li>fix issues from Coverity scan; all were minor.</li>
   </ul>
 
