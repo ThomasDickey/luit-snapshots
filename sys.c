@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.46 2013/01/10 00:34:37 tom Exp $ */
+/* $XTermId: sys.c,v 1.47 2013/01/11 10:46:14 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -196,9 +196,11 @@ setWindowSize(int sfd, int dfd)
 #ifdef TIOCGWINSZ
     int rc;
     struct winsize ws;
+    TRACE(("setWindowSize sfd %d, dfd %d\n", sfd, dfd));
     rc = ioctl(sfd, TIOCGWINSZ, (char *) &ws);
     if (rc < 0)
 	return -1;
+    TRACE(("...got %dx%d\n", ws.ws_row, ws.ws_col));
     rc = ioctl(dfd, TIOCSWINSZ, (char *) &ws);
     if (rc < 0)
 	return -1;
@@ -369,6 +371,7 @@ allocatePty(int *pty_return, char **line_return)
 #if defined(HAVE_GRANTPT) && defined(HAVE_WORKING_GRANTPT)
     int rc;
 
+    TRACE(("allocatePty (posix)\n"));
     /*
      * hmm - xterm does open(/dev/ptmx), grant, unlock, open(ptsname)
      * The second open is in child().
@@ -414,6 +417,7 @@ allocatePty(int *pty_return, char **line_return)
     int rc;
     char ttydev[80];		/* OpenBSD says at least 16 bytes */
 
+    TRACE(("allocatePty (openpty)\n"));
     rc = openpty(&pty, &opened_tty, ttydev, NULL, NULL);
     if (rc < 0) {
 	close(pty);
@@ -434,6 +438,7 @@ allocatePty(int *pty_return, char **line_return)
   bsd:
 #endif /* HAVE_GRANTPT, etc */
 
+    TRACE(("allocatePty (bsd)\n"));
     strcpy(name, "/dev/pty??");
     for (p1 = name1; *p1; p1++) {
 	name[8] = *p1;

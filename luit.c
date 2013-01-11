@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.41 2013/01/10 00:31:38 tom Exp $ */
+/* $XTermId: luit.c,v 1.42 2013/01/11 10:44:09 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -638,10 +638,6 @@ child(char *line, char *path, char *const argv[])
     int tty;
     int pgrp;
 
-    close(0);
-    close(1);
-    close(2);
-
     TRACE(("child %s\n", path));
     pgrp = setsid();
     if (pgrp < 0) {
@@ -659,10 +655,16 @@ child(char *line, char *path, char *const argv[])
 	write_waitpipe(c2p_waitpipe);
     }
 
+    setWindowSize(0, tty);
+    close(0);
     if (tty != 0)
 	dup2(tty, 0);
+
+    close(1);
     if (tty != 1)
 	dup2(tty, 1);
+
+    close(2);
     if (tty != 2)
 	dup2(tty, 2);
 
