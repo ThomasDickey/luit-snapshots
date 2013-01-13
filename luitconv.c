@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.36 2013/01/10 00:37:07 tom Exp $
+ * $XTermId: luitconv.c,v 1.38 2013/01/13 14:38:58 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -791,8 +791,36 @@ luitLookupMapping(const char *encoding_name)
 
 		result = &(latest->mapping);
 	    }
-	} else {
+	} else if (my_desc != NO_ICONV) {
 	    iconv_close(my_desc);
+	} else {
+	    TRACE(("...fallback to POSIX\n"));
+	    latest = TypeCalloc(LuitConv);
+	    if (latest != 0) {
+		unsigned ch;
+		BuiltInMapping mapping[MAX8];
+		BuiltInCharsetRec posix;
+
+		memset(&posix, 0, sizeof(posix));
+		posix.name = encoding_name;
+		posix.length = MAX8;
+		posix.table = mapping;
+		for (ch = 0; ch < posix.length; ++ch) {
+		    mapping[ch].source = ch;
+		    mapping[ch].target = (ch < 128) ? ch : 0;
+		}
+
+		latest->next = all_conversions;
+		latest->encoding_name = strmalloc(encoding_name);
+		latest->iconv_desc = my_desc;
+		initializeBuiltInTable(latest, &posix);
+		latest->mapping.recode = luitRecode;
+		latest->reverse.reverse = luitReverse;
+		latest->reverse.data = latest;
+		all_conversions = latest;
+
+		result = &(latest->mapping);
+	    }
 	}
 #ifdef NO_LEAKS
 	if (encoding_name != original_name
