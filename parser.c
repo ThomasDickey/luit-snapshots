@@ -1,4 +1,4 @@
-/* $XTermId: parser.c,v 1.21 2013/01/09 22:19:47 tom Exp $ */
+/* $XTermId: parser.c,v 1.22 2013/01/14 01:56:45 tom Exp $ */
 
 /*
 Copyright 2011-2012,2013 by Thomas E. Dickey
@@ -236,13 +236,15 @@ resolveLocale(const char *locale)
      */
     if (!found || !has_encoding(resolved)) {
 #ifdef HAVE_LANGINFO_CODESET
+	char *improved;
 	if (!ignore_locale
 	    && strcmp(locale, "C")
 	    && strcmp(locale, "POSIX")
 	    && strcmp(locale, "US-ASCII")
-	    && (resolved = nl_langinfo(CODESET)) != 0) {
-	    TRACE(("...nl_langinfo ->%s\n", resolved));
-	    resolved = strmalloc(resolved);
+	    && (improved = nl_langinfo(CODESET)) != 0) {
+	    TRACE(("...nl_langinfo ->%s\n", improved));
+	    free(resolved);
+	    resolved = strmalloc(improved);
 	} else
 #endif
 	if (f == 0 && (fopen(locale_alias, "r") == 0)) {

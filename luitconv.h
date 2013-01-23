@@ -1,7 +1,7 @@
 /*
- * $XTermId: luitconv.h,v 1.7 2010/11/24 22:29:34 tom Exp $
+ * $XTermId: luitconv.h,v 1.12 2013/01/21 22:49:19 tom Exp $
  *
- * Copyright 2010 by Thomas E. Dickey
+ * Copyright 2010,2013 by Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -28,7 +28,10 @@
 #ifdef USE_ICONV
 
 typedef struct _FontMap {
+    int type;
     unsigned (*recode) (unsigned, void *);	/* mapping function */
+    void *client_data;          /* second parameter of the two above */
+    struct _FontMap *next;      /* link to next element in list */
 } FontMapRec, *FontMapPtr;
 
 typedef struct _FontMapReverse {
@@ -67,5 +70,9 @@ extern void luitDestroyReverse(FontMapReversePtr);
 	FontEncRecode(code, fontmap_ptr)
 
 #endif
+
+extern void reportFontencCharsets(void);
+extern void reportIconvCharsets(void);
+extern void showFontencCharset(const char *);
 
 #endif /* LUITCONV_H */

@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.38 2013/01/13 14:38:58 tom Exp $
+ * $XTermId: luitconv.c,v 1.43 2013/01/16 01:38:01 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -28,6 +28,11 @@
 #include <iconv.h>
 
 #include <sys.h>
+
+#ifdef HAVE_LANGINFO_CODESET
+#include <locale.h>
+#include <langinfo.h>
+#endif
 
 /*
  * This uses a similar approach to vile's support for wide/narrow locales.
@@ -65,9 +70,10 @@ typedef struct _LuitConv {
     char *encoding_name;
     iconv_t iconv_desc;
     /* internal tables for input/output */
-    MappingData table_utf8[MAX8];	/* UTF-8 equivalents of 8-bit codes */
-    ReverseData rev_index[MAX8];	/* reverse-index */
+    MappingData *table_utf8;	/* UTF-8 equivalents of 8-bit codes */
+    ReverseData *rev_index;	/* reverse-index */
     size_t len_index;		/* index length */
+    size_t table_size;		/* length of table_utf8[] and rev_index[] */
     /* data expected by caller */
     FontMapRec mapping;
     FontMapReverseRec reverse;
@@ -375,6 +381,18 @@ ConvToUTF8(UCHAR * target, UINT source, size_t limit)
 }
 
 /******************************************************************************/
+
+static LuitConv *
+newLuitConv(size_t elts)
+{
+    LuitConv *result = TypeCalloc(LuitConv);
+    if (result != 0) {
+	result->table_size = elts;
+	result->table_utf8 = TypeCallocN(MappingData, elts);
+	result->rev_index = TypeCallocN(ReverseData, elts);
+    }
+    return result;
+}
 
 static int
 compare(const char *s, const char *t)
@@ -763,7 +781,7 @@ luitLookupMapping(const char *encoding_name)
 	}
 	if (my_desc != NO_ICONV) {
 	    TRACE(("...iconv_open succeeded\n"));
-	    latest = TypeCalloc(LuitConv);
+	    latest = newLuitConv(MAX8);
 	    if (latest != 0) {
 		latest->next = all_conversions;
 		latest->encoding_name = strmalloc(encoding_name);
@@ -778,7 +796,7 @@ luitLookupMapping(const char *encoding_name)
 	    }
 	} else if ((builtIn = findBuiltinEncoding(encoding_name)) != 0) {
 	    TRACE(("...use built-in charset\n"));
-	    latest = TypeCalloc(LuitConv);
+	    latest = newLuitConv(MAX8);
 	    if (latest != 0) {
 		latest->next = all_conversions;
 		latest->encoding_name = strmalloc(encoding_name);
@@ -795,7 +813,7 @@ luitLookupMapping(const char *encoding_name)
 	    iconv_close(my_desc);
 	} else {
 	    TRACE(("...fallback to POSIX\n"));
-	    latest = TypeCalloc(LuitConv);
+	    latest = newLuitConv(MAX8);
 	    if (latest != 0) {
 		unsigned ch;
 		BuiltInMapping mapping[MAX8];
@@ -883,6 +901,193 @@ luitMapCodeValue(unsigned code, FontMapPtr fontmap_ptr)
     return result;
 }
 
+#if defined(HAVE_LANGINFO_CODESET)
+typedef struct {
+    char *encoding;
+    char **locales;
+    size_t length;		/* amount used in locales[] */
+    size_t actual;		/* allocated size of locales[] */
+} CODESET_LOCALE;
+
+static int
+compare_encodings(const void *a, const void *b)
+{
+    const CODESET_LOCALE *p = a;
+    const CODESET_LOCALE *q = b;
+    return strcmp(p->encoding, q->encoding);
+}
+
+static int
+compare_locales(const void *a, const void *b)
+{
+    const char *const *p = a;
+    const char *const *q = b;
+    return strcmp(*p, *q);
+}
+#endif
+
+/*
+ * Obtain a list of supported locales, and for each obtain the corresponding
+ * charset.
+ */
+void
+reportIconvCharsets(void)
+{
+#if !defined(HAVE_LANGINFO_CODESET)
+    Message("nl_langinfo(CODESET) not supported\n");
+#else
+    FILE *fp;
+    char *old_locale;
+    char **allLs = 0;
+    size_t numLs = 0;
+    size_t useLs = 0;
+
+    /* save our current locale */
+    if ((old_locale = setlocale(LC_CTYPE, NULL)) != 0)
+	old_locale = strmalloc(old_locale);
+
+    /*
+     * next, obtain the list of locales.  Their order does not matter.
+     */
+    if ((fp = popen("locale -a", "r")) != 0) {
+	char buffer[BUFSIZ];
+	char *s;
+	while (fgets(buffer, sizeof(buffer) - 1, fp) != 0) {
+	    s = buffer + strlen(buffer);
+	    while (s != buffer) {
+		--s;
+		if (isspace(*s))
+		    *s = '\0';
+		else
+		    break;
+	    }
+	    if ((long) useLs >= (long) numLs) {
+		numLs = (useLs + 32) * 3 / 2;
+		allLs = realloc(allLs, (numLs + 2) * sizeof(*allLs));
+		if (allLs == NULL) {
+		    FatalError("Couldn't grow allLs array.\n");
+		}
+	    }
+	    allLs[useLs++] = strmalloc(buffer);
+	    allLs[useLs] = 0;
+	}
+	pclose(fp);
+    }
+
+    /* now, for each locale, set our locale to that and ask for the charset */
+    if (allLs != 0) {
+	int j, k, enc, loc;
+	char *resolved;
+	CODESET_LOCALE *allEs = 0;
+	size_t n, t, col, now;
+	size_t useEs = 0;
+	size_t numEs = 0;
+
+	for (j = 0; allLs[j] != 0; ++j) {
+	    setlocale(LC_CTYPE, allLs[j]);
+	    if ((resolved = nl_langinfo(CODESET)) != 0) {
+		enc = -1;
+		for (k = 0; k < (int) useEs; ++k) {
+		    if (!strcmp(resolved, allEs[k].encoding)) {
+			enc = k;
+			break;
+		    }
+		}
+		if (enc < 0) {
+		    if ((long) useEs >= (long) numEs) {
+			numEs = (useEs + 32) * 3 / 2;
+			allEs = realloc(allEs, numEs * sizeof(*allEs));
+			if (allEs == NULL) {
+			    FatalError("Couldn't grow allEs array.\n");
+			}
+		    }
+		    allEs[useEs].encoding = strmalloc(resolved);
+		    allEs[useEs].locales = 0;
+		    allEs[useEs].actual = 0;
+		    allEs[useEs].length = 0;
+		    enc = (int) useEs;
+		    ++useEs;
+		}
+		loc = -1;
+		for (k = 0; k < (int) allEs[enc].length; ++k) {
+		    if (!strcmp(allLs[j], allEs[enc].locales[k])) {
+			loc = k;
+			break;
+		    }
+		}
+		if (loc < 0) {
+		    if ((long) allEs[enc].length >=
+			(long) allEs[enc].actual) {
+			allEs[enc].actual = ((allEs[enc].length
+					      + 32) * 3 / 2);
+			allEs[enc].locales = realloc(allEs[enc].locales,
+						     (allEs[enc].actual + 2)
+						     * sizeof(char *));
+		    }
+		    loc = (int) allEs[enc].length;
+		    allEs[enc].length++;
+		}
+		allEs[enc].locales[loc] = allLs[j];
+		allEs[enc].locales[loc + 1] = 0;
+	    }
+	}
+
+	/* set our locale back to the starting one */
+	setlocale(LC_CTYPE, old_locale);
+
+	/* print the result */
+	if (useEs != 0) {
+	    printf("Iconv supports %ld encodings\n", (long) useEs);
+	    qsort(allEs, useEs, sizeof(allEs[0]), compare_encodings);
+	    for (n = 0; n < useEs; ++n) {
+		printf("  %s\n", allEs[n].encoding);
+		qsort(allEs[n].locales, allEs[n].length, sizeof(char *), compare_locales);
+		col = 0;
+		for (t = 0; t < allEs[n].length; ++t) {
+		    now = strlen(allEs[n].locales[t]);
+		    if (col + now + 2 > MAXCOLS) {
+			printf("\n");
+			col = 0;
+		    }
+		    if (col == 0) {
+			printf("    ");
+			col = 4;
+		    }
+		    printf("%s", allEs[n].locales[t]);
+		    col += now;
+		    if (t + 1 < allEs[n].length) {
+			printf(", ");
+			col += 2;
+		    }
+		}
+		if (col)
+		    printf("\n");
+	    }
+#ifdef NO_LEAKS
+	    for (n = 0; n < useEs; ++n) {
+		free(allEs[n].encoding);
+		free(allEs[n].locales);
+	    }
+	    free(allEs);
+#endif
+	} else {
+	    Message("No encodings found\n");
+	}
+#ifdef NO_LEAKS
+	for (n = 0; n < useLs; ++n) {
+	    free(allLs[n]);
+	}
+	free(allLs);
+#endif
+    } else {
+	Message("No locales found\n");
+    }
+
+    /* cleanup */
+    free(old_locale);
+#endif
+}
+
 #ifdef NO_LEAKS
 /*
  * Given a reverse-pointer, remove all of the corresponding cached information
@@ -911,6 +1116,8 @@ luitDestroyReverse(FontMapReversePtr reverse)
 		q->next = p->next;
 	    else
 		all_conversions = p->next;
+	    free(p->table_utf8);
+	    free(p->rev_index);
 	    free(p);
 	    break;
 	}

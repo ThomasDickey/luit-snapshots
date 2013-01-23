@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.36 2012/10/11 20:46:12 tom Exp $
+dnl $XTermId: configure.in,v 1.37 2013/01/16 01:02:44 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2011,2012 by Thomas E. Dickey
+dnl Copyright 2006-2012,2013 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -107,6 +107,12 @@ CF_ARG_ENABLE(iconv,
 	[with_iconv=no])
 AC_MSG_RESULT($with_iconv)
 
+CF_WITH_ZLIB
+if test "x$ac_cv_func_zError" = xyes
+then
+	AC_DEFINE(USE_ZLIB)
+fi
+
 if test "$with_iconv" != no || test "$with_fontenc" = no
 then
 	if test "$with_fontenc" != no
@@ -116,7 +122,6 @@ then
 	with_iconv=maybe
 elif test "$with_fontenc" != no
 then
-	CF_WITH_ZLIB
 	CF_X_FONTENC
 	if test $cf_have_fontenc_libs = yes ; then
 		AC_DEFINE(USE_FONTENC,1,[Define to 1 if font-encoding libraries can/should be used])

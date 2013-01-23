@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.20 2012/10/06 01:02:25 tom Exp $
+.\" $XTermId: luit.man,v 1.27 2013/01/22 01:56:39 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -25,6 +25,7 @@ luit \- Locale and ISO\ 2022 support for Unicode terminals
 [
 .I args
 ] ]
+.\" ***************************************************************************
 .SH DESCRIPTION
 .B Luit
 is a filter that can be run between an arbitrary application and a
@@ -32,6 +33,11 @@ UTF-8 terminal emulator.
 It will convert application output from the
 locale's encoding into UTF-8, and convert terminal input from UTF-8
 into the locale's encoding.
+.PP
+\fBLuit\fP reads its input from the child process,
+i.e., an application running in the terminal.
+\fBLuit\fP writes its output to the terminal.
+The two (input and output) can have different encodings.
 .PP
 An application may also request switching to a different output
 encoding using ISO\ 2022 and ISO\ 6429 escape sequences.
@@ -44,52 +50,22 @@ is usually invoked transparently by the terminal emulator.
 For information about running
 .B luit
 from the command line, see EXAMPLES below.
+.\" ***************************************************************************
 .SH OPTIONS
-.TP
-.B \-h
-Display some summary help and quit.
-.TP
-.B \-list
-List the supported charsets and encodings, then quit.
-.IP
-To make scripting simpler,
-.B luit
-ignores spaces, underscores and ASCII minus-signs (dash) embedded in the names.
-.B Luit
-also ignores case when matching charset and encoding names.
 .TP
 .B \-V
 Print \fBluit\fP's version and quit.
 .TP
-.B \-v
-Be verbose.
-Repeating the option, e.g., "\fB\-v\ \-v\fP" makes it more verbose.
-.B Luit
-does not use \fIgetopt\fP, so "\fB\-vv\fP" does not work.
-.TP
-.B \-c
-Function as a simple converter from standard input to standard output.
-.TP
-.B \-p
-In startup, establish a handshake between parent and child processes.
-This is needed for some older systems, e.g., to successfully copy
-the terminal settings to the pseudo-terminal.
-.TP
-.B \-t
-Initialize \fBluit\fP using the locale and command-line options,
-but do not open a pty connection.
-This option is used for testing \fBluit\fP's configuration.
-It will exit with success if no errors were detected.
-Repeat the \fB-t\fP option to cause warning messages to be treated as errors.
-.TP
-.B \-x
-Exit as soon as the child dies.
-This may cause
-.B luit
-to lose data at the end of the child's output.
+.BI \-alias " filename"
+the locale alias file
+.br
+(default: __locale_alias__).
 .TP
 .BI \-argv0 " name"
 Set the child's name (as passed in argv[0]).
+.TP
+.B \-c
+Function as a simple converter from standard input to standard output.
 .TP
 .BI \-encoding " encoding"
 Set up
@@ -98,38 +74,25 @@ to use
 .I encoding
 rather than the current locale's encoding.
 .TP
-.B +oss
-Disable interpretation of single shifts in application output.
+.BI \-g0 " charset"
+Set the output charset initially selected in G0.
+The default depends on the locale, but is usually
+.BR ASCII .
 .TP
-.B +ols
-Disable interpretation of locking shifts in application output.
+.BI \-g1 " charset"
+Set the output charset initially selected in G1.
+The default depends on the locale.
 .TP
-.B +osl
-Disable interpretation of character set selection sequences in
-application output.
+.BI \-g2 " charset"
+Set the output charset initially selected in G2.
+The default depends on the locale.
 .TP
-.B +ot
-Disable interpretation of all sequences and pass all sequences in
-application output to the terminal unchanged.
-This may lead to interesting results.
-.TP
-.B \-k7
-Generate seven-bit characters for keyboard input.
-.TP
-.B +kss
-Disable generation of single-shifts for keyboard input.
-.TP
-.B +kssgr
-Use GL codes after a single shift for keyboard input.
-By default,
-GR codes are generated after a single shift when generating eight-bit
-keyboard input.
-.TP
-.B \-kls
-Generate locking shifts (SO/SI) for keyboard input.
+.BI \-g3 " charset"
+Set the output charset initially selected in G3.
+The default depends on the locale.
 .TP
 .BI \-gl " gn"
-Set the initial assignment of GL.
+Set the initial assignment of GL in the output.
 The argument should be one of
 .BR g0 ,
 .BR g1 ,
@@ -140,46 +103,140 @@ The default depends on the locale, but is usually
 .BR g0 .
 .TP
 .BI \-gr " gk"
-Set the initial assignment of GR.
+Set the initial assignment of GR in the output.
 The default depends on the locale, and is usually
 .B g2
 except for EUC locales, where it is
 .BR g1 .
 .TP
-.BI \-g0 " charset"
-Set the charset initially selected in G0.
-The default depends on the locale, but is usually
-.BR ASCII .
-.TP
-.BI \-g1 " charset"
-Set the charset initially selected in G1.
-The default depends on the locale.
-.TP
-.BI \-g2 " charset"
-Set the charset initially selected in G2.
-The default depends on the locale.
-.TP
-.BI \-g3 " charset"
-Set the charset initially selected in G3.
-The default depends on the locale.
+.B \-h
+Display a usage and options message on the standard output and quit.
 .TP
 .BI \-ilog " filename"
 Log into
 .I filename
 all the bytes received from the child.
 .TP
+.B \-k7
+Generate seven-bit characters for keyboard input.
+.TP
+.BI \-kg0 " charset"
+Set the input charset initially selected in G0.
+The default depends on the locale, but is usually
+.BR ASCII .
+.TP
+.BI \-kg1 " charset"
+Set the input charset initially selected in G1.
+The default depends on the locale.
+.TP
+.BI \-kg2 " charset"
+Set the input charset initially selected in G2.
+The default depends on the locale.
+.TP
+.BI \-kg3 " charset"
+Set the input charset initially selected in G3.
+The default depends on the locale.
+.TP
+.BI \-kgl " gn"
+Set the initial assignment of GL in the input.
+The argument should be one of
+.BR g0 ,
+.BR g1 ,
+.B g2
+or
+.BR g3 .
+The default depends on the locale, but is usually
+.BR g0 .
+.TP
+.BI \-kgr " gk"
+Set the initial assignment of GR in the input.
+The default depends on the locale, and is usually
+.B g2
+except for EUC locales, where it is
+.BR g1 .
+.TP
+.B \-kls
+Generate locking shifts (SO/SI) for keyboard input.
+.TP
+.B +kss
+Disable generation of single-shifts for keyboard input.
+.TP
+.B +kssgr
+Use GL codes after a single shift for keyboard input.
+By default,
+GR codes are generated after a single shift when generating eight-bit
+keyboard input.
+.TP
+.B \-list
+List the supported charsets and encodings, then quit.
+\fBLuit\fP uses its internal tables for this,
+which are based on the \fIfontenc\fP library.
+.TP
+.B \-list-fontenc
+List the encodings provided by \*(``.enc\*('' files originally
+distributed with the \fIfontenc\fP library.
+.TP
+.B \-list-iconv
+List the encodings and locales supported by the \fIiconv\fP library.
+\fBLuit\fP adapts its internal tables of \fIfontenc\fP names to \fIiconv\fP encodings.
+.IP
+To make scripting simpler,
+.B luit
+ignores spaces, underscores and ASCII minus-signs (dash) embedded in the names.
+.B Luit
+also ignores case when matching charset and encoding names.
+.TP
 .BI \-olog " filename"
 Log into
 .I filename
 all the bytes sent to the terminal emulator.
 .TP
-.BI \-alias " filename"
-the locale alias file
-.br
-(default: __locale_alias__).
+.B +ols
+Disable interpretation of locking shifts in application output.
+.TP
+.B +osl
+Disable interpretation of character set selection sequences in
+application output.
+.TP
+.B +oss
+Disable interpretation of single shifts in application output.
+.TP
+.B +ot
+Disable interpretation of all sequences and pass all sequences in
+application output to the terminal unchanged.
+This may lead to interesting results.
+.TP
+.B \-p
+In startup, establish a handshake between parent and child processes.
+This is needed for some older systems, e.g., to successfully copy
+the terminal settings to the pseudo-terminal.
+.TP
+.BI \-show-fontenc " encoding"
+Show a given encoding, e.g., from a \*(``.enc\*('' file
+using the \*(``.enc\*('' format.
+.TP
+.B \-t
+Initialize \fBluit\fP using the locale and command-line options,
+but do not open a pty connection.
+This option is used for testing \fBluit\fP's configuration.
+It will exit with success if no errors were detected.
+Repeat the \fB-t\fP option to cause warning messages to be treated as errors.
+.TP
+.B \-v
+Be verbose.
+Repeating the option, e.g., \*(``\fB\-v\ \-v\fP\*('' makes it more verbose.
+.B Luit
+does not use \fIgetopt\fP, so \*(``\fB\-vv\fP\*('' does not work.
+.TP
+.B \-x
+Exit as soon as the child dies.
+This may cause
+.B luit
+to lose data at the end of the child's output.
 .TP
 .B \-\-
 End of options.
+.\" ***************************************************************************
 .SH ENVIRONMENT
 \fBLuit\fP uses these environment variables:
 .TP
@@ -195,12 +252,17 @@ If \fBsetlocale\fP returns a failure,
 \fBluit\fP looks instead at these variables in succession to obtain
 any clues from the user's environment for locale preference.
 .TP
+NCURSES_NO_UTF8_ACS
+\fBLuit\fP sets this to tell ncurses to not rely upon VT100 SI/SO controls
+for line-drawing.
+.TP
 SHELL
 This is normally set by shells other than the Bourne shell,
 as a convention.
 \fBLuit\fP will use this value (rather than the user's entry in /etc/passwd)
 to decide which shell to execute.
 If SHELL is not set, \fBluit\fP executes /bin/sh.
+.\" ***************************************************************************
 .SH EXAMPLES
 The most typical use of
 .B luit
@@ -245,10 +307,12 @@ And then, in
 .IP
 M-x set-terminal-coding-system RET iso-2022-8bit-ss2 RET
 .PP
+.\" ***************************************************************************
 .SH FILES
 .TP
 .B __locale_alias__
 The file mapping locales to locale encodings.
+.\" ***************************************************************************
 .SH SECURITY
 On systems with SVR4 (\*(``Unix-98\*('') ptys (Linux version 2.2 and later,
 SVR4),
@@ -273,6 +337,7 @@ takes no responsibility for any resulting security issues.
 .B Luit
 will refuse to run if it is installed setuid and cannot safely drop
 privileges.
+.\" ***************************************************************************
 .SH BUGS
 None of this complexity should be necessary.
 Stateless UTF-8
@@ -282,8 +347,13 @@ Charsets with a non-trivial intermediary byte are not yet supported.
 .PP
 Selecting alternate sets of control characters is not supported and
 will never be.
+.\" ***************************************************************************
 .SH SEE ALSO
-xterm(__mansuffix__).
+These are portable:
+.bP
+xterm(__mansuffix__),
+.bP
+ncurses(__mansuffix__).
 .PP
 These are Linux-specific:
 .bP
@@ -293,13 +363,14 @@ utf-8(__miscmansuffix__),
 .bP
 charsets(__miscmansuffix__).
 .PP
-These are more generally useful:
+These are particularly useful:
 .nf
 .bP
-.I Character Code Structure and Extension Techniques (ISO\ 2022, ECMA-35).
+\fICharacter Code Structure and Extension Techniques (ISO\ 2022, ECMA-35)\fP
 .bP
-.I Control Functions for Coded Character Sets (ISO\ 6429, ECMA-48).
+\fIControl Functions for Coded Character Sets (ISO\ 6429, ECMA-48)\fP
 .fi
+.\" ***************************************************************************
 .SH AUTHOR
 Luit was written by Juliusz Chroboczek <jch@pps.jussieu.fr> for the
 XFree86 project.

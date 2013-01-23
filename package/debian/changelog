@@ -1,5 +1,6 @@
-bluit (20130113) unstable; urgency=low
+bluit (20130122) unstable; urgency=low
 
+  * other improvements/new features
   * fix window-size for pty-losing platforms
   * code cleanup with Coverity and Clang
 
