@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.42 2013/01/11 10:44:09 tom Exp $ */
+/* $XTermId: luit.c,v 1.48 2013/01/21 23:30:56 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -97,29 +97,106 @@ FatalError(const char *f,...)
 }
 
 static void
-help(void)
+help(const char *program, int fatal)
 {
-    Message("luit\n"
-	    "  [ -V ] [ -h ] [ -list ] [ -v ] [ -argv0 name ]\n"
-	    "  [ -gl gn ] [-gr gk] "
-	    "[ -g0 set ] [ -g1 set ] "
-	    "[ -g2 set ] [ -g3 set ]\n"
-	    "  [ -encoding encoding ] "
-	    "[ +oss ] [ +ols ] [ +osl ] [ +ot ]\n"
-	    "  [ -kgl gn ] [-kgr gk] "
-	    "[ -kg0 set ] [ -kg1 set ] "
-	    "[ -kg2 set ] [ -kg3 set ]\n"
-	    "  [ -k7 ] [ +kss ] [ +kssgr ] [ -kls ]\n"
-	    "  [ -c ] "
-	    "[ -p ] "
-	    "[ -t ] "
-	    "[ -x ] "
-	    "[ -ilog filename ] "
-	    "[ -olog filename ] "
-	    "[ -alias filename ] "
-	    "[ -- ]\n"
-	    "  [ program [ args ] ]\n");
+#define DATA(name,mark,what) { #mark name, what }
+    /* *INDENT-OFF* */
+    static const struct {
+	const char *name;
+	const char *value;
+    } options[] = {
+	/* sorted per POSIX */
+	DATA("V", -, "show version"),
+	DATA("alias filename", -, "location of the locale alias file"),
+	DATA("argv0 name", -, "set child's name"),
+	DATA("c", -, "simple converter stdin/stdout"),
+	DATA("encoding encoding", -, "?"),
+	DATA("g0 set", -, "set output G0 charset (default ASCII)"),
+	DATA("g1 set", -, "set output G1 charset"),
+	DATA("g2 set", -, "set output G2 charset"),
+	DATA("g3 set", -, "set output G3 charset"),
+	DATA("gl gn", -, "set output GL charset"),
+	DATA("gr gk", -, "set output GR charset"),
+	DATA("h", -, "show this message"),
+	DATA("ilog filename", -, "log all input to this file"),
+	DATA("k7", -, "generate 7-bit characters for input"),
+	DATA("kg0 set", -, "set input G0 charset"),
+	DATA("kg1 set", -, "set input G1 charset"),
+	DATA("kg2 set", -, "set input G2 charset"),
+	DATA("kg3 set", -, "set input G3 charset"),
+	DATA("kgl gn", -, "set input GL charset"),
+	DATA("kgr gk", -, "set input GR charset"),
+	DATA("kls", -, "generate locking shifts SI/SO"),
+	DATA("kss", +, "disable generation of single-shifts for input"),
+	DATA("kssgr", +, "use GL after single-shift"),
+	DATA("list", -, "list encodings recognized by this program"),
+	DATA("list-fontenc", -, "list available \".enc\" encoding files"),
+	DATA("list-iconv", -, "list iconv-supported encodings"),
+	DATA("olog filename", -, "log all output to this file"),
+	DATA("ols", +, "disable locking-shifts in output"),
+	DATA("osl", +, "disable charset-selection sequences in output"),
+	DATA("oss", +, "disable single-shifts in output"),
+	DATA("ot", +, "disable interpretation of all sequences in output"),
+	DATA("p", -, "do parent/child handshake"),
+	DATA("show-fontenc", -, "show details of an \".enc\" encoding file"),
+	DATA("t", -, "testing (initialize locale but no terminal)"),
+	DATA("v", -, "verbose (repeat to increase level)"),
+	DATA("x", -, "exit as soon as child dies"),
+	DATA("-", -, "end of options"),
+    };
+    /* *INDENT-ON* */
+
+    size_t n;
+    size_t col, now;
+    FILE *fp = fatal ? stderr : stdout;
+
+    if (fatal) {
+	col = 0;
+	fprintf(fp, "%s\n", program);
+	for (n = 0; n < SizeOf(options); ++n) {
+	    if (col == 0) {
+		fprintf(fp, " ");
+		col = 1;
+	    }
+	    now = strlen(options[n].name) + 5;
+	    col += now;
+	    if (col > MAXCOLS) {
+		fprintf(fp, "\n ");
+		col = now + 1;
+	    }
+	    fprintf(fp, " [ %s ]", options[n].name);
+	}
+	if (col)
+	    fprintf(fp, "\n");
+	fprintf(fp, "  [ program [ args ] ]\n");
+    } else {
+	fprintf(fp, "Usage: %s [options] [ program [ args ] ]\n", program);
+	fprintf(fp, "\n");
+	fprintf(fp, "Options:\n");
+	col = 0;
+	for (n = 0; n < SizeOf(options); ++n) {
+	    now = strlen(options[n].name);
+	    if (now > col)
+		col = now;
+	}
+	for (n = 0; n < SizeOf(options); ++n) {
+	    fprintf(fp, "  %-*s  %s\n", (int) col, options[n].name,
+		    options[n].value);
+	}
+    }
+    fflush(fp);
+
+    if (fatal)
+	exit(EXIT_FAILURE);
 }
+
+#ifndef USE_ICONV
+extern void
+reportIconvCharsets(void)
+{
+    Message("You need the iconv configuration for this option\n");
+}
+#endif
 
 static int
 parseOptions(int argc, char **argv)
@@ -138,10 +215,22 @@ parseOptions(int argc, char **argv)
 	    printf("%s - %s\n", argv[0], LUIT_VERSION);
 	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "-h")) {
-	    help();
+	    help(argv[0], 0);
 	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "-list")) {
 	    reportCharsets();
+	    ExitProgram(0);
+	} else if (!strcmp(argv[i], "-show-fontenc")) {
+	    if (i + 1 >= argc)
+		FatalError("-show-fontenc requires an argument\n");
+	    showFontencCharset(argv[i + 1]);
+	    i += 2;
+	    ExitProgram(0);
+	} else if (!strcmp(argv[i], "-list-fontenc")) {
+	    reportFontencCharsets();
+	    ExitProgram(0);
+	} else if (!strcmp(argv[i], "-list-iconv")) {
+	    reportIconvCharsets();
 	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "+oss")) {
 	    outputState->outputFlags &= ~OF_SS;
@@ -324,7 +413,8 @@ parseOptions(int argc, char **argv)
 	    ++testonly;
 	    i += 1;
 	} else {
-	    FatalError("Unknown option %s\n", argv[i]);
+	    Message("Unknown option %s\n", argv[i]);
+	    help(argv[0], 1);
 	}
     }
     return i;

@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.47 2013/01/11 10:46:14 tom Exp $ */
+/* $XTermId: sys.c,v 1.48 2013/01/16 19:46:38 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -616,6 +616,7 @@ ExitProgram(int code)
     luit_leaks();
     iso2022_leaks();
     charset_leaks();
+    fontenc_leaks();
     exit(code);
 }
 #endif

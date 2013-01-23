@@ -1,7 +1,7 @@
-/* $XTermId: luit.h,v 1.19 2012/10/11 10:38:21 tom Exp $ */
+/* $XTermId: luit.h,v 1.21 2013/01/14 09:42:26 tom Exp $ */
 
 /*
-Copyright 2010-2011,2012 by Thomas E. Dickey
+Copyright 2010-2012,2013 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -55,6 +55,8 @@ extern int sevenbit;
 extern int ilog;
 extern int olog;
 extern int verbose;
+
+#define MAXCOLS 78
 
 void Message(const char *f,...) GCC_PRINTFLIKE(1,2);
 void Warning(const char *f,...) GCC_PRINTFLIKE(1,2);
