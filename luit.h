@@ -1,4 +1,4 @@
-/* $XTermId: luit.h,v 1.21 2013/01/14 09:42:26 tom Exp $ */
+/* $XTermId: luit.h,v 1.22 2013/01/23 10:02:12 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -49,6 +49,7 @@ THE SOFTWARE.
 #endif
 
 extern const char *locale_alias;
+extern int fill_fontenc;
 extern int ignore_locale;
 extern int iso2022;
 extern int sevenbit;
