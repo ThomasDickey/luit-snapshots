@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.48 2013/01/21 23:30:56 tom Exp $ */
+/* $XTermId: luit.c,v 1.50 2013/01/24 01:07:57 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -58,6 +58,7 @@ int ilog = -1;
 int olog = -1;
 int verbose = 0;
 int ignore_locale = 0;
+int fill_fontenc = 0;
 
 static volatile int sigwinch_queued = 0;
 static volatile int sigchld_queued = 0;
@@ -111,6 +112,7 @@ help(const char *program, int fatal)
 	DATA("argv0 name", -, "set child's name"),
 	DATA("c", -, "simple converter stdin/stdout"),
 	DATA("encoding encoding", -, "?"),
+	DATA("fill-fontenc", -, "fill in one-one mapping in -show-fontenc report"),
 	DATA("g0 set", -, "set output G0 charset (default ASCII)"),
 	DATA("g1 set", -, "set output G1 charset"),
 	DATA("g2 set", -, "set output G2 charset"),
@@ -220,6 +222,9 @@ parseOptions(int argc, char **argv)
 	} else if (!strcmp(argv[i], "-list")) {
 	    reportCharsets();
 	    ExitProgram(0);
+	} else if (!strcmp(argv[i], "-fill-fontenc")) {
+	    fill_fontenc = 1;
+	    i++;
 	} else if (!strcmp(argv[i], "-show-fontenc")) {
 	    if (i + 1 >= argc)
 		FatalError("-show-fontenc requires an argument\n");

@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.49 2013/01/23 01:49:19 tom Exp $
+ * $XTermId: fontenc.c,v 1.59 2013/01/24 01:16:05 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -344,6 +344,7 @@ loadEncodingsDir(void)
     }
 }
 
+#ifndef USE_FONTENC
 /*
  * The fontenc library attempts to fill in the one-one mapping in the setCode
  * function, but it is inconsistently applied and the loaded map contains gaps. 
@@ -354,9 +355,11 @@ fillCharMap(FontEncSimpleMapPtr mp, int size)
 {
     int n;
 
-    for (n = 0; (unsigned) n < mp->len && n < size; ++n) {
-	if (mp->map[n] == 0) {
-	    mp->map[n] = (UCode) (n + mp->first);
+    if (mp != 0 && mp->map != 0) {
+	for (n = 0; n < size; ++n) {
+	    if (mp->map[n] == 0) {
+		mp->map[n] = (UCode) (n + mp->first);
+	    }
 	}
     }
 }
@@ -370,12 +373,29 @@ trimCharMap(FontEncSimpleMapPtr mp, int size)
 {
     int n;
 
-    for (n = 0; (unsigned) n < mp->len && n < size; ++n) {
-	if (mp->map[n] == (UCode) (n + mp->first)) {
-	    mp->map[n] = 0;
+    if (mp != 0 && mp->map != 0) {
+	for (n = 0; n < size; ++n) {
+	    if (mp->map[n] == (UCode) (n + mp->first)) {
+		mp->map[n] = 0;
+	    }
 	}
     }
 }
+
+static void
+trim_or_fill(FontEncSimpleMapPtr mp, int size)
+{
+    if (fill_fontenc) {
+	fillCharMap(mp, size);
+    } else {
+	trimCharMap(mp, size);
+    }
+}
+#else
+#define fillCharMap(mp, size)	/* nothing */
+#define trimCharMap(mp, size)	/* nothing */
+#define trim_or_fill(mp, size)	/* nothing */
+#endif
 
 #ifndef USE_FONTENC
 static char *
@@ -537,7 +557,6 @@ fontencSize(FontEncPtr enc)
 /*
  * fontenc uses this indexing scheme to reduce tablesize.
  * The function returns a valid index into the forward map to Unicode;
- * FIXME a zero is always treated as undefined.
  */
 static int
 fontencUnmap(FontEncSimpleMapPtr map, int from)
@@ -652,8 +671,6 @@ loadFontEncRec(const char *charset, const char *path)
     size_t numAliases = 0;
     size_t result_size = 0;
     int numbers[MAX_NUMBERS];
-    int num_defs = 0;
-    int num_undefs = 0;
     FontMapPtr mapping = 0;
     int done = 0;
 
@@ -736,12 +753,10 @@ loadFontEncRec(const char *charset, const char *path)
 		    case 2:
 			for (code = numbers[0]; code <= numbers[1]; ++code) {
 			    defineCode(result, code, 0);
-			    ++num_undefs;
 			}
 			break;
 		    case 1:
 			defineCode(result, numbers[0], 0);
-			++num_undefs;
 			break;
 		    }
 		}
@@ -765,7 +780,6 @@ loadFontEncRec(const char *charset, const char *path)
 			}
 			break;
 		    }
-		    ++num_defs;
 		}
 		break;
 	    case ftStartMapping:
@@ -841,7 +855,7 @@ lookupOneFontenc(const char *name)
     FontEncPtr result = 0;
 
 #ifdef USE_FONTENC
-    result = FontEncFind(name, "FIXME");
+    result = FontEncFind(name, NULL);
     if (result == 0)
 #endif
     {
@@ -901,8 +915,8 @@ reportOneFontenc(const char *alias, const char *path)
 	int hi_char = -1;
 	int num_def = 0;
 	int inx;
-	FontMapPtr mq;
-	FontEncSimpleMapPtr forward = data->mappings->client_data;
+	FontMapPtr mp;
+	FontEncSimpleMapPtr mq = data->mappings->client_data;
 
 	printf("\tName: %s\n", data->name);
 	if (data->aliases) {
@@ -923,25 +937,26 @@ reportOneFontenc(const char *alias, const char *path)
 	} else {
 	    printf("\tBase: %04X\n", data->first);
 	}
-	forward = 0;
-	for (mq = data->mappings; mq != 0; mq = mq->next) {
-	    if (mq->type == FONT_ENCODING_UNICODE) {
-		forward = mq->client_data;
+	mq = 0;
+	for (mp = data->mappings; mp != 0; mp = mp->next) {
+	    if (mp->type == FONT_ENCODING_UNICODE) {
+		mq = mp->client_data;
 		break;
 	    }
 	}
-	if (forward != 0) {
-	    trimCharMap(forward, (int) fontencSize(data));
-	    for (n = 0; n < (int) forward->len; ++n) {
-		inx = fontencUnmap(forward, n);
-		if (inx >= 0 && forward->map[n]) {
+	if (mq != 0) {
+	    trim_or_fill(mq, (int) fontencSize(data));
+	    for (n = 0; n < (int) mq->len; ++n) {
+		inx = fontencUnmap(mq, n);
+		if (inx >= 0 && mq->map[n]) {
 		    UpdateLoChar(inx);
 		    UpdateHiChar(inx);
-		    num_def++;
+		    if (mq->map[n] != inx)
+			num_def++;
 		}
 	    }
 	    if (lo_char < 0) {
-		lo_char = forward->first;
+		lo_char = mq->first;
 		hi_char = data->size - 1;
 	    }
 	    printf("\tData: [%04x..%04x] defined %d\n", lo_char, hi_char, num_def);
@@ -980,9 +995,7 @@ showFontencCharset(const char *name)
 {
     FontEncPtr data = lookupOneFontenc(name);
     FontMapPtr mp;
-    FontEncSimpleMapPtr mq;
     int n;
-    int inx;
 
     if (data != 0) {
 	printf("# %s\n", name);
@@ -1006,23 +1019,22 @@ showFontencCharset(const char *name)
 
 	for (mp = data->mappings; mp != 0; mp = mp->next) {
 	    printf("STARTMAPPING %s\n", fontmapTypename(mp->type));
-	    if (mp->type == FONT_ENCODING_UNICODE
-		&& (((mq = mp->client_data) != 0)
-		    || mp->recode != 0)) {
+	    if (mp->type == FONT_ENCODING_UNICODE) {
 		int limit = (int) fontencSize(data);
 		unsigned ch;
 
-		fillCharMap(mq, limit);
-
-		for (n = 0; n < limit; ++n) {
-		    if (mp->recode) {
+		if (mp->client_data == 0)
+		    printf("# no client_data-array\n");
+		if (mp->recode == 0) {
+		    printf("# no recode-function\n");
+		} else {
+		    trim_or_fill(mp->client_data, (int) fontencSize(data));
+		    for (n = 0; n < limit; ++n) {
 			ch = mp->recode((unsigned) n, mp->client_data);
 			if (ch || !n) {
+			    if (!fill_fontenc && ((unsigned) n == ch))
+				continue;
 			    printf("0x%04X 0x%04X\n", n, ch);
-			}
-		    } else if ((inx = fontencUnmap(mq, n)) >= 0) {
-			if ((ch = mq->map[n]) != 0) {
-			    printf("0x%04X 0x%04X\n", inx, ch);
 			}
 		    }
 		}
