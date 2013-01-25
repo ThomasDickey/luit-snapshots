@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.19 2013/01/16 19:48:11 tom Exp $ */
+/* $XTermId: sys.h,v 1.20 2013/01/25 01:42:22 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -61,6 +61,7 @@ void luit_leaks(void);
 void charset_leaks(void);
 void fontenc_leaks(void);
 void iso2022_leaks(void);
+void luitconv_leaks(void);
 void ExitProgram(int code) GCC_NORETURN;
 #else
 #define ExitProgram(code) exit(code)

@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.113 2013/01/23 10:13:18 tom Exp $
+  $XTermId: luit.log.html,v 1.114 2013/01/25 01:11:42 tom Exp $
   -->
 
 <html>
@@ -43,9 +43,12 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
-  <p><a id="t20130123" name="t20130123">2013/01/23</a> -</p>
+  <p><a id="t20130124" name="t20130124">2013/01/24</a> -</p>
 
   <ul>
+    <li>add <code>-show-iconv</code> to show a given encoding from
+    iconv using the ".enc" format.</li>
+
     <li>add <code>-fill-fontenc</code> option to control output
     format of <code>-show-fontenc</code>.</li>
 
@@ -65,8 +68,8 @@
 
     <li>revise the help option <code>-h</code>, providing a summary
     of each option rather than the abbreviated listing. The
-    abbreviated listing is still provided when an uncognized option
-    is encountered.</li>
+    abbreviated listing is still provided when an unrecognized
+    option is encountered.</li>
 
     <li>improve error recovery in the iconv configuration by
     falling back to POSIX encoding if no encoding can be found in

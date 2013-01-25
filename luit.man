@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.27 2013/01/22 01:56:39 tom Exp $
+.\" $XTermId: luit.man,v 1.29 2013/01/24 09:26:34 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -172,11 +172,11 @@ List the supported charsets and encodings, then quit.
 \fBLuit\fP uses its internal tables for this,
 which are based on the \fIfontenc\fP library.
 .TP
-.B \-list-fontenc
+.B \-list\-fontenc
 List the encodings provided by \*(``.enc\*('' files originally
 distributed with the \fIfontenc\fP library.
 .TP
-.B \-list-iconv
+.B \-list\-iconv
 List the encodings and locales supported by the \fIiconv\fP library.
 \fBLuit\fP adapts its internal tables of \fIfontenc\fP names to \fIiconv\fP encodings.
 .IP
@@ -185,6 +185,14 @@ To make scripting simpler,
 ignores spaces, underscores and ASCII minus-signs (dash) embedded in the names.
 .B Luit
 also ignores case when matching charset and encoding names.
+.IP
+This option lists only the encodings which are associated with the
+locales supported on the current operating system.
+The portable \fIiconv\fP application provides a list of its supported
+encodings with the \fB\-l\fP option.
+Other implementations may provide similar functionality.
+There is no portable library call by which an application can
+obtain the same information.
 .TP
 .BI \-olog " filename"
 Log into
@@ -211,16 +219,30 @@ In startup, establish a handshake between parent and child processes.
 This is needed for some older systems, e.g., to successfully copy
 the terminal settings to the pseudo-terminal.
 .TP
-.BI \-show-fontenc " encoding"
+.BI \-show\-fontenc " encoding"
 Show a given encoding, e.g., from a \*(``.enc\*('' file
 using the \*(``.enc\*('' format.
+If \fBluit\fP is configured to use the \fIfontenc\fP library,
+it obtains the information using that library.
+Otherwise \fBluit\fP reads the file directly.
+.IP
+Some of \fIfontenc\fP's encodings are built into the library.
+Use the \fB\-show\-iconv\fP option to provide similar information
+when \fBluit\fP is configured to use \fIiconf\fP.
+.TP
+.BI \-show\-iconv " encoding"
+Show a given encoding, using the \*(``.enc\*('' format.
+If \fBluit\fP is configured to use \fIiconv\fP,
+it obtains the information using that interface.
+If \fIiconv\fP cannot supply the information, \fBluit\fP
+may use a built-in table.
 .TP
 .B \-t
 Initialize \fBluit\fP using the locale and command-line options,
 but do not open a pty connection.
 This option is used for testing \fBluit\fP's configuration.
 It will exit with success if no errors were detected.
-Repeat the \fB-t\fP option to cause warning messages to be treated as errors.
+Repeat the \fB\-t\fP option to cause warning messages to be treated as errors.
 .TP
 .B \-v
 Be verbose.
@@ -300,12 +322,12 @@ that do not speak UTF-8 well can use
 .B luit
 for multilingual output:
 .IP
-$ luit -encoding 'ISO 8859-1' emacs -nw
+$ luit \-encoding 'ISO 8859\-1' emacs \-nw
 .PP
 And then, in
 .BR Emacs ,
 .IP
-M-x set-terminal-coding-system RET iso-2022-8bit-ss2 RET
+M\-x set\-terminal\-coding\-system RET iso\-2022\-8bit\-ss2 RET
 .PP
 .\" ***************************************************************************
 .SH FILES

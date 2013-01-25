@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.50 2013/01/24 01:07:57 tom Exp $ */
+/* $XTermId: luit.c,v 1.51 2013/01/24 09:45:17 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -141,6 +141,7 @@ help(const char *program, int fatal)
 	DATA("ot", +, "disable interpretation of all sequences in output"),
 	DATA("p", -, "do parent/child handshake"),
 	DATA("show-fontenc", -, "show details of an \".enc\" encoding file"),
+	DATA("show-iconv", -, "show iconv encoding in \".enc\" format"),
 	DATA("t", -, "testing (initialize locale but no terminal)"),
 	DATA("v", -, "verbose (repeat to increase level)"),
 	DATA("x", -, "exit as soon as child dies"),
@@ -193,11 +194,14 @@ help(const char *program, int fatal)
 }
 
 #ifndef USE_ICONV
-extern void
-reportIconvCharsets(void)
+static void
+needIconvCfg(void)
 {
     Message("You need the iconv configuration for this option\n");
 }
+
+#define reportIconvCharsets() needIconvCfg()
+#define showIconvCharset(name) needIconvCfg()
 #endif
 
 static int
@@ -229,6 +233,12 @@ parseOptions(int argc, char **argv)
 	    if (i + 1 >= argc)
 		FatalError("-show-fontenc requires an argument\n");
 	    showFontencCharset(argv[i + 1]);
+	    i += 2;
+	    ExitProgram(0);
+	} else if (!strcmp(argv[i], "-show-iconv")) {
+	    if (i + 1 >= argc)
+		FatalError("-show-iconv requires an argument\n");
+	    showIconvCharset(argv[i + 1]);
 	    i += 2;
 	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "-list-fontenc")) {
