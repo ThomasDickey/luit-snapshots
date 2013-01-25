@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.h,v 1.12 2013/01/21 22:49:19 tom Exp $
+ * $XTermId: luitconv.h,v 1.18 2013/01/25 01:34:16 tom Exp $
  *
  * Copyright 2010,2013 by Thomas E. Dickey
  *
@@ -27,11 +27,15 @@
 
 #ifdef USE_ICONV
 
+#include <other.h>
+#include <iconv.h>
+
+#define FONT_ENCODING_UNICODE 1
 typedef struct _FontMap {
     int type;
     unsigned (*recode) (unsigned, void *);	/* mapping function */
-    void *client_data;          /* second parameter of the two above */
-    struct _FontMap *next;      /* link to next element in list */
+    void *client_data;		/* second parameter of the two above */
+    struct _FontMap *next;	/* link to next element in list */
 } FontMapRec, *FontMapPtr;
 
 typedef struct _FontMapReverse {
@@ -39,9 +43,50 @@ typedef struct _FontMapReverse {
     void *data;
 } FontMapReverseRec, *FontMapReversePtr;
 
+typedef struct _FontEnc {
+    char *name;			/* the name of the encoding */
+    char **aliases;		/* its aliases, null terminated */
+    int size;			/* its size, either in bytes or rows */
+    int row_size;		/* the size of a row, or 0 if bytes */
+    FontMapPtr mappings;	/* linked list of mappings */
+    struct _FontEnc *next;	/* link to next element */
+    /* the following two were added in version 0.2 of the font interface */
+    /* they should be kept at the end to preserve binary compatibility */
+    int first;			/* first byte or row */
+    int first_col;		/* first column in each row */
+} FontEncRec, *FontEncPtr;
+
+typedef struct {
+    size_t size;		/* length of text[] */
+    char *text;			/* value, in UTF-8 */
+    unsigned ucs;		/* corresponding Unicode value */
+} MappingData;
+
+typedef struct {
+    unsigned ucs;
+    unsigned ch;
+} ReverseData;
+
+typedef struct _LuitConv {
+    struct _LuitConv *next;
+    char *encoding_name;
+    iconv_t iconv_desc;
+    /* internal tables for input/output */
+    MappingData *table_utf8;	/* UTF-8 equivalents of 8-bit codes */
+    ReverseData *rev_index;	/* reverse-index */
+    size_t len_index;		/* index length */
+    size_t table_size;		/* length of table_utf8[] and rev_index[] */
+    /* data expected by caller */
+    FontMapRec mapping;
+    FontMapReverseRec reverse;
+} LuitConv;
+
+extern FontEncPtr luitGetFontEnc(const char *);
 extern FontMapPtr luitLookupMapping(const char *);
-extern unsigned luitMapCodeValue(unsigned, FontMapPtr);
 extern FontMapReversePtr luitLookupReverse(FontMapPtr);
+extern LuitConv *luitLookupEncoding(FontMapPtr);
+extern unsigned luitMapCodeValue(unsigned, FontMapPtr);
+extern void luitFreeFontEnc(FontEncPtr);
 
 #ifdef NO_LEAKS
 extern void luitDestroyReverse(FontMapReversePtr);
@@ -71,8 +116,27 @@ extern void luitDestroyReverse(FontMapReversePtr);
 
 #endif
 
+typedef unsigned short UCode;
+
+typedef struct _FontEncSimpleMap {
+    unsigned len;		/* might be 0x10000 */
+    UCode row_size;
+    UCode first;
+    UCode *map;			/* fontenc makes this const */
+} FontEncSimpleMapRec, *FontEncSimpleMapPtr;
+
+#ifdef FONT_ENCODING_POSTSCRIPT
+typedef struct _FontEncSimpleName {
+    unsigned len;
+    UCode first;
+    char **map;
+} FontEncSimpleNameRec, *FontEncSimpleNamePtr;
+#endif /* FONT_ENCODING_POSTSCRIPT */
+
+extern unsigned luitRecode(unsigned, void *);
 extern void reportFontencCharsets(void);
 extern void reportIconvCharsets(void);
 extern void showFontencCharset(const char *);
+extern void showIconvCharset(const char *);
 
 #endif /* LUITCONV_H */

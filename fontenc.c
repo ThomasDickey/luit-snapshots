@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.59 2013/01/24 01:16:05 tom Exp $
+ * $XTermId: fontenc.c,v 1.67 2013/01/25 01:46:39 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -38,40 +38,6 @@
 
 #define flatUCode(row,col) (((row) << 8) + (col))
 
-typedef unsigned short UCode;
-
-typedef struct _FontEncSimpleMap {
-    unsigned len;		/* might be 0x10000 */
-    UCode row_size;
-    UCode first;
-    UCode *map;			/* fontenc makes this const */
-} FontEncSimpleMapRec, *FontEncSimpleMapPtr;
-
-#ifdef FONT_ENCODING_POSTSCRIPT
-typedef struct _FontEncSimpleName {
-    unsigned len;
-    UCode first;
-    char **map;
-} FontEncSimpleNameRec, *FontEncSimpleNamePtr;
-#endif /* FONT_ENCODING_POSTSCRIPT */
-
-#ifdef USE_ICONV
-
-#define FONT_ENCODING_UNICODE 1
-typedef struct _FontEnc {
-    char *name;			/* the name of the encoding */
-    char **aliases;		/* its aliases, null terminated */
-    int size;			/* its size, either in bytes or rows */
-    int row_size;		/* the size of a row, or 0 if bytes */
-    FontMapPtr mappings;	/* linked list of mappings */
-    struct _FontEnc *next;	/* link to next element */
-    /* the following two were added in version 0.2 of the font interface */
-    /* they should be kept at the end to preserve binary compatibility */
-    int first;			/* first byte or row */
-    int first_col;		/* first column in each row */
-} FontEncRec, *FontEncPtr;
-#endif
-
 typedef enum {
     ftUnknown
     ,ftComment
@@ -91,8 +57,9 @@ typedef enum {
  * source code).  Rather than incorporate it directly here, this module adapts
  * as needed, and replaces where fontenc is unsuitable for reuse.
  */
-
+#ifdef USE_FONTENC
 extern FontEncPtr FontEncReallyLoad(const char *charset, const char *fontFileName);
+#endif
 
 /*
  * fontenc uses FontEncDirectory to find the "encodings.dir" file.  It uses a
@@ -604,9 +571,10 @@ defineCode(FontEncPtr enc, int from, int to)
 	}
     }
 }
+#endif /* !USE_FONTENC */
 
-static unsigned
-myRecode(unsigned code, void *client_data)
+unsigned
+luitRecode(unsigned code, void *client_data)
 {
     unsigned result;
     FontEncSimpleMapPtr map;
@@ -639,7 +607,6 @@ myRecode(unsigned code, void *client_data)
     }
     return result;
 }
-#endif /* !USE_FONTENC */
 
 #define UpdateLoChar(value) \
 	    if (lo_char < 0) { \
@@ -797,7 +764,7 @@ loadFontEncRec(const char *charset, const char *path)
 		    if (mapping == 0)
 			FatalError("cannot allocate map record\n");
 		    mapping->type = FONT_ENCODING_UNICODE;
-		    mapping->recode = myRecode;
+		    mapping->recode = luitRecode;
 
 		    if ((mq = TypeCalloc(FontEncSimpleMapRec)) == 0
 			|| (mq->map = TypeCallocN(UCode, result_size)) == 0) {
@@ -990,14 +957,13 @@ reportFontencCharsets(void)
 /*
  * Regurgitate an encoding from the in-memory copy.
  */
-void
-showFontencCharset(const char *name)
+static void
+showOneCharset(const char *name, FontEncPtr data)
 {
-    FontEncPtr data = lookupOneFontenc(name);
-    FontMapPtr mp;
-    int n;
-
     if (data != 0) {
+	FontMapPtr mp;
+	int n;
+
 	printf("# %s\n", name);
 	printf("STARTENCODING %s\n", data->name ? data->name : "unknown");
 
@@ -1045,6 +1011,26 @@ showFontencCharset(const char *name)
 	printf("ENDENCODING\n");
     } else {
 	Warning("no encoding data found for %s\n", name);
+    }
+}
+
+void
+showFontencCharset(const char *name)
+{
+    showOneCharset(name, lookupOneFontenc(name));
+}
+
+/*
+ * Display iconv encoding as ".enc" format.
+ */
+void
+showIconvCharset(const char *name)
+{
+    FontEncPtr data = luitGetFontEnc(name);
+
+    if (data != 0) {
+	showOneCharset(name, data);
+	luitFreeFontEnc(data);
     }
 }
 

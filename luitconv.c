@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.43 2013/01/16 01:38:01 tom Exp $
+ * $XTermId: luitconv.c,v 1.49 2013/01/25 01:46:39 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -24,8 +24,6 @@
  */
 
 #include <other.h>
-
-#include <iconv.h>
 
 #include <sys.h>
 
@@ -54,31 +52,6 @@
 #define NO_ICONV  (iconv_t)(-1)
 
 /******************************************************************************/
-typedef struct {
-    size_t size;		/* length of text[] */
-    char *text;			/* value, in UTF-8 */
-    unsigned ucs;		/* corresponding Unicode value */
-} MappingData;
-
-typedef struct {
-    unsigned ucs;
-    unsigned ch;
-} ReverseData;
-
-typedef struct _LuitConv {
-    struct _LuitConv *next;
-    char *encoding_name;
-    iconv_t iconv_desc;
-    /* internal tables for input/output */
-    MappingData *table_utf8;	/* UTF-8 equivalents of 8-bit codes */
-    ReverseData *rev_index;	/* reverse-index */
-    size_t len_index;		/* index length */
-    size_t table_size;		/* length of table_utf8[] and rev_index[] */
-    /* data expected by caller */
-    FontMapRec mapping;
-    FontMapReverseRec reverse;
-} LuitConv;
-
 static LuitConv *all_conversions;
 
 /******************************************************************************/
@@ -599,13 +572,6 @@ initializeIconvTable(LuitConv * data)
 }
 
 static unsigned
-luitRecode(unsigned code, void *client_data GCC_UNUSED)
-{
-    TRACE(("luitRecode 0x%04X %p\n", code, client_data));
-    return code;
-}
-
-static unsigned
 luitReverse(unsigned code, void *client_data GCC_UNUSED)
 {
     unsigned result = code;
@@ -744,6 +710,117 @@ findBuiltinEncoding(const char *encoding_name)
 }
 
 /******************************************************************************/
+LuitConv *
+luitLookupEncoding(FontMapPtr mapping)
+{
+    LuitConv *latest;
+    LuitConv *result = 0;
+    for (latest = all_conversions; latest != 0; latest = latest->next) {
+	if (&(latest->mapping) == mapping) {
+	    result = latest;
+	}
+    }
+    return result;
+}
+
+/*
+ * Provide all of the data, needed for -show-iconv option to construct a ".enc"
+ * representation.
+ */
+FontEncPtr
+luitGetFontEnc(const char *name)
+{
+    FontEncPtr result = 0;
+    FontMapPtr mp = 0;
+    FontMapPtr mp2 = 0;
+    FontEncSimpleMapPtr mq = 0;
+    UCode *map = 0;
+    LuitConv *lc;
+    int n;
+
+    if ((mp = luitLookupMapping(name)) != 0
+	&& (lc = luitLookupEncoding(mp)) != 0
+	&& (mp2 = TypeCalloc(FontMapRec)) != 0
+	&& (mq = TypeCalloc(FontEncSimpleMapRec)) != 0
+	&& (map = TypeCallocN(UCode, lc->table_size)) != 0
+	&& (result = TypeCalloc(FontEncRec)) != 0) {
+
+	result->name = strmalloc(name);
+	result->size = (int) lc->table_size;
+	result->mappings = mp2;
+
+	*mp2 = *mp;
+	mp2->client_data = mq;
+	mp2->next = 0;
+
+	mq->len = (unsigned) result->size;
+	mq->map = map;
+
+	for (n = 0; n < result->size; ++n) {
+	    unsigned ch = lc->rev_index[n].ch;
+	    if (ch < mq->len)
+		map[ch] = (UCode) lc->rev_index[n].ucs;
+	}
+    }
+    return result;
+}
+
+/*
+ * Free the data allocated in luitGetFontEnc().
+ */
+void
+luitFreeFontEnc(FontEncPtr data)
+{
+    if (data != 0) {
+	FontMapPtr mp;
+	FontEncSimpleMapPtr mq;
+
+	if ((mp = data->mappings) != 0) {
+	    if ((mq = mp->client_data) != 0) {
+		free(mq->map);
+		free(mq);
+	    }
+	    free(mp);
+	}
+	free(data->name);
+	free(data);
+    }
+}
+
+static FontMapPtr
+initLuitConv(const char *encoding_name,
+	     iconv_t my_desc,
+	     const BuiltInCharsetRec * builtIn)
+{
+    FontMapPtr result = 0;
+    LuitConv *latest = newLuitConv(MAX8);
+    if (latest != 0) {
+	latest->next = all_conversions;
+	latest->encoding_name = strmalloc(encoding_name);
+	latest->iconv_desc = my_desc;
+	if (builtIn != 0)
+	    initializeBuiltInTable(latest, builtIn);
+	else
+	    initializeIconvTable(latest);
+	latest->mapping.type = FONT_ENCODING_UNICODE;
+	latest->mapping.recode = luitRecode;
+	latest->reverse.reverse = luitReverse;
+	latest->reverse.data = latest;
+	all_conversions = latest;
+
+	result = &(latest->mapping);
+
+	/* sort the reverse-index, to allow using bsearch */
+	if (result != 0) {
+	    qsort(latest->rev_index,
+		  latest->len_index,
+		  sizeof(latest->rev_index[0]),
+		  cmp_rindex);
+	}
+    }
+    return result;
+}
+
 FontMapPtr
 luitLookupMapping(const char *encoding_name)
 {
@@ -751,7 +828,7 @@ luitLookupMapping(const char *encoding_name)
     const char *original_name = encoding_name;
 #endif
     FontMapPtr result = 0;
-    LuitConv *latest = 0;
+    LuitConv *latest;
     const BuiltInCharsetRec *builtIn;
     iconv_t my_desc;
 
@@ -781,64 +858,28 @@ luitLookupMapping(const char *encoding_name)
 	}
 	if (my_desc != NO_ICONV) {
 	    TRACE(("...iconv_open succeeded\n"));
-	    latest = newLuitConv(MAX8);
-	    if (latest != 0) {
-		latest->next = all_conversions;
-		latest->encoding_name = strmalloc(encoding_name);
-		latest->iconv_desc = my_desc;
-		initializeIconvTable(latest);
-		latest->mapping.recode = luitRecode;
-		latest->reverse.reverse = luitReverse;
-		latest->reverse.data = latest;
-		all_conversions = latest;
-
-		result = &(latest->mapping);
-	    }
+	    result = initLuitConv(encoding_name, my_desc, NULL);
+	    iconv_close(my_desc);
+	    if ((latest = luitLookupEncoding(result)) != 0)
+		latest->iconv_desc = NO_ICONV;
 	} else if ((builtIn = findBuiltinEncoding(encoding_name)) != 0) {
 	    TRACE(("...use built-in charset\n"));
-	    latest = newLuitConv(MAX8);
-	    if (latest != 0) {
-		latest->next = all_conversions;
-		latest->encoding_name = strmalloc(encoding_name);
-		latest->iconv_desc = my_desc;
-		initializeBuiltInTable(latest, builtIn);
-		latest->mapping.recode = luitRecode;
-		latest->reverse.reverse = luitReverse;
-		latest->reverse.data = latest;
-		all_conversions = latest;
-
-		result = &(latest->mapping);
-	    }
-	} else if (my_desc != NO_ICONV) {
-	    iconv_close(my_desc);
+	    result = initLuitConv(encoding_name, my_desc, builtIn);
 	} else {
+	    unsigned ch;
+	    BuiltInMapping mapping[MAX8];
+	    BuiltInCharsetRec posix;
+
 	    TRACE(("...fallback to POSIX\n"));
-	    latest = newLuitConv(MAX8);
-	    if (latest != 0) {
-		unsigned ch;
-		BuiltInMapping mapping[MAX8];
-		BuiltInCharsetRec posix;
-
-		memset(&posix, 0, sizeof(posix));
-		posix.name = encoding_name;
-		posix.length = MAX8;
-		posix.table = mapping;
-		for (ch = 0; ch < posix.length; ++ch) {
-		    mapping[ch].source = ch;
-		    mapping[ch].target = (ch < 128) ? ch : 0;
-		}
-
-		latest->next = all_conversions;
-		latest->encoding_name = strmalloc(encoding_name);
-		latest->iconv_desc = my_desc;
-		initializeBuiltInTable(latest, &posix);
-		latest->mapping.recode = luitRecode;
-		latest->reverse.reverse = luitReverse;
-		latest->reverse.data = latest;
-		all_conversions = latest;
-
-		result = &(latest->mapping);
+	    memset(&posix, 0, sizeof(posix));
+	    posix.name = encoding_name;
+	    posix.length = MAX8;
+	    posix.table = mapping;
+	    for (ch = 0; ch < posix.length; ++ch) {
+		mapping[ch].source = ch;
+		mapping[ch].target = (ch < 128) ? ch : 0;
 	    }
+	    result = initLuitConv(encoding_name, my_desc, &posix);
 	}
 #ifdef NO_LEAKS
 	if (encoding_name != original_name
@@ -847,14 +888,6 @@ luitLookupMapping(const char *encoding_name)
 	    free((char *) encoding_name);
 	}
 #endif
-
-	/* sort the reverse-index, to allow using bsearch */
-	if (result != 0) {
-	    qsort(latest->rev_index,
-		  latest->len_index,
-		  sizeof(latest->rev_index[0]),
-		  cmp_rindex);
-	}
     }
 
     TRACE(("... luitLookupMapping ->%p\n", result));
@@ -1103,7 +1136,8 @@ luitDestroyReverse(FontMapReversePtr reverse)
 	if (&(p->reverse) == reverse) {
 
 	    free(p->encoding_name);
-	    iconv_close(p->iconv_desc);
+	    if (p->iconv_desc != NO_ICONV)
+		iconv_close(p->iconv_desc);
 
 	    for (n = 0; n < MAX8; ++n) {
 		if (p->table_utf8[n].text) {
@@ -1121,6 +1155,15 @@ luitDestroyReverse(FontMapReversePtr reverse)
 	    free(p);
 	    break;
 	}
+    }
+}
+
+void
+luitconv_leaks(void)
+{
+    TRACE(("luitconv_leaks %p\n", all_conversions));
+    while (all_conversions != 0) {
+	luitDestroyReverse(&(all_conversions->reverse));
     }
 }
 #endif
