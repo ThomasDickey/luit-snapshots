@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.29 2013/01/24 09:26:34 tom Exp $
+.\" $XTermId: luit.man,v 1.31 2013/01/27 21:51:52 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -262,6 +262,10 @@ End of options.
 .SH ENVIRONMENT
 \fBLuit\fP uses these environment variables:
 .TP
+FONT_ENCODINGS_DIRECTORY
+overrides the location of the \*(``encodings.dir\*('' file,
+which lists encodings in external \*(``.enc\*('' files.
+.TP
 LC_ALL
 .TP
 LC_CTYPE
@@ -391,6 +395,8 @@ These are particularly useful:
 \fICharacter Code Structure and Extension Techniques (ISO\ 2022, ECMA-35)\fP
 .bP
 \fIControl Functions for Coded Character Sets (ISO\ 6429, ECMA-48)\fP
+.bP
+http://czyborra.com/charsets/
 .fi
 .\" ***************************************************************************
 .SH AUTHOR

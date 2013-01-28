@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.114 2013/01/25 01:11:42 tom Exp $
+  $XTermId: luit.log.html,v 1.120 2013/01/27 23:56:47 tom Exp $
   -->
 
 <html>
@@ -43,9 +43,20 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
-  <p><a id="t20130124" name="t20130124">2013/01/24</a> -</p>
+  <p><a id="t20130127" name="t20130127">2013/01/27</a> -</p>
 
   <ul>
+    <li>replaced existing built-in encoding tables with augmented
+    set generated from iconv to obviate need for fontenc's tables
+    as a fallback.</li>
+
+    <li>add prefix translations from <code>IBM-CP</code> to
+    <code>CP&nbsp;</code>), etc., to make fontenc's encoding name
+    "ibm-cp866" work with luit.</li>
+
+    <li>add <code>koi8-e</code> to locale-charsets table, to make
+    that encoding work.</li>
+
     <li>add <code>-show-iconv</code> to show a given encoding from
     iconv using the ".enc" format.</li>
 
@@ -505,8 +516,8 @@
     <li>wrote a configure script.</li>
 
     <li>minor code cleanup (fix compiler warnings, add ifdef's to
-    prevent repeated inclusion of header files remove redundant
-    #include's indented code).</li>
+    prevent repeated inclusion of header files, remove redundant
+    #include's, indented code).</li>
   </ul>
 </body>
 </html>

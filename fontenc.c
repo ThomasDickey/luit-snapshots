@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.67 2013/01/25 01:46:39 tom Exp $
+ * $XTermId: fontenc.c,v 1.72 2013/01/27 22:05:35 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -63,24 +63,22 @@ extern FontEncPtr FontEncReallyLoad(const char *charset, const char *fontFileNam
 
 /*
  * fontenc uses FontEncDirectory to find the "encodings.dir" file.  It uses a
- * compiled-in default value which can be overridden by the
- * FONT_ENCODINGS_DIRECTORY environment variable.
+ * compiled-in default value which can be overridden by an environment
+ * variable.
  */
 extern char *FontEncDirectory(void);
 
 #ifndef USE_FONTENC
-#define FONT_ENCODINGS_DIRECTORY \
-	"/usr/share/fonts/X11/encodings/encodings.dir"
 char *
 FontEncDirectory(void)
 {
-    static char default_dir[] = FONT_ENCODINGS_DIRECTORY;
+    static char default_dir[] = ENCODINGS_DIR_FILE;
     static char *dir = NULL;
 
     if (dir == NULL) {
 	char *c = getenv("FONT_ENCODINGS_DIRECTORY");
 	if (c) {
-	    dir = strdup(c);
+	    dir = strmalloc(c);
 	    if (!dir)
 		return NULL;
 	} else {
@@ -147,6 +145,8 @@ getFileBuffer(char **bufferp, size_t *lengthp, FILE *fp)
 	    size_t need = have + used + 2;
 	    if (*lengthp < need) {
 		*bufferp = realloc(*bufferp, need);
+		if (*bufferp == 0)
+		    return 0;
 		*lengthp = need;
 	    }
 	    strcpy(*bufferp + used, extra);
@@ -409,7 +409,7 @@ compareKeyword(char *value, const char *expected)
     save = *next;
     *next = '\0';
 
-    result = strcasecmp(value, expected);
+    result = StrCaseCmp(value, expected);
 
     *next = save;
     return result;
@@ -430,21 +430,21 @@ getLineType(char *line, char **nextp)
 	result = ftComment;
     } else if (isdigit(*line)) {
 	result = ftDefine;
-    } else if (!strcasecmp(line, "ALIAS")) {
+    } else if (!StrCaseCmp(line, "ALIAS")) {
 	result = ftAlias;
-    } else if (!strcasecmp(line, "STARTENCODING")) {
+    } else if (!StrCaseCmp(line, "STARTENCODING")) {
 	result = ftStartEncoding;
-    } else if (!strcasecmp(line, "STARTMAPPING")) {
+    } else if (!StrCaseCmp(line, "STARTMAPPING")) {
 	result = ftStartMapping;
-    } else if (!strcasecmp(line, "ENDENCODING")) {
+    } else if (!StrCaseCmp(line, "ENDENCODING")) {
 	result = ftEndEncoding;
-    } else if (!strcasecmp(line, "ENDMAPPING")) {
+    } else if (!StrCaseCmp(line, "ENDMAPPING")) {
 	result = ftEndMapping;
-    } else if (!strcasecmp(line, "SIZE")) {
+    } else if (!StrCaseCmp(line, "SIZE")) {
 	result = ftSize;
-    } else if (!strcasecmp(line, "FIRSTINDEX")) {
+    } else if (!StrCaseCmp(line, "FIRSTINDEX")) {
 	result = ftFirstIndex;
-    } else if (!strcasecmp(line, "UNDEFINE")) {
+    } else if (!StrCaseCmp(line, "UNDEFINE")) {
 	result = ftUndefine;
     }
     **nextp = save;
@@ -815,7 +815,7 @@ loadFontEncRec(const char *charset, const char *path)
 /*
  * Find an encoding, given its name.
  */
-static FontEncPtr
+FontEncPtr
 lookupOneFontenc(const char *name)
 {
     int n;
@@ -829,7 +829,7 @@ lookupOneFontenc(const char *name)
 	loadEncodingsDir();
 	if (encodings_dir != 0) {
 	    for (n = 0; encodings_dir[n].alias != 0; ++n) {
-		if (!strcasecmp(name, encodings_dir[n].alias)) {
+		if (!StrCaseCmp(name, encodings_dir[n].alias)) {
 		    if ((result = encodings_dir[n].data) == 0) {
 			result = loadFontEncRec(encodings_dir[n].alias,
 						encodings_dir[n].path);
@@ -883,7 +883,7 @@ reportOneFontenc(const char *alias, const char *path)
 	int num_def = 0;
 	int inx;
 	FontMapPtr mp;
-	FontEncSimpleMapPtr mq = data->mappings->client_data;
+	FontEncSimpleMapPtr mq;
 
 	printf("\tName: %s\n", data->name);
 	if (data->aliases) {
@@ -911,7 +911,7 @@ reportOneFontenc(const char *alias, const char *path)
 		break;
 	    }
 	}
-	if (mq != 0) {
+	if (mq != 0 && mq->map != 0) {
 	    trim_or_fill(mq, (int) fontencSize(data));
 	    for (n = 0; n < (int) mq->len; ++n) {
 		inx = fontencUnmap(mq, n);
@@ -1020,19 +1020,21 @@ showFontencCharset(const char *name)
     showOneCharset(name, lookupOneFontenc(name));
 }
 
+#ifdef USE_ICONV
 /*
  * Display iconv encoding as ".enc" format.
  */
 void
 showIconvCharset(const char *name)
 {
-    FontEncPtr data = luitGetFontEnc(name);
+    FontEncPtr data = luitGetFontEnc(name, umICONV);
 
     if (data != 0) {
 	showOneCharset(name, data);
 	luitFreeFontEnc(data);
     }
 }
+#endif
 
 #ifdef NO_LEAKS
 static void

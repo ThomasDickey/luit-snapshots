@@ -1,4 +1,4 @@
-bluit (20130124) unstable; urgency=low
+bluit (20130127) unstable; urgency=low
 
   * other improvements/new features
   * fix window-size for pty-losing platforms

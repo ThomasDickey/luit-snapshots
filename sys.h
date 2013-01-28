@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.20 2013/01/25 01:42:22 tom Exp $ */
+/* $XTermId: sys.h,v 1.21 2013/01/27 21:42:47 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -55,6 +55,13 @@ int allocatePty(int *pty_return, char **line_return);
 int openTty(char *line);
 int droppriv(void);
 char *strmalloc(const char *value);
+
+#ifdef HAVE_STRCASECMP
+#define StrCaseCmp(a,b) strcasecmp(a,b)
+#else
+int my_strcasecmp(const char *a, const char *b);
+#define StrCaseCmp(a,b) my_strcasecmp(a,b)
+#endif
 
 #ifdef NO_LEAKS
 void luit_leaks(void);

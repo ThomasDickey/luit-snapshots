@@ -1,8 +1,8 @@
 Summary: luit - Locale and ISO 2022 support for Unicode terminals
 %define AppProgram luit
-%define AppVersion 20130124
+%define AppVersion 20130127
 %define UseProgram b%{AppProgram}
-# $XTermId: luit.spec,v 1.35 2013/01/24 09:26:34 tom Exp $
+# $XTermId: luit.spec,v 1.37 2013/01/27 16:04:09 tom Exp $
 Name: %{AppProgram}
 Version: %{AppVersion}
 Release: 1
@@ -23,6 +23,8 @@ packages.  This package installs an alternative binary "bluit", and
 adds a symbolic link for "xterm-filter".
 
 %prep
+
+%define debug_package %{nil}
 
 %setup -q -n %{AppProgram}-%{AppVersion}
 
