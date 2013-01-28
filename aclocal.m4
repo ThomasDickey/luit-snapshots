@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.66 2012/10/10 00:52:21 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.69 2013/01/27 22:31:59 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2011,2012 by Thomas E. Dickey
+dnl Copyright 2006-2012,2013 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -2270,6 +2270,45 @@ if test "$with_dmalloc" = yes ; then
 	AC_CHECK_HEADER(dmalloc.h,
 		[AC_CHECK_LIB(dmalloc,[dmalloc_debug]ifelse([$1],,[],[,$1]))])
 fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Configure option to specify the location of encodings.dir, for programs
+dnl that must read it directly.
+AC_DEFUN([CF_WITH_ENCODINGS_DIR],
+[
+AC_MSG_CHECKING(for location of encodings.dir file)
+AC_ARG_WITH(encodings-dir,
+[  --with-encodings-dir=XXX file used for encodings directory (default: auto)],
+[ENCODINGS_DIR_FILE=$withval],
+[ENCODINGS_DIR_FILE=auto])
+
+CF_VERBOSE()
+case "x$ENCODINGS_DIR_FILE" in #(vi
+xauto|xyes|xno)
+	ENCODINGS_DIR_FILE=unknown
+	for cf_path in \
+		/usr/X11*/lib/X11/fonts \
+		/usr/share/fonts/X11
+		do
+			test -d "$cf_path" || continue
+			cf_encodings_dir=$cf_path/encodings/encodings.dir
+			CF_VERBOSE(...testing $cf_encodings_dir)
+			if test -f $cf_encodings_dir ; then
+				ENCODINGS_DIR_FILE=$cf_encodings_dir
+				break
+			fi
+		done
+	;; #(vi
+*)
+	if test ! -f "$ENCODINGS_DIR_FILE" ; then
+		AC_MSG_WARN(Encodings file not found: $ENCODINGS_DIR_FILE)
+		ENCODINGS_DIR_FILE=/usr/share/fonts/X11
+	fi
+	;;
+esac
+AC_MSG_RESULT($ENCODINGS_DIR_FILE)
+AC_SUBST(ENCODINGS_DIR_FILE)
+AC_DEFINE_UNQUOTED(ENCODINGS_DIR_FILE, "$ENCODINGS_DIR_FILE")
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_LOCALE_ALIAS version: 6 updated: 2011/10/26 04:23:30

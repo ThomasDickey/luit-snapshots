@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.h,v 1.18 2013/01/25 01:34:16 tom Exp $
+ * $XTermId: luitconv.h,v 1.22 2013/01/28 01:00:13 tom Exp $
  *
  * Copyright 2010,2013 by Thomas E. Dickey
  *
@@ -29,6 +29,13 @@
 
 #include <other.h>
 #include <iconv.h>
+
+typedef enum {
+    umBUILTIN = 1
+    ,umFONTENC = 2
+    ,umICONV = 4
+    ,umANY = (umBUILTIN | umFONTENC | umICONV)
+} UM_MODE;
 
 #define FONT_ENCODING_UNICODE 1
 typedef struct _FontMap {
@@ -81,8 +88,20 @@ typedef struct _LuitConv {
     FontMapReverseRec reverse;
 } LuitConv;
 
-extern FontEncPtr luitGetFontEnc(const char *);
-extern FontMapPtr luitLookupMapping(const char *);
+typedef struct {
+    unsigned source;
+    unsigned target;
+} BuiltInMapping;
+
+typedef struct _BuiltInCharset {
+    const char *name;		/* table name, for lookups */
+    const BuiltInMapping *table;
+    size_t length;		/* length of table[] */
+} BuiltInCharsetRec;
+
+extern const BuiltInCharsetRec builtin_encodings[];
+extern FontEncPtr luitGetFontEnc(const char *, UM_MODE);
+extern FontMapPtr luitLookupMapping(const char *, UM_MODE);
 extern FontMapReversePtr luitLookupReverse(FontMapPtr);
 extern LuitConv *luitLookupEncoding(FontMapPtr);
 extern unsigned luitMapCodeValue(unsigned, FontMapPtr);
@@ -93,7 +112,7 @@ extern void luitDestroyReverse(FontMapReversePtr);
 #endif
 
 #define LookupMapping(encoding_name) \
-	luitLookupMapping(encoding_name)
+	luitLookupMapping(encoding_name, umANY)
 
 #define LookupReverse(fontmap_ptr) \
 	luitLookupReverse(fontmap_ptr)
@@ -138,5 +157,6 @@ extern void reportFontencCharsets(void);
 extern void reportIconvCharsets(void);
 extern void showFontencCharset(const char *);
 extern void showIconvCharset(const char *);
+extern FontEncPtr lookupOneFontenc(const char *);
 
 #endif /* LUITCONV_H */

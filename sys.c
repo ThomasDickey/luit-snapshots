@@ -1,4 +1,4 @@
-/* $XTermId: sys.c,v 1.49 2013/01/25 01:43:11 tom Exp $ */
+/* $XTermId: sys.c,v 1.51 2013/01/27 21:47:10 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -592,6 +592,21 @@ droppriv(void)
     return rc;
 }
 
+#ifndef HAVE_STRCASECMP
+int
+my_strcasecmp(const char *a, const char *b)
+{
+    while (*a != '\0' && *b != '\0') {
+	int p = toupper(*a++);
+	int q = toupper(*b++);
+	int r;
+	if ((r = p - q) != 0)
+	    return r;
+    }
+    return *a - *b;
+}
+#endif
+
 char *
 strmalloc(const char *value)
 {
@@ -613,6 +628,7 @@ strmalloc(const char *value)
 void
 ExitProgram(int code)
 {
+    TRACE(("ExitProgram %d\n", code));
     luit_leaks();
     iso2022_leaks();
     charset_leaks();

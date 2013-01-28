@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.37 2013/01/16 01:02:44 tom Exp $
+dnl $XTermId: configure.in,v 1.40 2013/01/28 00:50:29 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -80,6 +80,7 @@ poll \
 putenv \
 select \
 strdup \
+strcasecmp \
 )
 
 CF_CHECK_TYPE([nfds_t],[unsigned long],[
@@ -142,10 +143,11 @@ then
 	AM_ICONV
 	AC_DEFINE(USE_ICONV,1,[Define to 1 if iconv-libraries should be used])
 	CF_ADD_LIBS($LIBICONV)
-	EXTRASRCS="$EXTRASRCS luitconv.c"
-	EXTRAOBJS="$EXTRAOBJS luitconv\$o"
+	EXTRASRCS="$EXTRASRCS luitconv.c  builtin.c"
+	EXTRAOBJS="$EXTRAOBJS luitconv\$o builtin\$o"
 fi
 
+CF_WITH_ENCODINGS_DIR
 CF_WITH_LOCALE_ALIAS
 
 CF_DISABLE_LEAKS

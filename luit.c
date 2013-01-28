@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.51 2013/01/24 09:45:17 tom Exp $ */
+/* $XTermId: luit.c,v 1.56 2013/01/26 16:41:52 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -111,7 +111,7 @@ help(const char *program, int fatal)
 	DATA("alias filename", -, "location of the locale alias file"),
 	DATA("argv0 name", -, "set child's name"),
 	DATA("c", -, "simple converter stdin/stdout"),
-	DATA("encoding encoding", -, "?"),
+	DATA("encoding encoding", -, "use this encoding rather than current locale's encoding"),
 	DATA("fill-fontenc", -, "fill in one-one mapping in -show-fontenc report"),
 	DATA("g0 set", -, "set output G0 charset (default ASCII)"),
 	DATA("g1 set", -, "set output G1 charset"),
@@ -190,7 +190,7 @@ help(const char *program, int fatal)
     fflush(fp);
 
     if (fatal)
-	exit(EXIT_FAILURE);
+	ExitProgram(EXIT_FAILURE);
 }
 
 #ifndef USE_ICONV
@@ -233,13 +233,11 @@ parseOptions(int argc, char **argv)
 	    if (i + 1 >= argc)
 		FatalError("-show-fontenc requires an argument\n");
 	    showFontencCharset(argv[i + 1]);
-	    i += 2;
 	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "-show-iconv")) {
 	    if (i + 1 >= argc)
 		FatalError("-show-iconv requires an argument\n");
 	    showIconvCharset(argv[i + 1]);
-	    i += 2;
 	    ExitProgram(0);
 	} else if (!strcmp(argv[i], "-list-fontenc")) {
 	    reportFontencCharsets();

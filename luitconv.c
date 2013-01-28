@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.49 2013/01/25 01:46:39 tom Exp $
+ * $XTermId: luitconv.c,v 1.61 2013/01/28 01:01:07 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -47,7 +47,8 @@
 #define UCS_REPL        0xfffd
 #define DEC_REPL	0x2426	/* SYMBOL FOR SUBSTITUTE FORM TWO */
 
-#define MAX8		256
+#define MAX8		0x100
+#define MAX16		0x10000
 
 #define NO_ICONV  (iconv_t)(-1)
 
@@ -55,20 +56,6 @@
 static LuitConv *all_conversions;
 
 /******************************************************************************/
-
-typedef struct {
-    unsigned source;
-    unsigned target;
-} BuiltInMapping;
-
-typedef struct _BuiltInCharset {
-    const char *name;		/* table name, for lookups */
-    int type;			/* FIXME - to do */
-    const BuiltInMapping *table;
-    size_t length;		/* length of table[] */
-    unsigned shift;		/* FIXME - to-do */
-    unsigned fill;		/* value to use for undefined characters */
-} BuiltInCharsetRec;
 
 /* originally derived from the file data.c in the XTerm sources */
 static const BuiltInMapping dec_special[] =
@@ -391,16 +378,16 @@ compare(const char *s, const char *t)
  * variations.
  */
 static iconv_t
-try_iconv_open(const char **guess)
+try_iconv_open(const char *guess, char **alias)
 {
     int chcase;
     int mkcase;
-    char *encoding_name = malloc(strlen(*guess) + 2);
-    char *encoding_temp = malloc(strlen(*guess) + 2);
+    char *encoding_name = malloc(strlen(guess) + 2);
+    char *encoding_temp = malloc(strlen(guess) + 2);
     char *p;
     iconv_t result;
 
-    strcpy(encoding_name, *guess);
+    strcpy(encoding_name, guess);
     TRACE(("try_iconv_open(%s)\n", encoding_name));
     result = iconv_open("UTF-8", encoding_name);
 
@@ -411,7 +398,7 @@ try_iconv_open(const char **guess)
      */
     if (result == NO_ICONV) {
 	for (chcase = 0; chcase <= 2; ++chcase) {
-	    strcpy(encoding_name, *guess);
+	    strcpy(encoding_name, guess);
 
 	    switch (chcase) {
 	    case 0:		/* no change */
@@ -483,8 +470,12 @@ try_iconv_open(const char **guess)
 	}
     }
 
-    if (strcmp(encoding_name, *guess)) {
-	*guess = encoding_name;
+    if (strcmp(encoding_name, guess)) {
+	if (result != NO_ICONV) {
+	    *alias = encoding_name;
+	} else {
+	    free(encoding_name);
+	}
     } else {
 	free(encoding_name);
     }
@@ -649,24 +640,27 @@ findEncodingAlias(const char *encoding_name)
 }
 
 static void
-initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
+initializeBuiltInTable(LuitConv * data,
+		       const BuiltInCharsetRec * builtIn,
+		       int enc_file)
 {
     UCHAR buffer[20];
     size_t n;
     size_t need;
 
-    TRACE(("initializing built-in '%s'\n", builtIn->name));
+    TRACE(("initializing %s '%s'\n",
+	   enc_file ? "external" : "built-in",
+	   builtIn->name));
+    (void) enc_file;
 
     data->len_index = 0;
 
-    for (n = 0; n < MAX8; ++n) {
-	data->table_utf8[n].ucs = (builtIn->fill
-				   ? builtIn->fill
-				   : (unsigned) n);
+    for (n = 0; n < builtIn->length; ++n) {
+	data->table_utf8[n].ucs = (unsigned) n;
     }
 
     for (n = 0; n < builtIn->length; ++n) {
-	if (builtIn->table[n].source < MAX8) {
+	if (builtIn->table[n].source < builtIn->length) {
 	    size_t j = builtIn->table[n].source;
 
 	    data->table_utf8[j].ucs = builtIn->table[n].target;
@@ -691,17 +685,12 @@ initializeBuiltInTable(LuitConv * data, const BuiltInCharsetRec * builtIn)
 static const BuiltInCharsetRec *
 findBuiltinEncoding(const char *encoding_name)
 {
-    static const BuiltInCharsetRec table[] =
-    {
-	{"dec-special", 0, dec_special, SizeOf(dec_special), 0, 0},
-	{"dec-dectech", 0, dec_dectech, SizeOf(dec_dectech), 0, DEC_REPL},
-    };
     size_t n;
     const BuiltInCharsetRec *result = 0;
 
-    for (n = 0; n < SizeOf(table); ++n) {
-	if (!compare(encoding_name, table[n].name)) {
-	    result = &(table[n]);
+    for (n = 0; builtin_encodings[n].name != 0; ++n) {
+	if (!compare(encoding_name, builtin_encodings[n].name)) {
+	    result = &(builtin_encodings[n]);
 	    break;
 	}
     }
@@ -728,7 +717,7 @@ luitLookupEncoding(FontMapPtr mapping)
  * representation.
  */
 FontEncPtr
-luitGetFontEnc(const char *name)
+luitGetFontEnc(const char *name, UM_MODE mode)
 {
     FontEncPtr result = 0;
     FontMapPtr mp = 0;
@@ -738,7 +727,7 @@ luitGetFontEnc(const char *name)
     LuitConv *lc;
     int n;
 
-    if ((mp = luitLookupMapping(name)) != 0
+    if ((mp = luitLookupMapping(name, mode)) != 0
 	&& (lc = luitLookupEncoding(mp)) != 0
 	&& (mp2 = TypeCalloc(FontMapRec)) != 0
 	&& (mq = TypeCalloc(FontEncSimpleMapRec)) != 0
@@ -761,6 +750,13 @@ luitGetFontEnc(const char *name)
 	    if (ch < mq->len)
 		map[ch] = (UCode) lc->rev_index[n].ucs;
 	}
+    } else {
+	if (mp2)
+	    free(mp2);
+	if (mq)
+	    free(mq);
+	if (map)
+	    free(map);
     }
     return result;
 }
@@ -790,16 +786,34 @@ luitFreeFontEnc(FontEncPtr data)
 static FontMapPtr
 initLuitConv(const char *encoding_name,
 	     iconv_t my_desc,
-	     const BuiltInCharsetRec * builtIn)
+	     const BuiltInCharsetRec * builtIn,
+	     int enc_file)
 {
     FontMapPtr result = 0;
-    LuitConv *latest = newLuitConv(MAX8);
-    if (latest != 0) {
+    LuitConv *latest;
+    size_t length = MAX8;
+
+    if (builtIn) {
+	if (builtIn->length != 0 && builtIn->length <= MAX8) {
+	    size_t n;
+	    for (n = 0; n < builtIn->length; ++n) {
+		if (builtIn->table[n].source >= MAX8) {
+		    length = MAX16;
+		    break;
+		}
+	    }
+	} else {
+	    length = MAX16;
+	}
+    }
+
+    TRACE(("initLuitConv(%s) %u\n", encoding_name, (unsigned) length));
+    if ((latest = newLuitConv(length)) != 0) {
 	latest->next = all_conversions;
 	latest->encoding_name = strmalloc(encoding_name);
 	latest->iconv_desc = my_desc;
 	if (builtIn != 0)
-	    initializeBuiltInTable(latest, builtIn);
+	    initializeBuiltInTable(latest, builtIn, enc_file);
 	else
 	    initializeIconvTable(latest);
 	latest->mapping.type = FONT_ENCODING_UNICODE;
@@ -821,18 +835,64 @@ initLuitConv(const char *encoding_name,
     return result;
 }
 
-FontMapPtr
-luitLookupMapping(const char *encoding_name)
+/*
+ * This uses as input the data loaded from an external ".enc" file to construct
+ * a table that initLuitConv() can use.
+ */
+static FontMapPtr
+convertFontEnc(FontEncPtr fontenc)
 {
-#ifdef NO_LEAKS
-    const char *original_name = encoding_name;
-#endif
+    FontMapPtr mp = fontenc->mappings;
+    FontEncSimpleMapPtr mq;
+    BuiltInMapping *mapping;
     FontMapPtr result = 0;
+
+    TRACE(("convertFontEnc: %s\n", fontenc->name));
+
+    while (mp != 0) {
+	if (mp->type == FONT_ENCODING_UNICODE)
+	    break;
+	mp = mp->next;
+    }
+
+    if (mp != 0
+	&& (mq = mp->client_data) != 0
+	&& mq->len
+	&& (mapping = TypeCallocN(BuiltInMapping, mq->len + 1)) != 0) {
+	unsigned j, k;
+	BuiltInCharsetRec builtIn;
+
+	TRACE(("...found mapping for %d items\n", mq->len));
+
+	memset(&builtIn, 0, sizeof(builtIn));
+	builtIn.name = fontenc->name;
+	builtIn.table = mapping;
+	builtIn.length = mq->len;
+
+	for (j = k = 0; j < mq->len; ++j) {
+	    unsigned code = luitRecode(j, mq);
+	    mapping[k].source = j;
+	    mapping[k].target = code ? code : j;
+	    ++k;
+	}
+	result = initLuitConv(fontenc->name, NO_ICONV, &builtIn, 1);
+	free(mapping);
+    }
+
+    return result;
+}
+
+FontMapPtr
+luitLookupMapping(const char *encoding_name, UM_MODE mode)
+{
+    FontMapPtr result = 0;
+    FontEncPtr fontenc;
     LuitConv *latest;
     const BuiltInCharsetRec *builtIn;
     iconv_t my_desc;
+    char *aliased = 0;
 
-    TRACE(("luitLookupMapping '%s'\n", encoding_name));
+    TRACE(("luitLookupMapping '%s' %u\n", encoding_name, mode));
 
     for (latest = all_conversions; latest != 0; latest = latest->next) {
 	if (!compare(encoding_name, latest->encoding_name)) {
@@ -844,53 +904,62 @@ luitLookupMapping(const char *encoding_name)
 
     if (latest == 0) {
 	const char *alias = 0;
-	my_desc = try_iconv_open(&encoding_name);
-	if (my_desc == NO_ICONV) {
-	    alias = findEncodingAlias(encoding_name);
-	    if (alias != 0) {
-#ifdef NO_LEAKS
-		free((char *) encoding_name);
-#endif
-		encoding_name = alias;
-		TRACE(("...retry '%s'\n", encoding_name));
-		my_desc = try_iconv_open(&encoding_name);
+
+	if (mode & umICONV) {
+	    my_desc = try_iconv_open(encoding_name, &aliased);
+	    if (my_desc == NO_ICONV) {
+		alias = findEncodingAlias(encoding_name);
+		if (alias != 0) {
+		    if (aliased) {
+			free(aliased);
+			aliased = 0;
+		    }
+		    encoding_name = alias;
+		    TRACE(("...retry '%s'\n", encoding_name));
+		    my_desc = try_iconv_open(encoding_name, &aliased);
+		}
 	    }
+	} else {
+	    my_desc = NO_ICONV;
 	}
+
 	if (my_desc != NO_ICONV) {
 	    TRACE(("...iconv_open succeeded\n"));
-	    result = initLuitConv(encoding_name, my_desc, NULL);
+	    result = initLuitConv(encoding_name, my_desc, NULL, -1);
 	    iconv_close(my_desc);
-	    if ((latest = luitLookupEncoding(result)) != 0)
+	    if ((latest = luitLookupEncoding(result)) != 0) {
 		latest->iconv_desc = NO_ICONV;
-	} else if ((builtIn = findBuiltinEncoding(encoding_name)) != 0) {
-	    TRACE(("...use built-in charset\n"));
-	    result = initLuitConv(encoding_name, my_desc, builtIn);
-	} else {
-	    unsigned ch;
-	    BuiltInMapping mapping[MAX8];
-	    BuiltInCharsetRec posix;
-
-	    TRACE(("...fallback to POSIX\n"));
-	    memset(&posix, 0, sizeof(posix));
-	    posix.name = encoding_name;
-	    posix.length = MAX8;
-	    posix.table = mapping;
-	    for (ch = 0; ch < posix.length; ++ch) {
-		mapping[ch].source = ch;
-		mapping[ch].target = (ch < 128) ? ch : 0;
 	    }
-	    result = initLuitConv(encoding_name, my_desc, &posix);
+	} else if ((mode & umFONTENC)
+		   && (fontenc = lookupOneFontenc(encoding_name)) != 0) {
+	    result = convertFontEnc(fontenc);
+	} else if (mode & umBUILTIN) {
+	    if ((builtIn = findBuiltinEncoding(encoding_name)) != 0) {
+		TRACE(("...use built-in charset\n"));
+		result = initLuitConv(encoding_name, my_desc, builtIn, 0);
+	    } else {
+		unsigned ch;
+		BuiltInMapping mapping[MAX8];
+		BuiltInCharsetRec posix;
+
+		TRACE(("...fallback to POSIX\n"));
+		memset(&posix, 0, sizeof(posix));
+		posix.name = encoding_name;
+		posix.length = SizeOf(mapping);
+		posix.table = mapping;
+		for (ch = 0; ch < posix.length; ++ch) {
+		    mapping[ch].source = ch;
+		    mapping[ch].target = (ch < 128) ? ch : 0;
+		}
+		result = initLuitConv(encoding_name, my_desc, &posix, 0);
+	    }
 	}
-#ifdef NO_LEAKS
-	if (encoding_name != original_name
-	    && (alias != encoding_name
-		|| alias != 0)) {
-	    free((char *) encoding_name);
+	if (aliased) {
+	    free(aliased);
 	}
-#endif
     }
 
-    TRACE(("... luitLookupMapping ->%p\n", result));
+    TRACE(("...luitLookupMapping ->%p\n", result));
     return result;
 }
 

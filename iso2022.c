@@ -1,4 +1,4 @@
-/* $XTermId: iso2022.c,v 1.36 2012/10/12 09:25:00 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.37 2013/01/25 18:50:14 tom Exp $ */
 
 /*
 Copyright 2011,2012 by Thomas E. Dickey
@@ -287,12 +287,16 @@ initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
     TRACE(("initIso2022(locale=%s, charset=%s)\n", locale, NonNull(charset)));
     rc = getLocaleState(locale, charset, &gl, &gr, &g0, &g1, &g2, &g3, &other);
     if (rc < 0) {
-	if (charset)
+	if (charset) {
 	    Warning("couldn't find charset %s; "
 		    "using ISO 8859-1.\n", charset);
-	else
+	} else if (ignore_locale) {
+	    Warning("couldn't find charset data for %s; "
+		    "using ISO 8859-1.\n", locale);
+	} else {
 	    Warning("couldn't find charset data for locale %s; "
 		    "using ISO 8859-1.\n", locale);
+	}
     }
 
     if (G0(i) == NULL) {

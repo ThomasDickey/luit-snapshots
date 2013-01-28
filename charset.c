@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.41 2013/01/10 00:47:28 tom Exp $ */
+/* $XTermId: charset.c,v 1.55 2013/01/28 01:32:17 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -277,7 +277,7 @@ getFontencCharset(unsigned final, int type, const char *name)
     }
 
     if (!fc->name) {
-	VERBOSE(2, ("...no match for '%s'\n", NonNull(name)));
+	VERBOSE(2, ("...no match for '%s' in FontEnc charsets\n", NonNull(name)));
     } else if ((c = TypeCalloc(CharsetRec)) == 0) {
 	VERBOSE(2, ("malloc failed\n"));
     } else if ((mapping = LookupMapping(fc->xlfd)) == NULL) {
@@ -323,7 +323,7 @@ getOtherCharset(const char *name)
     }
 
     if (!fc->name) {
-	VERBOSE(2, ("...no match for '%s'\n", NonNull(name)));
+	VERBOSE(2, ("...no match for '%s' in Other charsets\n", NonNull(name)));
     } else if ((c = TypeCalloc(CharsetRec)) == NULL) {
 	VERBOSE(2, ("malloc failed\n"));
     } else if ((s = TypeCalloc(OtherState)) == NULL) {
@@ -403,6 +403,8 @@ getCharsetByName(const char *name)
     const CharsetRec *c;
 
     VERBOSE(2, ("getCharsetByName(%s)\n", NonNull(name)));
+    TRACE(("getCharsetByName(%s)\n", NonNull(name)));
+
     if (name == NULL)
 	return getUnknownCharset(T_94);
 
@@ -444,6 +446,7 @@ static const LocaleCharsetRec localeCharsets[] =
     {"ISO8859-15", 0, 2, "ASCII", NULL,         "ISO 8859-15",   NULL,         NULL},
     {"ISO8859-16", 0, 2, "ASCII", NULL,         "ISO 8859-16",   NULL,         NULL},
 
+    {"KOI8-E",     0, 2, "ASCII", NULL,         "KOI8-E",        NULL,         NULL},
     {"KOI8-R",     0, 2, "ASCII", NULL,         "KOI8-R",        NULL,         NULL},
     {"KOI8-U",     0, 2, "ASCII", NULL,         "KOI8-U",        NULL,         NULL},
     {"KOI8-RU",    0, 2, "ASCII", NULL,         "KOI8-RU",       NULL,         NULL},
@@ -502,16 +505,52 @@ reportCharsets(void)
 	       q->name, q->final ? " (ISO 2022)" : "");
 }
 
+#ifdef USE_ICONV
+static LocaleCharsetRec fakeLocaleCharset;
+#endif
+
 static const LocaleCharsetRec *
 findLocaleCharset(const char *charset)
 {
     const LocaleCharsetRec *p;
+    const LocaleCharsetRec *result = 0;
 
     for (p = localeCharsets; p->name; p++) {
-	if (compare(p->name, charset) == 0)
+	if (compare(p->name, charset) == 0) {
+	    result = p;
 	    break;
+	}
     }
-    return p->name ? p : 0;
+#ifdef USE_ICONV
+    /*
+     * The table is useful, but not complete.
+     * If we can find a mapping for an 8-bit encoding, fake a table entry.
+     */
+    if (result == 0) {
+	FontEncPtr enc = luitGetFontEnc(charset,
+					(UM_MODE) ((int) umICONV
+						   | (int) umFONTENC));
+	if (enc != 0
+	    && enc->size <= 256
+	    && enc->row_size == 0) {
+	    LocaleCharsetRec *temp = &fakeLocaleCharset;
+
+	    TRACE(("...fake a LocaleCharset record for %s\n", charset));
+
+	    memset(temp, 0, sizeof(*temp));
+	    temp->name = strmalloc(charset);
+	    temp->gr = 2;
+	    temp->g0 = "ASCII";
+	    temp->g2 = temp->name;
+	    result = temp;
+
+	} else {
+	    TRACE(("...do not know how to fake LocaleCharset for %s\n", charset));
+	}
+	luitFreeFontEnc(enc);
+    }
+#endif
+    return result;
 }
 
 static const LocaleCharsetRec *
@@ -525,7 +564,11 @@ matchLocaleCharset(const char *charset)
     } prefixes[] = {
 #define DATA(source, target) { source, target, sizeof(source)-1, sizeof(target)-1 }
 	DATA("ISO-", "ISO "),
+	    DATA("DEC ", "DEC-"),
+	    DATA("IBM-CP", "CP "),	/* "ibm-cp866" -> "cp 866" (iconv) */
 	    DATA("IBM", "CP "),
+	    DATA("MICROSOFT-CP", "CP "),
+	    DATA("MICROSOFT", "CP "),
 	    DATA("CP-", "CP "),
 	    DATA("ANSI", "CP "),	/* e.g., Solaris ANSI1251 */
 #undef DATA
@@ -535,9 +578,9 @@ matchLocaleCharset(const char *charset)
 
     if (*charset != '\0') {
 	char *euro;
-	char source[MAX_KEYWORD_LENGTH];
+	char source[MAX_KEYWORD_LENGTH + 1];
 
-	strcpy(source, charset);
+	sprintf(source, "%.*s", MAX_KEYWORD_LENGTH, charset);
 	if ((euro = strrchr(source, '@')) != 0 && !strcmp(euro, "@euro")) {
 	    Warning("the euro character may not be supported\n");
 	    *euro = 0;
@@ -583,15 +626,20 @@ getLocaleState(const char *locale,
     char *resolved = 0;
     const LocaleCharsetRec *p;
 
+    TRACE(("getLocaleState(locale=%s, charset=%s)\n", locale, NonNull(charset)));
     if (!charset) {
-	resolved = resolveLocale(locale);
-	if (!resolved)
-	    return -1;
-	charset = strrchr(resolved, '.');
-	if (charset)
-	    charset++;
-	else
-	    charset = resolved;
+	if (ignore_locale) {
+	    charset = locale;
+	} else {
+	    resolved = resolveLocale(locale);
+	    if (!resolved)
+		return -1;
+	    if ((charset = strrchr(resolved, '.')) != 0) {
+		charset++;
+	    } else {
+		charset = resolved;
+	    }
+	}
     }
 
     if ((p = matchLocaleCharset(charset)) != 0) {
@@ -611,6 +659,8 @@ getLocaleState(const char *locale,
 
     if (resolved != 0)
 	free(resolved);
+
+    TRACE(("...getLocaleState ->%d\n", result));
     return result;
 }
 
@@ -676,5 +726,11 @@ charset_leaks(void)
 	destroyCharset(cachedCharsets);
 	cachedCharsets = next;
     }
+#ifdef USE_ICONV
+    if (fakeLocaleCharset.name != 0) {
+	free((void *) fakeLocaleCharset.name);
+	fakeLocaleCharset.name = 0;
+    }
+#endif
 }
 #endif /* NO_LEAKS */
