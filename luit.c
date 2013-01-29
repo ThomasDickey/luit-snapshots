@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.56 2013/01/26 16:41:52 tom Exp $ */
+/* $XTermId: luit.c,v 1.59 2013/01/29 01:17:10 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -94,7 +94,7 @@ FatalError(const char *f,...)
     va_start(args, f);
     vfprintf(stderr, f, args);
     va_end(args);
-    ExitProgram(1);
+    ExitFailure();
 }
 
 static void
@@ -132,6 +132,7 @@ help(const char *program, int fatal)
 	DATA("kss", +, "disable generation of single-shifts for input"),
 	DATA("kssgr", +, "use GL after single-shift"),
 	DATA("list", -, "list encodings recognized by this program"),
+	DATA("list-builtin", -, "list built-in encodings"),
 	DATA("list-fontenc", -, "list available \".enc\" encoding files"),
 	DATA("list-iconv", -, "list iconv-supported encodings"),
 	DATA("olog filename", -, "log all output to this file"),
@@ -140,8 +141,9 @@ help(const char *program, int fatal)
 	DATA("oss", +, "disable single-shifts in output"),
 	DATA("ot", +, "disable interpretation of all sequences in output"),
 	DATA("p", -, "do parent/child handshake"),
-	DATA("show-fontenc", -, "show details of an \".enc\" encoding file"),
-	DATA("show-iconv", -, "show iconv encoding in \".enc\" format"),
+	DATA("show-builtin enc", -, "show details of a given built-in encoding"),
+	DATA("show-fontenc enc", -, "show details of an \".enc\" encoding file"),
+	DATA("show-iconv enc", -, "show iconv encoding in \".enc\" format"),
 	DATA("t", -, "testing (initialize locale but no terminal)"),
 	DATA("v", -, "verbose (repeat to increase level)"),
 	DATA("x", -, "exit as soon as child dies"),
@@ -190,7 +192,7 @@ help(const char *program, int fatal)
     fflush(fp);
 
     if (fatal)
-	ExitProgram(EXIT_FAILURE);
+	ExitFailure();
 }
 
 #ifndef USE_ICONV
@@ -200,9 +202,20 @@ needIconvCfg(void)
     Message("You need the iconv configuration for this option\n");
 }
 
-#define reportIconvCharsets() needIconvCfg()
-#define showIconvCharset(name) needIconvCfg()
+#define reportBuiltinCharsets()  needIconvCfg()
+#define reportIconvCharsets()    needIconvCfg()
+#define showBuiltinCharset(name) needIconvCfg()
+#define showIconvCharset(name)   needIconvCfg()
 #endif
+
+static char *
+needParam(int argc, char **argv, int now)
+{
+    if (now + 1 >= argc)
+	FatalError("%s requires an argument\n", argv[now]);
+    return (argv[now + 1]);
+}
+#define getParam(now) needParam(argc, argv, now)
 
 static int
 parseOptions(int argc, char **argv)
@@ -219,32 +232,34 @@ parseOptions(int argc, char **argv)
 	    i++;
 	} else if (!strcmp(argv[i], "-V")) {
 	    printf("%s - %s\n", argv[0], LUIT_VERSION);
-	    ExitProgram(0);
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "-h")) {
 	    help(argv[0], 0);
-	    ExitProgram(0);
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "-list")) {
 	    reportCharsets();
-	    ExitProgram(0);
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "-fill-fontenc")) {
 	    fill_fontenc = 1;
 	    i++;
+	} else if (!strcmp(argv[i], "-show-builtin")) {
+	    showBuiltinCharset(getParam(i));
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "-show-fontenc")) {
-	    if (i + 1 >= argc)
-		FatalError("-show-fontenc requires an argument\n");
-	    showFontencCharset(argv[i + 1]);
-	    ExitProgram(0);
+	    showFontencCharset(getParam(i));
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "-show-iconv")) {
-	    if (i + 1 >= argc)
-		FatalError("-show-iconv requires an argument\n");
-	    showIconvCharset(argv[i + 1]);
-	    ExitProgram(0);
+	    showIconvCharset(getParam(i));
+	    ExitSuccess();
+	} else if (!strcmp(argv[i], "-list-builtin")) {
+	    reportBuiltinCharsets();
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "-list-fontenc")) {
 	    reportFontencCharsets();
-	    ExitProgram(0);
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "-list-iconv")) {
 	    reportIconvCharsets();
-	    ExitProgram(0);
+	    ExitSuccess();
 	} else if (!strcmp(argv[i], "+oss")) {
 	    outputState->outputFlags &= ~OF_SS;
 	    i++;
@@ -270,31 +285,20 @@ parseOptions(int argc, char **argv)
 	    inputState->inputFlags |= IF_LS;
 	    i++;
 	} else if (!strcmp(argv[i], "-g0")) {
-	    if (i + 1 >= argc)
-		FatalError("-g0 requires an argument\n");
-	    G0(outputState) = getCharsetByName(argv[i + 1]);
+	    G0(outputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-g1")) {
-	    if (i + 1 >= argc)
-		FatalError("-g1 requires an argument\n");
-	    G1(outputState) = getCharsetByName(argv[i + 1]);
+	    G1(outputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-g2")) {
-	    if (i + 1 >= argc)
-		FatalError("-g2 requires an argument\n");
-	    G2(outputState) = getCharsetByName(argv[i + 1]);
+	    G2(outputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-g3")) {
-	    if (i + 1 >= argc)
-		FatalError("-g3 requires an argument\n");
-	    G3(outputState) = getCharsetByName(argv[i + 1]);
-
+	    G3(outputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-gl")) {
 	    int j;
-	    if (i + 1 >= argc)
-		FatalError("-gl requires an argument\n");
-	    if (strlen(argv[i + 1]) != 2 ||
+	    if (strlen(getParam(i)) != 2 ||
 		argv[i + 1][0] != 'g')
 		j = -1;
 	    else
@@ -308,9 +312,7 @@ parseOptions(int argc, char **argv)
 	    i += 2;
 	} else if (!strcmp(argv[i], "-gr")) {
 	    int j;
-	    if (i + 1 >= argc)
-		FatalError("-gr requires an argument\n");
-	    if (strlen(argv[i + 1]) != 2 ||
+	    if (strlen(getParam(i)) != 2 ||
 		argv[i + 1][0] != 'g')
 		j = -1;
 	    else
@@ -323,31 +325,20 @@ parseOptions(int argc, char **argv)
 		outputState->grp = &outputState->g[j];
 	    i += 2;
 	} else if (!strcmp(argv[i], "-kg0")) {
-	    if (i + 1 >= argc)
-		FatalError("-kg0 requires an argument\n");
-	    G0(inputState) = getCharsetByName(argv[i + 1]);
+	    G0(inputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-kg1")) {
-	    if (i + 1 >= argc)
-		FatalError("-kg1 requires an argument\n");
-	    G1(inputState) = getCharsetByName(argv[i + 1]);
+	    G1(inputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-kg2")) {
-	    if (i + 1 >= argc)
-		FatalError("-kg2 requires an argument\n");
-	    G2(inputState) = getCharsetByName(argv[i + 1]);
+	    G2(inputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-kg3")) {
-	    if (i + 1 >= argc)
-		FatalError("-kg3 requires an argument\n");
-	    G3(inputState) = getCharsetByName(argv[i + 1]);
-
+	    G3(inputState) = getCharsetByName(getParam(i));
 	    i += 2;
 	} else if (!strcmp(argv[i], "-kgl")) {
 	    int j;
-	    if (i + 1 >= argc)
-		FatalError("-kgl requires an argument\n");
-	    if (strlen(argv[i + 1]) != 2 ||
+	    if (strlen(getParam(i)) != 2 ||
 		argv[i + 1][0] != 'g')
 		j = -1;
 	    else
@@ -361,9 +352,7 @@ parseOptions(int argc, char **argv)
 	    i += 2;
 	} else if (!strcmp(argv[i], "-kgr")) {
 	    int j;
-	    if (i + 1 >= argc)
-		FatalError("-kgl requires an argument\n");
-	    if (strlen(argv[i + 1]) != 2 ||
+	    if (strlen(getParam(i)) != 2 ||
 		argv[i + 1][0] != 'g')
 		j = -1;
 	    else
@@ -376,9 +365,7 @@ parseOptions(int argc, char **argv)
 		inputState->grp = &inputState->g[j];
 	    i += 2;
 	} else if (!strcmp(argv[i], "-argv0")) {
-	    if (i + 1 >= argc)
-		FatalError("-argv0 requires an argument\n");
-	    child_argv0 = argv[i + 1];
+	    child_argv0 = getParam(i);
 	    i += 2;
 	} else if (!strcmp(argv[i], "-x")) {
 	    exitOnChild = 1;
@@ -387,36 +374,28 @@ parseOptions(int argc, char **argv)
 	    converter = 1;
 	    i++;
 	} else if (!strcmp(argv[i], "-ilog")) {
-	    if (i + 1 >= argc)
-		FatalError("-ilog requires an argument\n");
 	    if (ilog >= 0)
 		close(ilog);
-	    ilog = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	    ilog = open(getParam(i), O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	    if (ilog < 0) {
 		perror("Couldn't open input log");
-		ExitProgram(1);
+		ExitFailure();
 	    }
 	    i += 2;
 	} else if (!strcmp(argv[i], "-olog")) {
-	    if (i + 1 >= argc)
-		FatalError("-olog requires an argument\n");
 	    if (olog >= 0)
 		close(olog);
-	    olog = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	    olog = open(getParam(i), O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	    if (olog < 0) {
 		perror("Couldn't open output log");
-		ExitProgram(1);
+		ExitFailure();
 	    }
 	    i += 2;
 	} else if (!strcmp(argv[i], "-alias")) {
-	    if (i + 1 >= argc)
-		FatalError("-alias requires an argument\n");
-	    locale_alias = argv[i + 1];
+	    locale_alias = getParam(i);
 	    i += 2;
 	} else if (!strcmp(argv[i], "-encoding")) {
-	    if (i + 1 >= argc)
-		FatalError("-encoding requires an argument\n");
-	    locale_name = argv[i + 1];
+	    locale_name = getParam(i);
 	    ignore_locale = 1;
 	    i += 2;
 	} else if (!strcmp(argv[i], "-p")) {
@@ -573,7 +552,7 @@ convert(int ifd, int ofd)
     rc = droppriv();
     if (rc < 0) {
 	perror("Couldn't drop privileges");
-	ExitProgram(1);
+	ExitFailure();
     }
 
     while (1) {
@@ -581,7 +560,7 @@ convert(int ifd, int ofd)
 	if (i <= 0) {
 	    if (i < 0) {
 		perror("Read error");
-		ExitProgram(1);
+		ExitFailure();
 	    }
 	    break;
 	}
@@ -696,13 +675,13 @@ condom(int argc, char **argv)
     rc = allocatePty(&pty, &line);
     if (rc < 0) {
 	perror("Couldn't allocate pty");
-	ExitProgram(1);
+	ExitFailure();
     }
 
     rc = droppriv();
     if (rc < 0) {
 	perror("Couldn't drop privileges");
-	ExitProgram(1);
+	ExitFailure();
     }
 
     if (pipe_option) {
@@ -713,7 +692,7 @@ condom(int argc, char **argv)
     pid = fork();
     if (pid < 0) {
 	perror("Couldn't fork");
-	ExitProgram(1);
+	ExitFailure();
     }
 
     if (pid == 0) {
@@ -745,13 +724,13 @@ child(char *line, char *path, char *const argv[])
     pgrp = setsid();
     if (pgrp < 0) {
 	kill(getppid(), SIGABRT);
-	ExitProgram(1);
+	ExitFailure();
     }
 
     tty = openTty(line);
     if (tty < 0) {
 	kill(getppid(), SIGABRT);
-	ExitProgram(1);
+	ExitFailure();
     }
 
     if (pipe_option) {
@@ -781,7 +760,7 @@ child(char *line, char *path, char *const argv[])
 
     execvp(path, argv);
     perror("Couldn't exec");
-    ExitProgram(1);
+    ExitFailure();
 }
 
 static void

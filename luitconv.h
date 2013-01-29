@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.h,v 1.22 2013/01/28 01:00:13 tom Exp $
+ * $XTermId: luitconv.h,v 1.25 2013/01/29 00:43:48 tom Exp $
  *
  * Copyright 2010,2013 by Thomas E. Dickey
  *
@@ -31,10 +31,11 @@
 #include <iconv.h>
 
 typedef enum {
-    umBUILTIN = 1
-    ,umFONTENC = 2
-    ,umICONV = 4
-    ,umANY = (umBUILTIN | umFONTENC | umICONV)
+    umPOSIX = 1
+    ,umBUILTIN = 2
+    ,umFONTENC = 4
+    ,umICONV = 8
+    ,umANY = (umPOSIX | umBUILTIN | umFONTENC | umICONV)
 } UM_MODE;
 
 #define FONT_ENCODING_UNICODE 1
@@ -153,8 +154,10 @@ typedef struct _FontEncSimpleName {
 #endif /* FONT_ENCODING_POSTSCRIPT */
 
 extern unsigned luitRecode(unsigned, void *);
+extern void reportBuiltinCharsets(void);
 extern void reportFontencCharsets(void);
 extern void reportIconvCharsets(void);
+extern void showBuiltinCharset(const char *);
 extern void showFontencCharset(const char *);
 extern void showIconvCharset(const char *);
 extern FontEncPtr lookupOneFontenc(const char *);

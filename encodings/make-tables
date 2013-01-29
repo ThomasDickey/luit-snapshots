@@ -1,10 +1,11 @@
 #!/usr/bin/perl -w
-# $XTermId: make-tables,v 1.2 2013/01/28 00:57:25 tom Exp $
+# $XTermId: make-tables,v 1.3 2013/01/28 10:00:37 tom Exp $
 #
 # Convert ".enc" files into C code, using that as a fallback when iconv lacks
 # information for a given encoding.
 
 our @table_names;
+our $indent = "    ";
 
 sub trim_enc($) {
 	my $name = $_[0];
@@ -35,6 +36,7 @@ EOF
 	my $comment;
 	my $source;
 	my $target;
+	my $converted = 0;
 	for $n (0..$#input) {
 		chomp $input[$n];
 		if ( $input[$n] =~ /startmapping\s+unicode/i ) {
@@ -49,7 +51,7 @@ EOF
 			$comment = "";
 		}
 		if ( $ignore ) {
-			printf "\t/* %s */\n", $comment if ( $comment ne "" );
+			printf "%s/* %s */\n", $indent, $comment if ( $comment ne "" );
 		} elsif ( $input[$n] =~ /^\s*0x[[:xdigit:]]+/i ) {
 			$source = $input[$n];
 			$source =~ s/#.*//;
@@ -59,11 +61,15 @@ EOF
 			$target =~ s/^[^[:blank:]]+\s+//;
 			$target =~ s/\s+.*//;
 			if ( $comment ne "" ) {
-				printf "\t{%s, %s},\t/* %s */\n", $source, $target, $comment;
+				printf "%s{%s, %s},\t/* %s */\n", $indent, $source, $target, $comment;
 			} else {
-				printf "\t{%s, %s},\n", $source, $target;
+				printf "%s{%s, %s},\n", $indent, $source, $target;
 			}
+			$converted++;
 		}
+	}
+	if ($converted == 0) {
+		printf "%s{0, 0},\t/* empty table is illegal syntax */\n", $indent;
 	}
 
 	printf <<EOF;
@@ -92,11 +98,11 @@ const BuiltInCharsetRec builtin_encodings[] =
 {
 EOF
 	for $name ( sort @table_names ) {
-		printf "\t{ \"%s\", DATA(%s) },\n", &trim_enc($name), &table_name($name);
+		printf "%s{ \"%s\", DATA(%s) },\n", $indent, &trim_enc($name), &table_name($name);
 	}
 
 printf <<EOF;
-	{ 0, 0, 0 }
+${indent}{ 0, 0, 0 }
 };
 EOF
 }

@@ -1,4 +1,4 @@
-/* $XTermId: sys.h,v 1.21 2013/01/27 21:42:47 tom Exp $ */
+/* $XTermId: sys.h,v 1.22 2013/01/29 01:15:31 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -73,5 +73,8 @@ void ExitProgram(int code) GCC_NORETURN;
 #else
 #define ExitProgram(code) exit(code)
 #endif
+
+#define ExitSuccess() ExitProgram(EXIT_SUCCESS)
+#define ExitFailure() ExitProgram(EXIT_FAILURE)
 
 #endif /* LUIT_SYS_H */
