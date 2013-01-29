@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.31 2013/01/27 21:51:52 tom Exp $
+.\" $XTermId: luit.man,v 1.33 2013/01/29 01:12:32 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -172,6 +172,13 @@ List the supported charsets and encodings, then quit.
 \fBLuit\fP uses its internal tables for this,
 which are based on the \fIfontenc\fP library.
 .TP
+.B \-list\-builtin
+List the built-in encodings used as a fallback when data from
+\fIiconv\fP or \fIfontenc\fP is missing.
+.IP
+This option relies on \fBluit\fP being configured to use \fIiconv\fP,
+since the \fIfontenc\fP does not supply a list of built-in encodings.
+.TP
 .B \-list\-fontenc
 List the encodings provided by \*(``.enc\*('' files originally
 distributed with the \fIfontenc\fP library.
@@ -219,6 +226,13 @@ In startup, establish a handshake between parent and child processes.
 This is needed for some older systems, e.g., to successfully copy
 the terminal settings to the pseudo-terminal.
 .TP
+.BI \-show\-builtin " encoding"
+Show a built-in encoding, e.g., from a \*(``.enc\*('' file
+using the \*(``.enc\*('' format.
+.IP
+This option relies on \fBluit\fP being configured to use \fIiconv\fP,
+since the \fIfontenc\fP does not supply a list of built-in encodings.
+.TP
 .BI \-show\-fontenc " encoding"
 Show a given encoding, e.g., from a \*(``.enc\*('' file
 using the \*(``.enc\*('' format.
@@ -227,8 +241,9 @@ it obtains the information using that library.
 Otherwise \fBluit\fP reads the file directly.
 .IP
 Some of \fIfontenc\fP's encodings are built into the library.
-Use the \fB\-show\-iconv\fP option to provide similar information
-when \fBluit\fP is configured to use \fIiconf\fP.
+The \fIfontenc\fP library uses those in preference to an external file.
+Use the \fB\-show\-builtin\fP option to provide similar information
+when \fBluit\fP is configured to use \fIiconv\fP.
 .TP
 .BI \-show\-iconv " encoding"
 Show a given encoding, using the \*(``.enc\*('' format.

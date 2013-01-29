@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.72 2013/01/27 22:05:35 tom Exp $
+ * $XTermId: fontenc.c,v 1.73 2013/01/29 00:43:18 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -1021,6 +1021,20 @@ showFontencCharset(const char *name)
 }
 
 #ifdef USE_ICONV
+/*
+ * Display built-in encoding as ".enc" format.
+ */
+void
+showBuiltinCharset(const char *name)
+{
+    FontEncPtr data = luitGetFontEnc(name, umBUILTIN);
+
+    if (data != 0) {
+	showOneCharset(name, data);
+	luitFreeFontEnc(data);
+    }
+}
+
 /*
  * Display iconv encoding as ".enc" format.
  */

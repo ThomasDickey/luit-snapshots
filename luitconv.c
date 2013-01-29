@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.61 2013/01/28 01:01:07 tom Exp $
+ * $XTermId: luitconv.c,v 1.64 2013/01/29 00:57:35 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -660,7 +660,7 @@ initializeBuiltInTable(LuitConv * data,
     }
 
     for (n = 0; n < builtIn->length; ++n) {
-	if (builtIn->table[n].source < builtIn->length) {
+	if (builtIn->table[n].source < data->table_size) {
 	    size_t j = builtIn->table[n].source;
 
 	    data->table_utf8[j].ucs = builtIn->table[n].target;
@@ -933,26 +933,25 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode)
 	} else if ((mode & umFONTENC)
 		   && (fontenc = lookupOneFontenc(encoding_name)) != 0) {
 	    result = convertFontEnc(fontenc);
-	} else if (mode & umBUILTIN) {
-	    if ((builtIn = findBuiltinEncoding(encoding_name)) != 0) {
-		TRACE(("...use built-in charset\n"));
-		result = initLuitConv(encoding_name, my_desc, builtIn, 0);
-	    } else {
-		unsigned ch;
-		BuiltInMapping mapping[MAX8];
-		BuiltInCharsetRec posix;
+	} else if (mode & umBUILTIN
+		   && (builtIn = findBuiltinEncoding(encoding_name)) != 0) {
+	    TRACE(("...use built-in charset\n"));
+	    result = initLuitConv(encoding_name, my_desc, builtIn, 0);
+	} else if (mode & umPOSIX) {
+	    unsigned ch;
+	    BuiltInMapping mapping[MAX8];
+	    BuiltInCharsetRec posix;
 
-		TRACE(("...fallback to POSIX\n"));
-		memset(&posix, 0, sizeof(posix));
-		posix.name = encoding_name;
-		posix.length = SizeOf(mapping);
-		posix.table = mapping;
-		for (ch = 0; ch < posix.length; ++ch) {
-		    mapping[ch].source = ch;
-		    mapping[ch].target = (ch < 128) ? ch : 0;
-		}
-		result = initLuitConv(encoding_name, my_desc, &posix, 0);
+	    TRACE(("...fallback to POSIX\n"));
+	    memset(&posix, 0, sizeof(posix));
+	    posix.name = encoding_name;
+	    posix.length = SizeOf(mapping);
+	    posix.table = mapping;
+	    for (ch = 0; ch < posix.length; ++ch) {
+		mapping[ch].source = ch;
+		mapping[ch].target = (ch < 128) ? ch : 0;
 	    }
+	    result = initLuitConv(encoding_name, my_desc, &posix, 0);
 	}
 	if (aliased) {
 	    free(aliased);
@@ -1027,6 +1026,33 @@ compare_locales(const void *a, const void *b)
     return strcmp(*p, *q);
 }
 #endif
+
+/*
+ * Report a list of the built-in encodings (used for fallback)
+ */
+void
+reportBuiltinCharsets(void)
+{
+    size_t j, k;
+
+    printf("These encodings are used if iconv/fontenc data are missing:\n");
+    printf("\n");
+    for (j = 0; builtin_encodings[j].name != 0; ++j) {
+	const BuiltInCharsetRec *p = &(builtin_encodings[j]);
+	unsigned lo = p->table[0].source;
+	unsigned hi = lo;
+
+	printf("%s\n", builtin_encodings[j].name);
+	for (k = 1; k < p->length; ++k) {
+	    if (lo > p->table[k].source)
+		lo = p->table[k].source;
+	    if (hi < p->table[k].source)
+		hi = p->table[k].source;
+	}
+	printf("\tData: [%04X..%04X] defined %u\n",
+	       lo, hi, (unsigned) p->length);
+    }
+}
 
 /*
  * Obtain a list of supported locales, and for each obtain the corresponding

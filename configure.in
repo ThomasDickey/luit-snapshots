@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.40 2013/01/28 00:50:29 tom Exp $
+dnl $XTermId: configure.in,v 1.42 2013/01/28 11:54:13 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -95,18 +95,59 @@ CF_FUNC_GRANTPT
 CF_FUNC_POLL
 
 AC_MSG_CHECKING(if you want to use fontenc)
-CF_ARG_DISABLE(fontenc,
-	[  --enable-fontenc         enable/disable use of fontenc],
-	[with_fontenc=no],
-	[with_fontenc=yes])
+CF_ARG_ENABLE(fontenc,
+	[  --enable-fontenc        enable/disable use of fontenc],
+	[with_fontenc=yes],
+	[with_fontenc=maybe])
 AC_MSG_RESULT($with_fontenc)
 
 AC_MSG_CHECKING(if you want to use iconv)
-CF_ARG_ENABLE(iconv,
-	[  --enable-iconv           enable/disable use of iconv],
-	[with_iconv=yes],
-	[with_iconv=no])
+CF_ARG_DISABLE(iconv,
+	[  --disable-iconv         enable/disable use of iconv],
+	[with_iconv=no],
+	[with_iconv=maybe])
 AC_MSG_RESULT($with_iconv)
+
+case $with_iconv in
+yes)
+	case $with_fontenc in
+	yes)
+		with_fontenc=no
+		AC_MSG_WARN(overriding deprecated fontenc)
+		;;
+	maybe|no)
+		with_fontenc=no
+		AC_MSG_NOTICE(using iconv)
+		;;
+	esac
+	;;
+no)
+	case $with_fontenc in
+	yes)
+		;;
+	no)
+		AC_MSG_ERROR(you must choose between iconv and fontenc)
+		;;
+	maybe)
+		with_fontenc=yes
+		AC_MSG_NOTICE(using fontenc)
+		;;
+	esac
+	;;
+maybe)
+	case $with_fontenc in
+	yes)
+		with_iconv=no
+		AC_MSG_NOTICE(using fontenc)
+		;;
+	no|maybe)
+		with_iconv=yes
+		with_fontenc=no
+		AC_MSG_NOTICE(using iconv)
+		;;
+	esac
+	;;
+esac
 
 CF_WITH_ZLIB
 if test "x$ac_cv_func_zError" = xyes
@@ -114,31 +155,21 @@ then
 	AC_DEFINE(USE_ZLIB)
 fi
 
-if test "$with_iconv" != no || test "$with_fontenc" = no
-then
-	if test "$with_fontenc" != no
-	then
-		AC_MSG_WARN(ignoring fontenc since iconv was requested)
-	fi
-	with_iconv=maybe
-elif test "$with_fontenc" != no
+if test "$with_fontenc" = yes
 then
 	CF_X_FONTENC
 	if test $cf_have_fontenc_libs = yes ; then
 		AC_DEFINE(USE_FONTENC,1,[Define to 1 if font-encoding libraries can/should be used])
 	else
-		with_iconv=maybe
+		AC_MSG_ERROR(cannot link with fontenc)
 	fi
-else
-	AC_MSG_WARN(luit requires either fontenc or iconv)
-	with_iconv=maybe
 fi
 
 AM_LANGINFO_CODESET
 
 # Since iconv is widely available, fallback to using it if fontenc is neither
 # requested nor available.
-if test "$with_iconv" != no
+if test "$with_iconv" = yes
 then
 	AM_ICONV
 	AC_DEFINE(USE_ICONV,1,[Define to 1 if iconv-libraries should be used])

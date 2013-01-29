@@ -1,5 +1,6 @@
-bluit (20130127) unstable; urgency=low
+bluit (20130128) unstable; urgency=low
 
+  * deprecate fontenc library in favor of iconv
   * other improvements/new features
   * fix window-size for pty-losing platforms
   * code cleanup with Coverity and Clang

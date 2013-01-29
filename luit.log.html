@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.120 2013/01/27 23:56:47 tom Exp $
+  $XTermId: luit.log.html,v 1.123 2013/01/29 01:14:27 tom Exp $
   -->
 
 <html>
@@ -43,9 +43,21 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
-  <p><a id="t20130127" name="t20130127">2013/01/27</a> -</p>
+  <p><a id="t20130128" name="t20130128">2013/01/28</a> -</p>
 
   <ul>
+    <li>add <code>-show-builtin</code> option to show details of a
+    particular built-in encoding.</li>
+
+    <li>add <code>-list-builtin</code> option to show built-in
+    encodings embedded. This is available only for the iconv
+    configuration; the fontenc library has no API for retrieving
+    the information.</li>
+
+    <li>change defaults for configure script options
+    <code>--enable-iconv</code> and <code>--enable-fontenc</code>
+    to deprecate the fontenc library.</li>
+
     <li>replaced existing built-in encoding tables with augmented
     set generated from iconv to obviate need for fontenc's tables
     as a fallback.</li>
