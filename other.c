@@ -1,4 +1,4 @@
-/* $XTermId: other.c,v 1.14 2010/11/26 20:48:29 tom Exp $ */
+/* $XTermId: other.c,v 1.15 2013/01/30 01:27:54 tom Exp $ */
 
 /*
 Copyright (c) 2002 by Tomohiro KUBOTA
@@ -29,7 +29,7 @@ THE SOFTWARE.
 int
 init_gbk(OtherStatePtr s)
 {
-    s->gbk.mapping = LookupMapping("gbk-0");
+    s->gbk.mapping = LookupMapping("gbk-0", us16BIT);
     if (!s->gbk.mapping)
 	return 0;
 
@@ -183,7 +183,7 @@ stack_utf8(unsigned c, OtherStatePtr s)
 int
 init_sjis(OtherStatePtr s)
 {
-    s->sjis.x0208mapping = LookupMapping("jisx0208.1990-0");
+    s->sjis.x0208mapping = LookupMapping("jisx0208.1990-0", us16BIT);
     if (!s->sjis.x0208mapping)
 	return 0;
 
@@ -191,7 +191,7 @@ init_sjis(OtherStatePtr s)
     if (!s->sjis.x0208reverse)
 	return 0;
 
-    s->sjis.x0201mapping = LookupMapping("jisx0201.1976-0");
+    s->sjis.x0201mapping = LookupMapping("jisx0201.1976-0", us16BIT);
     if (!s->sjis.x0201mapping)
 	return 0;
 
@@ -275,7 +275,7 @@ stack_sjis(unsigned c, OtherStatePtr s)
 int
 init_hkscs(OtherStatePtr s)
 {
-    s->hkscs.mapping = LookupMapping("big5hkscs-0");
+    s->hkscs.mapping = LookupMapping("big5hkscs-0", us16BIT);
     if (!s->hkscs.mapping)
 	return 0;
 
@@ -351,7 +351,7 @@ stack_hkscs(unsigned c, OtherStatePtr s)
 int
 init_gb18030(OtherStatePtr s)
 {
-    s->gb18030.cs0_mapping = LookupMapping("gb18030.2000-0");
+    s->gb18030.cs0_mapping = LookupMapping("gb18030.2000-0", us16BIT);
     if (!s->gb18030.cs0_mapping)
 	return 0;
 
@@ -359,7 +359,7 @@ init_gb18030(OtherStatePtr s)
     if (!s->gb18030.cs0_reverse)
 	return 0;
 
-    s->gb18030.cs1_mapping = LookupMapping("gb18030.2000-1");
+    s->gb18030.cs1_mapping = LookupMapping("gb18030.2000-1", us16BIT);
     if (!s->gb18030.cs1_mapping)
 	return 0;
 

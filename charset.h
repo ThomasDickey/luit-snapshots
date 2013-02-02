@@ -1,4 +1,4 @@
-/* $XTermId: charset.h,v 1.10 2012/10/11 21:05:39 tom Exp $ */
+/* $XTermId: charset.h,v 1.15 2013/02/02 15:25:06 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -57,6 +57,16 @@ typedef struct _Charset {
     struct _Charset *next;
 } CharsetRec, *CharsetPtr;
 
+typedef struct _FontencCharset {
+    const char *name;
+    int type;
+    unsigned char final;
+    const char *xlfd;
+    unsigned shift;
+    FontMapPtr mapping;
+    FontMapReversePtr reverse;
+} FontencCharsetRec, *FontencCharsetPtr;
+
 typedef struct _LocaleCharset {
     const char *name;
     int gl;
@@ -68,9 +78,13 @@ typedef struct _LocaleCharset {
     const char *other;
 } LocaleCharsetRec, *LocaleCharsetPtr;
 
+int lcStrCmp(const char *, const char *);
 const CharsetRec *getUnknownCharset(int);
 const CharsetRec *getCharset(unsigned, int);
 const CharsetRec *getCharsetByName(const char *);
+const FontencCharsetRec *getFontencByName(const char *);
+const FontencCharsetRec *getCompositePart(const char *, unsigned);
+const char *getCompositeCharset(const char *);
 void reportCharsets(void);
 int getLocaleState(const char *locale, const char *charset,
 		   int *gl_return, int *gr_return,

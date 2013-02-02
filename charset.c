@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.55 2013/01/28 01:32:17 tom Exp $ */
+/* $XTermId: charset.c,v 1.63 2013/02/02 16:44:52 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -48,16 +48,6 @@ static const CharsetRec Unknown9494Charset =
 {"Unknown (94x94)", T_9494, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
 static const CharsetRec Unknown9696Charset =
 {"Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
-
-typedef struct _FontencCharset {
-    const char *name;
-    int type;
-    unsigned char final;
-    const char *xlfd;
-    unsigned shift;
-    FontMapPtr mapping;
-    FontMapReversePtr reverse;
-} FontencCharsetRec, *FontencCharsetPtr;
 
 /*
  * The "name" given is useful on the command-line.
@@ -138,8 +128,8 @@ static const OtherCharsetRec otherCharsets[] =
 };
 /* *INDENT-ON* */
 
-static int
-compare(const char *s, const char *t)
+int
+lcStrCmp(const char *s, const char *t)
 {
     while (*s || *t) {
 	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
@@ -243,7 +233,7 @@ getCachedCharset(unsigned final, int type, const char *name)
     CharsetPtr c;
     for (c = cachedCharsets; c; c = c->next) {
 	if (((c->type == type && c->final == final) ||
-	     (name && !compare(c->name, name))) &&
+	     (name && !lcStrCmp(c->name, name))) &&
 	    (c->type != T_FAILED))
 	    return c;
     }
@@ -258,6 +248,28 @@ cacheCharset(CharsetPtr c)
     VERBOSE(2, ("cachedCharset '%s'\n", c->name));
 }
 
+#ifdef USE_ICONV
+static US_SIZE
+cpSize(FontencCharsetPtr fc)
+{
+    US_SIZE result = usANY;
+
+    switch (fc->type) {
+    case T_94:
+    case T_96:
+    case T_128:
+	result = us8BIT;
+	break;
+    case T_9494:
+    case T_9696:
+    case T_94192:
+	result = us16BIT;
+	break;
+    }
+    return result;
+}
+#endif
+
 static CharsetPtr
 getFontencCharset(unsigned final, int type, const char *name)
 {
@@ -267,10 +279,11 @@ getFontencCharset(unsigned final, int type, const char *name)
     FontMapReversePtr reverse;
     CharsetPtr result = NULL;
 
+    TRACE(("getFontencCharset(final %#x, type %d, name %s)\n", final, type, name));
     fc = fontencCharsets;
     while (fc->name) {
 	if (((fc->type == type && fc->final == final) ||
-	     (name && !compare(fc->name, name))) &&
+	     (name && !lcStrCmp(fc->name, name))) &&
 	    (fc->type != T_FAILED))
 	    break;
 	fc++;
@@ -280,7 +293,7 @@ getFontencCharset(unsigned final, int type, const char *name)
 	VERBOSE(2, ("...no match for '%s' in FontEnc charsets\n", NonNull(name)));
     } else if ((c = TypeCalloc(CharsetRec)) == 0) {
 	VERBOSE(2, ("malloc failed\n"));
-    } else if ((mapping = LookupMapping(fc->xlfd)) == NULL) {
+    } else if ((mapping = LookupMapping(fc->xlfd, cpSize(fc))) == NULL) {
 	VERBOSE(2, ("...lookup mapping %s (%s) failed\n", NonNull(name), fc->xlfd));
 	fc->type = T_FAILED;
     } else if ((reverse = LookupReverse(mapping)) == NULL) {
@@ -317,7 +330,7 @@ getOtherCharset(const char *name)
 
     fc = otherCharsets;
     while (fc->name) {
-	if (name && !compare(fc->name, name))
+	if (name && !lcStrCmp(fc->name, name))
 	    break;
 	fc++;
     }
@@ -379,7 +392,6 @@ getUnknownCharset(int type)
 	return &Unknown94Charset;
     }
 }
-
 const CharsetRec *
 getCharset(unsigned final, int type)
 {
@@ -459,7 +471,6 @@ static const LocaleCharsetRec localeCharsets[] =
     {"CP866",      0, 2, "ASCII", NULL,         "CP 866",        NULL,         NULL},
     {"TCVN",       0, 2, "ASCII", NULL,         "TCVN",          NULL,         NULL},
 
-    {"eucCN",      0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
     {"GB2312",     0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
     {"eucJP",      0, 1, "ASCII", "JIS X 0208", "JIS X 0201:GR", "JIS X 0212", NULL},
     {"eucKR",      0, 1, "ASCII", "KSC 5601",   NULL,            NULL,         NULL},
@@ -500,13 +511,58 @@ reportCharsets(void)
     }
 
     printf("\n\nKnown charsets (not all may be available):\n\n");
-    for (q = fontencCharsets; q->name; q++)
+    for (q = fontencCharsets; q->name; q++) {
 	printf("  %s%s\n",
 	       q->name, q->final ? " (ISO 2022)" : "");
+    }
 }
 
 #ifdef USE_ICONV
 static LocaleCharsetRec fakeLocaleCharset;
+
+static const LocaleCharsetRec *
+findLocaleByCharset(const char *charset)
+{
+    const LocaleCharsetRec *lc;
+    const LocaleCharsetRec *result = 0;
+
+    for (lc = localeCharsets; lc->name != 0; ++lc) {
+	if (lc->g1 == 0 && lc->g2 == 0)
+	    continue;
+	if ((lc->g3 != 0 && !lcStrCmp(charset, lc->g3))
+	    || (lc->g2 != 0 && !lcStrCmp(charset, lc->g2))
+	    || (lc->g1 != 0 && !lcStrCmp(charset, lc->g1))) {
+	    result = lc;
+	    break;
+	}
+    }
+    TRACE(("findLocaleByCharset(%s) ->%s\n",
+	   charset, result ? result->name : "?"));
+    return result;
+}
+
+static const LocaleCharsetRec *
+closestLocaleCharset(FontEncPtr enc)
+{
+    const LocaleCharsetRec *result = 0;
+
+    if (enc != 0) {
+	result = findLocaleByCharset(enc->name);
+    }
+    return result;
+}
+
+static int
+canFakeLocaleCharset(FontEncPtr enc)
+{
+    int result = 0;
+    if (enc != 0
+	&& enc->size <= 256
+	&& enc->row_size == 0) {
+	result = 1;
+    }
+    return result;
+}
 #endif
 
 static const LocaleCharsetRec *
@@ -516,7 +572,7 @@ findLocaleCharset(const char *charset)
     const LocaleCharsetRec *result = 0;
 
     for (p = localeCharsets; p->name; p++) {
-	if (compare(p->name, charset) == 0) {
+	if (lcStrCmp(p->name, charset) == 0) {
 	    result = p;
 	    break;
 	}
@@ -530,9 +586,9 @@ findLocaleCharset(const char *charset)
 	FontEncPtr enc = luitGetFontEnc(charset,
 					(UM_MODE) ((int) umICONV
 						   | (int) umFONTENC));
-	if (enc != 0
-	    && enc->size <= 256
-	    && enc->row_size == 0) {
+	if ((result = closestLocaleCharset(enc)) != 0) {
+	    TRACE(("...matched a LocaleCharset record for %s\n", charset));
+	} else if (canFakeLocaleCharset(enc)) {
 	    LocaleCharsetRec *temp = &fakeLocaleCharset;
 
 	    TRACE(("...fake a LocaleCharset record for %s\n", charset));
@@ -576,6 +632,7 @@ matchLocaleCharset(const char *charset)
 
     const LocaleCharsetRec *p = 0;
 
+    TRACE(("matchLocaleCharset(%s)\n", charset));
     if (*charset != '\0') {
 	char *euro;
 	char source[MAX_KEYWORD_LENGTH + 1];
@@ -663,6 +720,97 @@ getLocaleState(const char *locale,
     TRACE(("...getLocaleState ->%d\n", result));
     return result;
 }
+
+#ifdef USE_ICONV
+/*
+ * Given either a charset name, or the xlfd field (which is more likely to
+ * match iconv), return a pointer to the entry in fontencCharsets which matches.
+ */
+const FontencCharsetRec *
+getFontencByName(const char *encoding_name)
+{
+    const FontencCharsetRec *result = 0;
+    const FontencCharsetRec *fc;
+
+    for (fc = fontencCharsets; fc->name != 0; ++fc) {
+	if (!lcStrCmp(encoding_name, fc->name)
+	    || !lcStrCmp(encoding_name, fc->xlfd)) {
+	    result = fc;
+	    break;
+	}
+    }
+    return result;
+}
+
+/*
+ * Check (for EUC-JP specifically, but generally...) for a charset which
+ * is part of a composite charset using G2/G3 via single-shifts.
+ */
+const char *
+getCompositeCharset(const char *encoding_name)
+{
+    const char *result = 0;
+    const FontencCharsetRec *fc;
+    const LocaleCharsetRec *lc;
+
+    if ((fc = getFontencByName(encoding_name)) != 0) {
+	if ((lc = findLocaleByCharset(fc->name)) != 0) {
+	    result = lc->name;
+	    TRACE(("getCompositeCharset(%s) ->%s\n", encoding_name, result));
+	}
+    }
+    return result;
+}
+
+static const char *
+selectPart(const LocaleCharsetRec * data, unsigned g)
+{
+    const char *result = 0;
+    switch (g) {
+    case 0:
+	result = data->g0;
+	break;
+    case 1:
+	result = data->g1;
+	break;
+    case 2:
+	result = data->g2;
+	break;
+    case 3:
+	result = data->g3;
+	break;
+    }
+    return result;
+}
+
+/*
+ * Given a composite name returned by getCompositeCharset, return a pointer to
+ * the data which describes the encoding used for a given shift.
+ */
+const FontencCharsetRec *
+getCompositePart(const char *composite_name, unsigned g)
+{
+    const FontencCharsetRec *result = 0;
+    const LocaleCharsetRec *lc;
+    const char *part_name;
+
+    for (lc = localeCharsets; lc->name; ++lc) {
+	if (!lcStrCmp(composite_name, lc->name)) {
+	    if ((part_name = selectPart(lc, g)) != 0) {
+		const FontencCharsetRec *fc;
+		for (fc = fontencCharsets; fc->name != 0; ++fc) {
+		    if (!lcStrCmp(part_name, fc->name)) {
+			result = fc;
+			break;
+		    }
+		}
+	    }
+	    break;
+	}
+    }
+    return result;
+}
+#endif
 
 #ifdef NO_LEAKS
 static int
