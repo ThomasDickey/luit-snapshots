@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.64 2013/01/29 00:57:35 tom Exp $
+ * $XTermId: luitconv.c,v 1.91 2013/02/02 16:50:30 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -23,7 +23,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <other.h>
+#include <iso2022.h>
 
 #include <sys.h>
 
@@ -38,160 +38,16 @@
  * We use the iconv library to construct a mapping forward for each byte,
  * into UTF-8, and then use that mapping to construct the reverse mapping
  * from UTF-8 into the original set of single byte values.
- *
- * This only works for 8-bit encodings, since iconv's API has insufficient
- * information to tell how many characters may be in an encoding.  We can
- * detect incomplete mappings, which hint at multibyte encodings.
  */
 
 #define UCS_REPL        0xfffd
-#define DEC_REPL	0x2426	/* SYMBOL FOR SUBSTITUTE FORM TWO */
 
 #define MAX8		0x100
 #define MAX16		0x10000
 
 #define NO_ICONV  (iconv_t)(-1)
 
-/******************************************************************************/
 static LuitConv *all_conversions;
-
-/******************************************************************************/
-
-/* originally derived from the file data.c in the XTerm sources */
-static const BuiltInMapping dec_special[] =
-{
-    {0x5f, 0x25ae},		/* black vertical rectangle */
-    {0x60, 0x25c6},		/* black diamond */
-    {0x61, 0x2592},		/* medium shade */
-    {0x62, 0x2409},		/* symbol for horizontal tabulation */
-    {0x63, 0x240c},		/* symbol for form feed */
-    {0x64, 0x240d},		/* symbol for carriage return */
-    {0x65, 0x240a},		/* symbol for line feed */
-    {0x66, 0x00b0},		/* degree sign */
-    {0x67, 0x00b1},		/* plus-minus sign */
-    {0x68, 0x2424},		/* symbol for newline */
-    {0x69, 0x240b},		/* symbol for vertical tabulation */
-    {0x6a, 0x2518},		/* box drawings light up and left */
-    {0x6b, 0x2510},		/* box drawings light down and left */
-    {0x6c, 0x250c},		/* box drawings light down and right */
-    {0x6d, 0x2514},		/* box drawings light up and right */
-    {0x6e, 0x253c},		/* box drawings light vertical and horizontal */
-    {0x6f, 0x23ba},		/* box drawings scan 1 */
-    {0x70, 0x23bb},		/* box drawings scan 3 */
-    {0x71, 0x2500},		/* box drawings light horizontal */
-    {0x72, 0x23bc},		/* box drawings scan 7 */
-    {0x73, 0x23bd},		/* box drawings scan 9 */
-    {0x74, 0x251c},		/* box drawings light vertical and right */
-    {0x75, 0x2524},		/* box drawings light vertical and left */
-    {0x76, 0x2534},		/* box drawings light up and horizontal */
-    {0x77, 0x252c},		/* box drawings light down and horizontal */
-    {0x78, 0x2502},		/* box drawings light vertical */
-    {0x79, 0x2264},		/* less-than or equal to */
-    {0x7a, 0x2265},		/* greater-than or equal to */
-    {0x7b, 0x03c0},		/* greek small letter pi */
-    {0x7c, 0x2260},		/* not equal to */
-    {0x7d, 0x00a3},		/* pound sign */
-    {0x7e, 0x00b7},		/* middle dot */
-};
-
-/* derived from http://www.vt100.net/charsets/technical.html */
-static const BuiltInMapping dec_dectech[] =
-{
-    {0x21, 0x23b7},		/* RADICAL SYMBOL BOTTOM Centred left to right, so that it joins up with 02/02 */
-    {0x22, 0x250c},		/* BOX DRAWINGS LIGHT DOWN AND RIGHT */
-    {0x23, 0x2500},		/* BOX DRAWINGS LIGHT HORIZONTAL */
-    {0x24, 0x2320},		/* TOP HALF INTEGRAL with the proviso that the stem is vertical, to join with 02/06 */
-    {0x25, 0x2321},		/* BOTTOM HALF INTEGRAL with the proviso above. */
-    {0x26, 0x2502},		/* BOX DRAWINGS LIGHT VERTICAL */
-    {0x27, 0x23a1},		/* LEFT SQUARE BRACKET UPPER CORNER Joins vertically to 02/06, 02/08. Doesn't join to its right. */
-    {0x28, 0x23a3},		/* LEFT SQUARE BRACKET LOWER CORNER Joins vertically to 02/06, 02/07. Doesn't join to its right. */
-    {0x29, 0x23a4},		/* RIGHT SQUARE BRACKET UPPER CORNER Joins vertically to 026, 02a. Doesn't join to its left. */
-    {0x2a, 0x23a6},		/* RIGHT SQUARE BRACKET LOWER CORNER Joins vertically to 026, 029. Doesn't join to its left. */
-    {0x2b, 0x239b},		/* LEFT PARENTHESIS UPPER HOOK Joins vertically to 026, 02c, 02/15. Doesn't join to its right. */
-    {0x2c, 0x239d},		/* LEFT PARENTHESIS LOWER HOOK Joins vertically to 026, 02b, 02/15. Doesn't join to its right. */
-    {0x2d, 0x239e},		/* RIGHT PARENTHESIS UPPER HOOK Joins vertically to 026, 02e, 03/00. Doesn't join to its left. */
-    {0x2e, 0x23a0},		/* RIGHT PARENTHESIS LOWER HOOK Joins vertically to 026, 02d, 03/00. Doesn't join to its left. */
-    {0x2f, 0x23a8},		/* LEFT CURLY BRACKET MIDDLE PIECE Joins vertically to 026, 02b, 02c. */
-    {0x30, 0x23ac},		/* RIGHT CURLY BRACKET MIDDLE PIECE Joins vertically to 02/06, 02d, 02e. */
-    {0x31, DEC_REPL},		/* Top Left Sigma. Joins to right with 02/03, 03/05. Joins diagonally below right with 03/03, 03/07. */
-    {0x32, DEC_REPL},		/* Bottom Left Sigma. Joins to right with 02/03, 03/06. Joins diagonally above right with 03/04, 03/07. */
-    {0x33, DEC_REPL},		/* Top Diagonal Sigma. Line for joining 03/01 to 03/04 or 03/07. */
-    {0x34, DEC_REPL},		/* Bottom Diagonal Sigma. Line for joining 03/02 to 03/03 or 03/07. */
-    {0x35, DEC_REPL},		/* Top Right Sigma. Joins to left with 02/03, 03/01. */
-    {0x36, DEC_REPL},		/* Bottom Right Sigma. Joins to left with 02/03, 03/02. */
-    {0x37, DEC_REPL},		/* Middle Sigma. Joins diagonally with 03/01, 03/02, 03/03, 03/04. */
-    {0x38, DEC_REPL},		/* undefined */
-    {0x39, DEC_REPL},		/* undefined */
-    {0x3a, DEC_REPL},		/* undefined */
-    {0x3b, DEC_REPL},		/* undefined */
-    {0x3c, 0x2264},		/* LESS-THAN OR EQUAL TO */
-    {0x3d, 0x2260},		/* NOT EQUAL TO */
-    {0x3e, 0x2265},		/* GREATER-THAN OR EQUAL TO */
-    {0x3f, 0x222B},		/* INTEGRAL */
-    {0x40, 0x2234},		/* THEREFORE */
-    {0x41, 0x221d},		/* PROPORTIONAL TO */
-    {0x42, 0x221e},		/* INFINITY */
-    {0x43, 0x00f7},		/* DIVISION SIGN */
-    {0x44, 0x039a},		/* GREEK CAPITAL DELTA */
-    {0x45, 0x2207},		/* NABLA */
-    {0x46, 0x03a6},		/* GREEK CAPITAL LETTER PHI */
-    {0x47, 0x0393},		/* GREEK CAPITAL LETTER GAMMA */
-    {0x48, 0x223c},		/* TILDE OPERATOR */
-    {0x49, 0x2243},		/* ASYMPTOTICALLY EQUAL TO */
-    {0x4a, 0x0398},		/* GREEK CAPITAL LETTER THETA */
-    {0x4b, 0x00d7},		/* MULTIPLICATION SIGN */
-    {0x4c, 0x039b},		/* GREEK CAPITAL LETTER LAMDA */
-    {0x4d, 0x21d4},		/* LEFT RIGHT DOUBLE ARROW */
-    {0x4e, 0x21d2},		/* RIGHTWARDS DOUBLE ARROW */
-    {0x4f, 0x2261},		/* IDENTICAL TO */
-    {0x50, 0x03a0},		/* GREEK CAPITAL LETTER PI */
-    {0x51, 0x03a8},		/* GREEK CAPITAL LETTER PSI */
-    {0x52, DEC_REPL},		/* undefined */
-    {0x53, 0x03a3},		/* GREEK CAPITAL LETTER SIGMA */
-    {0x54, DEC_REPL},		/* undefined */
-    {0x55, DEC_REPL},		/* undefined */
-    {0x56, 0x221a},		/* SQUARE ROOT */
-    {0x57, 0x03a9},		/* GREEK CAPITAL LETTER OMEGA */
-    {0x58, 0x039e},		/* GREEK CAPITAL LETTER XI */
-    {0x59, 0x03a5},		/* GREEK CAPITAL LETTER UPSILON */
-    {0x5a, 0x2282},		/* SUBSET OF */
-    {0x5b, 0x2283},		/* SUPERSET OF */
-    {0x5c, 0x2229},		/* INTERSECTION */
-    {0x5d, 0x222a},		/* UNION */
-    {0x5e, 0x2227},		/* LOGICAL AND */
-    {0x5f, 0x2228},		/* LOGICAL OR */
-    {0x60, 0x00ac},		/* NOT SIGN */
-    {0x61, 0x03b1},		/* GREEK SMALL LETTER ALPHA */
-    {0x62, 0x03b2},		/* GREEK SMALL LETTER BETA */
-    {0x63, 0x03c7},		/* GREEK SMALL LETTER CHI */
-    {0x64, 0x03b4},		/* GREEK SMALL LETTER DELTA */
-    {0x65, 0x03b5},		/* GREEK SMALL LETTER EPSILON */
-    {0x66, 0x03c6},		/* GREEK SMALL LETTER PHI */
-    {0x67, 0x03b3},		/* GREEK SMALL LETTER GAMMA */
-    {0x68, 0x03b7},		/* GREEK SMALL LETTER ETA */
-    {0x69, 0x03b9},		/* GREEK SMALL LETTER IOTA */
-    {0x6a, 0x03b8},		/* GREEK SMALL LETTER THETA */
-    {0x6b, 0x03ba},		/* GREEK SMALL LETTER KAPPA */
-    {0x6c, 0x03bb},		/* GREEK SMALL LETTER LAMDA */
-    {0x6d, DEC_REPL},		/* undefined */
-    {0x6e, 0x03bd},		/* GREEK SMALL LETTER NU */
-    {0x6f, 0x2202},		/* PARTIAL DIFFERENTIAL */
-    {0x70, 0x03c0},		/* GREEK SMALL LETTER PI */
-    {0x71, 0x03c8},		/* GREEK SMALL LETTER PSI */
-    {0x72, 0x03c1},		/* GREEK SMALL LETTER RHO */
-    {0x73, 0x03c3},		/* GREEK SMALL LETTER SIGMA */
-    {0x74, 0x03c4},		/* GREEK SMALL LETTER TAU */
-    {0x75, DEC_REPL},		/* undefined */
-    {0x76, 0x0192},		/* LATIN SMALL LETTER F WITH HOOK Probably chosen for its meaning of "function" */
-    {0x77, 0x03c9},		/* GREEK SMALL LETTER OMEGA */
-    {0x78, 0x03bE},		/* GREEK SMALL LETTER XI */
-    {0x79, 0x03c5},		/* GREEK SMALL LETTER UPSILON */
-    {0x7a, 0x03b6},		/* GREEK SMALL LETTER ZETA */
-    {0x7b, 0x2190},		/* LEFTWARDS ARROW */
-    {0x7c, 0x2191},		/* UPWARDS ARROW */
-    {0x7d, 0x2192},		/* RIGHTWARDS ARROW */
-    {0x7e, 0x2193},		/* DOWNWARDS ARROW */
-};
 
 /******************************************************************************/
 static int
@@ -347,28 +203,12 @@ newLuitConv(size_t elts)
 {
     LuitConv *result = TypeCalloc(LuitConv);
     if (result != 0) {
+	TRACE(("newLuitConv(%u)\n", (unsigned) elts));
 	result->table_size = elts;
 	result->table_utf8 = TypeCallocN(MappingData, elts);
 	result->rev_index = TypeCallocN(ReverseData, elts);
     }
     return result;
-}
-
-static int
-compare(const char *s, const char *t)
-{
-    while (*s || *t) {
-	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
-	    s++;
-	else if (*t && (isspace(UChar(*t)) || *t == '-' || *t == '_'))
-	    t++;
-	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
-	    s++;
-	    t++;
-	} else
-	    return 1;
-    }
-    return 0;
 }
 
 /*
@@ -496,11 +336,19 @@ cmp_rindex(const void *a, const void *b)
 
 #ifdef OPT_TRACE
 static void
-trace_convert(LuitConv * data, size_t which)
+trace_convert(LuitConv * data, size_t which, unsigned gs)
 {
     size_t j;
+    char gsbuf[10];
 
-    TRACE(("convert %4X:%d:%04X:",
+    if (gs) {
+	sprintf(gsbuf, "G%u ", gs);
+    } else {
+	gsbuf[0] = '\0';
+    }
+
+    TRACE(("convert %s%04X:%d:%04X:",
+	   gsbuf,
 	   (unsigned) which,
 	   (int) data->table_utf8[which].size,
 	   data->table_utf8[which].ucs));
@@ -512,11 +360,111 @@ trace_convert(LuitConv * data, size_t which)
     TRACE(("\n"));
 }
 #else
-#define trace_convert(data,n)	/* nothing */
+#define trace_convert(data,n,gs)	/* nothing */
 #endif
 
+/*
+ * Assuming single-byte encoding, count the number of successful translations
+ * to UTF-8 from the 0..255 range.
+ */
+static unsigned
+count8bitIconv(iconv_t my_desc)
+{
+    unsigned result = 0;
+    int n;
+
+    for (n = 0; n < MAX8; ++n) {
+	size_t converted;
+	char input[80];
+	ICONV_CONST char *ip = input;
+	char output[80];
+	char *op = output;
+	size_t in_bytes = 1;
+	size_t out_bytes = sizeof(output);
+
+	input[0] = (char) n;
+	input[1] = 0;
+	(void) iconv(my_desc, NULL, NULL, NULL, NULL);
+	converted = iconv(my_desc, &ip, &in_bytes, &op, &out_bytes);
+	if (converted != (size_t) (-1)) {
+	    ++result;
+	}
+    }
+    TRACE(("count8bitIconv -> %u\n", result));
+    return result;
+}
+
+#define legalUCode(n) ((n) < 0xd800 || (n) > 0xdfff)
+
+/*
+ * Given an encoding name, check to see if it is a single-byte encoding. 
+ * Return a suitable table-size, depending.
+ *
+ * iconv() provides no function for this purpose.  For demonstration purposes
+ * (though it is claimed to be slow...) we can use iconv to convert a series
+ * of UTF-8 codes to the given encoding, checking if any of those give more
+ * than one byte.
+ *
+ * If we knew this was always ISO-2022 encoding, we could shorten the scan;
+ * however luit does handle a few which are not.
+ *
+ * As a quick check, we first count the number of codes going _to_ UTF-8 in the
+ * series 0..255, and if that is 256 there is no need for this function.
+ *
+ * FIXME: improve this by constructing a table of known single-byte encoding
+ * names.
+ */
+static unsigned
+sizeofIconvTable(const char *encoding_name, unsigned limit)
+{
+    unsigned result = MAX8;
+    iconv_t my_desc = iconv_open(encoding_name, "UTF-8");
+    if (my_desc != NO_ICONV) {
+	unsigned n;
+	unsigned total = 0;
+	size_t in_bytes;
+	UCHAR input[80];
+	char *ip;
+	size_t out_bytes;
+	char output[80];
+	char *op;
+
+	TRACE(("sizeofIconvTable(%s, %u) opened...\n", encoding_name, limit));
+	for (n = 0; n < MAX16; ++n) {
+	    if (!legalUCode(n))
+		continue;
+	    if ((in_bytes = (size_t) ConvToUTF8(input, n, sizeof(input))) == 0) {
+		continue;
+	    }
+	    ip = (char *) input;
+	    op = output;
+	    ip[in_bytes] = 0;
+	    out_bytes = sizeof(output);
+	    (void) iconv(my_desc, NULL, NULL, NULL, NULL);
+	    if (iconv(my_desc, &ip, &in_bytes, &op, &out_bytes) == (size_t) -1) {
+		continue;
+	    }
+	    ++total;
+	    /* if we have found all codes that the fast check could, quit */
+	    if ((limit == 256) && (total >= limit)) {
+		result = limit;
+		break;
+	    }
+	}
+	iconv_close(my_desc);
+	TRACE(("...total codes %u\n", total));
+	if (total > 256)
+	    result = MAX16;
+    }
+    TRACE(("sizeofIconvTable(%s, %u) = %u\n", encoding_name, limit, result));
+    return result;
+}
+
+/*
+ * Build forward/reverse mappings for single-byte encoding.
+ */
 static void
-initializeIconvTable(LuitConv * data)
+initialize8bitTable(LuitConv * data)
 {
     unsigned n;
 
@@ -533,6 +481,7 @@ initializeIconvTable(LuitConv * data)
 
 	input[0] = (char) n;
 	input[1] = 0;
+	(void) iconv(data->iconv_desc, NULL, NULL, NULL, NULL);
 	converted = iconv(data->iconv_desc, &ip, &in_bytes, &op, &out_bytes);
 	if (converted == (size_t) (-1)) {
 	    TRACE(("convert err %d\n", n));
@@ -553,10 +502,114 @@ initializeIconvTable(LuitConv * data)
 	    } else {
 		data->table_utf8[n].ucs = UCS_REPL;
 	    }
-	    trace_convert(data, (size_t) n);
+	    trace_convert(data, (size_t) n, 0);
 
 	    data->rev_index[data->len_index].ucs = data->table_utf8[n].ucs;
 	    data->rev_index[data->len_index].ch = n;
+	    data->len_index++;
+	}
+    }
+}
+
+static UINT
+jisxCode(const char *buffer, int length, unsigned *gs)
+{
+    UINT result = UChar(buffer[0]);
+
+    switch (result) {
+    case SS2:
+	*gs = 2;
+	break;
+    case SS3:
+	*gs = 3;
+	break;
+    default:
+	*gs = (result >= 128);
+	break;
+    }
+
+    switch (result) {
+    case SS2:
+	/* FALLTHRU */
+    case SS3:
+	++buffer;
+	--length;
+	/* FALLTHRU */
+    default:
+	switch (length) {
+	case 0:
+	    break;
+	case 1:
+	    result = UChar(buffer[0]);
+	    break;
+	default:
+	    result = (UINT) (0x8080 ^ ((UChar(buffer[0]) << 8)
+				       | UChar(buffer[1])));
+	    break;
+	}
+	break;
+    }
+    return result;
+}
+
+/*
+ * Build forward/reverse mappings for multi-byte encoding.
+ *
+ * As in sizeofIconvTable(), scan the encodings using a translation from UTF-8
+ * to the target.  That gives us the reverse-mapping information, from which
+ * we later construct the forward-mapping.
+ *
+ * TODO: update charset size as needed for -show-iconv
+ */
+static void
+initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
+{
+    unsigned n;
+    unsigned gs;
+    LuitConv *data;
+    iconv_t my_desc = iconv_open(charset, "UTF-8");
+
+    for (n = 0; n < gmax; ++n) {
+	if ((data = datap[n]) != 0) {
+	    datap[n]->len_index = 0;
+	}
+    }
+
+    if (my_desc != NO_ICONV) {
+	for (n = 0; n < MAX16; ++n) {
+	    UCHAR input[80];
+	    ICONV_CONST char *ip = (ICONV_CONST char *) input;
+	    char output[80];
+	    char *op = output;
+	    size_t in_bytes;
+	    size_t out_bytes = sizeof(output);
+	    unsigned my_code;
+
+	    if (!legalUCode(n))
+		continue;
+	    if ((in_bytes = (size_t) ConvToUTF8(input, n, sizeof(input))) == 0) {
+		continue;
+	    }
+	    ip = (char *) input;
+	    op = output;
+	    ip[in_bytes] = 0;
+	    out_bytes = sizeof(output);
+	    (void) iconv(my_desc, NULL, NULL, NULL, NULL);
+	    if (iconv(my_desc, &ip, &in_bytes, &op, &out_bytes) == (size_t) -1) {
+		continue;
+	    }
+	    my_code = jisxCode(output, (int) (op - output), &gs);
+	    if ((data = datap[gs]) == 0) {
+		continue;
+	    }
+	    data->table_utf8[my_code].size = strlen((char *) input);
+	    data->table_utf8[my_code].text = strmalloc((char *) input);
+	    data->table_utf8[my_code].ucs = n;
+
+	    trace_convert(data, (size_t) my_code, gs);
+
+	    data->rev_index[data->len_index].ucs = n;
+	    data->rev_index[data->len_index].ch = my_code;
 	    data->len_index++;
 	}
     }
@@ -601,6 +654,7 @@ findEncodingAlias(const char *encoding_name)
 	const char *luit_name;
 	const char *iconv_name;
     } table[] = {
+	/* 8-bit character sets */
 	{ "KOI8-E",		"ISO-IR-111" },
 	{ "TCVN-0",		"TCVN5712-1:1993" },
 	{ "ibm-cp437",		"cp437" },
@@ -610,7 +664,8 @@ findEncodingAlias(const char *encoding_name)
 	{ "microsoft-cp1250",   "windows-1250" },
 	{ "microsoft-cp1251",   "windows-1251" },
 	{ "microsoft-cp1252",   "windows-1252" },
-#if 0	/* FIXME - not 8-bit character sets */
+	/* other character sets */
+#if 0
 	{ "big5.eten-0",	"BIG-5" },
 	{ "big5hkscs-0",        "BIG5-HKSCS" },
 	{ "gb18030.2000-0",     "GB18030" },
@@ -630,7 +685,7 @@ findEncodingAlias(const char *encoding_name)
 
     TRACE(("findEncodingAlias(%s)\n", encoding_name));
     for (n = 0; n < SizeOf(table); ++n) {
-	if (!compare(encoding_name, table[n].luit_name)) {
+	if (!lcStrCmp(encoding_name, table[n].luit_name)) {
 	    result = table[n].iconv_name;
 	    TRACE(("... matched '%s'\n", result));
 	    break;
@@ -673,7 +728,7 @@ initializeBuiltInTable(LuitConv * data,
 		memcpy(data->table_utf8[j].text, buffer, need);
 	    }
 
-	    trace_convert(data, j);
+	    trace_convert(data, j, 0);
 
 	    data->rev_index[data->len_index].ucs = data->table_utf8[j].ucs;
 	    data->rev_index[data->len_index].ch = (unsigned) j;
@@ -689,7 +744,7 @@ findBuiltinEncoding(const char *encoding_name)
     const BuiltInCharsetRec *result = 0;
 
     for (n = 0; builtin_encodings[n].name != 0; ++n) {
-	if (!compare(encoding_name, builtin_encodings[n].name)) {
+	if (!lcStrCmp(encoding_name, builtin_encodings[n].name)) {
 	    result = &(builtin_encodings[n]);
 	    break;
 	}
@@ -727,7 +782,7 @@ luitGetFontEnc(const char *name, UM_MODE mode)
     LuitConv *lc;
     int n;
 
-    if ((mp = luitLookupMapping(name, mode)) != 0
+    if ((mp = luitLookupMapping(name, mode, usANY)) != 0
 	&& (lc = luitLookupEncoding(mp)) != 0
 	&& (mp2 = TypeCalloc(FontMapRec)) != 0
 	&& (mq = TypeCalloc(FontEncSimpleMapRec)) != 0
@@ -783,45 +838,68 @@ luitFreeFontEnc(FontEncPtr data)
     }
 }
 
+static void
+finishIconvTable(LuitConv * latest)
+{
+    latest->next = all_conversions;
+    latest->mapping.type = FONT_ENCODING_UNICODE;
+    latest->mapping.recode = luitRecode;
+    latest->reverse.reverse = luitReverse;
+    latest->reverse.data = latest;
+    all_conversions = latest;
+    TRACE(("...finished LuitConv table for \"%s\"\n", latest->encoding_name));
+}
+
 static FontMapPtr
 initLuitConv(const char *encoding_name,
 	     iconv_t my_desc,
 	     const BuiltInCharsetRec * builtIn,
-	     int enc_file)
+	     int enc_file,
+	     US_SIZE size)
 {
     FontMapPtr result = 0;
     LuitConv *latest;
+    unsigned fast;
     size_t length = MAX8;
 
-    if (builtIn) {
-	if (builtIn->length != 0 && builtIn->length <= MAX8) {
-	    size_t n;
-	    for (n = 0; n < builtIn->length; ++n) {
-		if (builtIn->table[n].source >= MAX8) {
-		    length = MAX16;
-		    break;
+    switch (size) {
+    case us8BIT:
+	length = MAX8;
+	break;
+    case us16BIT:
+	length = MAX16;
+	break;
+    default:
+	if (builtIn) {
+	    if (builtIn->length != 0) {
+		size_t n;
+		for (n = 0; n < builtIn->length; ++n) {
+		    if (builtIn->table[n].source >= MAX8) {
+			length = MAX16;
+			break;
+		    }
 		}
+	    } else {
+		length = MAX16;
 	    }
-	} else {
-	    length = MAX16;
+	} else if ((fast = count8bitIconv(my_desc)) < 256) {
+	    length = sizeofIconvTable(encoding_name, fast);
 	}
+	break;
     }
 
     TRACE(("initLuitConv(%s) %u\n", encoding_name, (unsigned) length));
     if ((latest = newLuitConv(length)) != 0) {
-	latest->next = all_conversions;
 	latest->encoding_name = strmalloc(encoding_name);
 	latest->iconv_desc = my_desc;
-	if (builtIn != 0)
+	if (builtIn != 0) {
 	    initializeBuiltInTable(latest, builtIn, enc_file);
-	else
-	    initializeIconvTable(latest);
-	latest->mapping.type = FONT_ENCODING_UNICODE;
-	latest->mapping.recode = luitRecode;
-	latest->reverse.reverse = luitReverse;
-	latest->reverse.data = latest;
-	all_conversions = latest;
-
+	} else if (length == MAX16) {
+	    initialize16bitTable(latest->encoding_name, &latest, 1);
+	} else {
+	    initialize8bitTable(latest);
+	}
+	finishIconvTable(latest);
 	result = &(latest->mapping);
 
 	/* sort the reverse-index, to allow using bsearch */
@@ -861,8 +939,11 @@ convertFontEnc(FontEncPtr fontenc)
 	&& (mapping = TypeCallocN(BuiltInMapping, mq->len + 1)) != 0) {
 	unsigned j, k;
 	BuiltInCharsetRec builtIn;
+	US_SIZE size = ((fontenc->size <= 256 && fontenc->row_size == 0)
+			? us8BIT
+			: us16BIT);
 
-	TRACE(("...found mapping for %d items\n", mq->len));
+	TRACE(("...found mapping for %d items (size:%d)\n", mq->len, size));
 
 	memset(&builtIn, 0, sizeof(builtIn));
 	builtIn.name = fontenc->name;
@@ -875,68 +956,170 @@ convertFontEnc(FontEncPtr fontenc)
 	    mapping[k].target = code ? code : j;
 	    ++k;
 	}
-	result = initLuitConv(fontenc->name, NO_ICONV, &builtIn, 1);
+	result = initLuitConv(fontenc->name, NO_ICONV, &builtIn, 1, size);
 	free(mapping);
     }
 
     return result;
 }
 
-FontMapPtr
-luitLookupMapping(const char *encoding_name, UM_MODE mode)
+static int
+knownCharset(const FontencCharsetRec * fc)
+{
+    int result = 0;
+    if (!strcmp(fc->name, "ASCII"))
+	result = 1;
+    return result;
+}
+
+/*
+ * Portable iconv provides an "EUC-JP" which combines the information for the
+ * JIS-X encodings.  For this case we can deduce the separate encodings.  Do
+ * that, and return true if successful.
+ */
+static int
+loadCompositeCharset(iconv_t my_desc, const char *composite_name)
+{
+    LuitConv *work[4];
+    unsigned g;
+    unsigned gmax = 0;
+    unsigned csize = 0;
+
+    /*
+     * This is the first time we have tried for the composite.  Make
+     * a list of the parts, first.
+     */
+    for (g = 0; g < 4; ++g) {
+	const FontencCharsetRec *fc = getCompositePart(composite_name, g);
+	work[g] = 0;
+	if (fc != 0 && !knownCharset(fc)) {
+	    TRACE(("part %d:%s (%s)\n", g, fc->name, fc->xlfd));
+
+	    switch (fc->type) {
+	    case T_94:
+	    case T_96:
+	    case T_128:
+		csize = MAX8;
+		break;
+	    case T_9494:
+	    case T_9696:
+	    case T_94192:
+		csize = MAX16;
+		break;
+	    default:
+		TRACE(("...ignoring for now\n"));
+		break;
+	    }
+
+	    if ((work[g] = newLuitConv(csize)) == 0)
+		break;
+	    work[g]->encoding_name = strmalloc(fc->name);
+	    work[g]->iconv_desc = my_desc;
+	    gmax = g + 1;
+	}
+    }
+
+    /*
+     * Now, load the charset, filling out the appropriate forward mapping
+     * in each one according to the shift-information embedded in the
+     * reverse mapping string.
+     */
+    initialize16bitTable(composite_name, work, gmax);
+    /*
+     * Finally, link the parts into the list of loaded charsets so we
+     * will not repeat this process.
+     */
+    for (g = 0; g < 4; ++g) {
+	if (work[g] != 0) {
+	    work[g]->iconv_desc = NO_ICONV;
+	    finishIconvTable(work[g]);
+	}
+    }
+    return 0;
+}
+
+static FontMapPtr
+getFontMapByName(const char *encoding_name)
 {
     FontMapPtr result = 0;
-    FontEncPtr fontenc;
     LuitConv *latest;
-    const BuiltInCharsetRec *builtIn;
-    iconv_t my_desc;
-    char *aliased = 0;
-
-    TRACE(("luitLookupMapping '%s' %u\n", encoding_name, mode));
 
     for (latest = all_conversions; latest != 0; latest = latest->next) {
-	if (!compare(encoding_name, latest->encoding_name)) {
-	    TRACE(("...found mapping in cache\n"));
+	if (!lcStrCmp(encoding_name, latest->encoding_name)) {
 	    result = &(latest->mapping);
 	    break;
 	}
     }
+    TRACE(("getFontMapByName(%s) %s\n", encoding_name,
+	   result ? "OK" : "FAIL"));
+    return result;
+}
 
-    if (latest == 0) {
-	const char *alias = 0;
+static FontMapPtr
+lookupIconv(const char **encoding_name, char **aliased, US_SIZE size)
+{
+    LuitConv *latest;
+    FontMapPtr result = 0;
+    iconv_t my_desc;
+    iconv_t check;
+    const FontencCharsetRec *fc;
+    const char *alias;
+    const char *full;
 
-	if (mode & umICONV) {
-	    my_desc = try_iconv_open(encoding_name, &aliased);
-	    if (my_desc == NO_ICONV) {
-		alias = findEncodingAlias(encoding_name);
-		if (alias != 0) {
-		    if (aliased) {
-			free(aliased);
-			aliased = 0;
-		    }
-		    encoding_name = alias;
-		    TRACE(("...retry '%s'\n", encoding_name));
-		    my_desc = try_iconv_open(encoding_name, &aliased);
-		}
+    my_desc = try_iconv_open(*encoding_name, aliased);
+    if (my_desc == NO_ICONV
+	&& (alias = findEncodingAlias(*encoding_name)) != 0) {
+	if (alias != 0) {
+	    if (*aliased) {
+		free(*aliased);
+		*aliased = 0;
 	    }
-	} else {
-	    my_desc = NO_ICONV;
+	    *encoding_name = alias;
+	    TRACE(("...retry '%s'\n", *encoding_name));
+	    my_desc = try_iconv_open(*encoding_name, aliased);
 	}
+    }
+    if (my_desc != NO_ICONV) {
+	TRACE(("...iconv_open succeeded\n"));
+	result = initLuitConv(*encoding_name, my_desc, NULL, -1, size);
+	iconv_close(my_desc);
+	if ((latest = luitLookupEncoding(result)) != 0) {
+	    latest->iconv_desc = NO_ICONV;
+	}
+    } else if ((full = getCompositeCharset(*encoding_name)) != 0
+	       && (check = try_iconv_open(full, aliased)) != NO_ICONV) {
+	loadCompositeCharset(check, full);
+	iconv_close(check);
+	if ((fc = getFontencByName(*encoding_name)) != 0) {
+	    result = getFontMapByName(fc->name);
+	}
+    }
+    return result;
+}
 
-	if (my_desc != NO_ICONV) {
-	    TRACE(("...iconv_open succeeded\n"));
-	    result = initLuitConv(encoding_name, my_desc, NULL, -1);
-	    iconv_close(my_desc);
-	    if ((latest = luitLookupEncoding(result)) != 0) {
-		latest->iconv_desc = NO_ICONV;
-	    }
+FontMapPtr
+luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
+{
+    FontMapPtr result = 0;
+    FontEncPtr fontenc;
+    const BuiltInCharsetRec *builtIn;
+    char *aliased = 0;
+
+    TRACE(("luitLookupMapping '%s' mode %u size %u\n", encoding_name, mode, size));
+
+    if ((result = getFontMapByName(encoding_name)) != 0) {
+	TRACE(("...found in cache\n"));
+    } else {
+	if ((mode & umICONV)
+	    && (result = lookupIconv(&encoding_name, &aliased, size)) != 0) {
+	    TRACE(("...lookupIconv succeeded\n"));
 	} else if ((mode & umFONTENC)
 		   && (fontenc = lookupOneFontenc(encoding_name)) != 0) {
 	    result = convertFontEnc(fontenc);
 	} else if (mode & umBUILTIN
 		   && (builtIn = findBuiltinEncoding(encoding_name)) != 0) {
 	    TRACE(("...use built-in charset\n"));
-	    result = initLuitConv(encoding_name, my_desc, builtIn, 0);
+	    result = initLuitConv(encoding_name, NO_ICONV, builtIn, 0, us8BIT);
 	} else if (mode & umPOSIX) {
 	    unsigned ch;
 	    BuiltInMapping mapping[MAX8];
@@ -951,11 +1134,11 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode)
 		mapping[ch].source = ch;
 		mapping[ch].target = (ch < 128) ? ch : 0;
 	    }
-	    result = initLuitConv(encoding_name, my_desc, &posix, 0);
+	    result = initLuitConv(encoding_name, NO_ICONV, &posix, 0, us8BIT);
 	}
-	if (aliased) {
-	    free(aliased);
-	}
+    }
+    if (aliased) {
+	free(aliased);
     }
 
     TRACE(("...luitLookupMapping ->%p\n", result));
@@ -986,12 +1169,12 @@ luitMapCodeValue(unsigned code, FontMapPtr fontmap_ptr)
     LuitConv *search;
 
     result = code;
-    if (code < MAX8) {
-	for (search = all_conversions; search != 0; search = search->next) {
-	    if (&(search->mapping) == fontmap_ptr) {
+    for (search = all_conversions; search != 0; search = search->next) {
+	if (&(search->mapping) == fontmap_ptr) {
+	    if (code < search->table_size) {
 		result = search->table_utf8[code].ucs;
-		break;
 	    }
+	    break;
 	}
     }
 
@@ -1225,7 +1408,7 @@ void
 luitDestroyReverse(FontMapReversePtr reverse)
 {
     LuitConv *p, *q;
-    int n;
+    size_t n;
 
     for (p = all_conversions, q = 0; p != 0; q = p, p = p->next) {
 	if (&(p->reverse) == reverse) {
@@ -1234,7 +1417,7 @@ luitDestroyReverse(FontMapReversePtr reverse)
 	    if (p->iconv_desc != NO_ICONV)
 		iconv_close(p->iconv_desc);
 
-	    for (n = 0; n < MAX8; ++n) {
+	    for (n = 0; n < p->table_size; ++n) {
 		if (p->table_utf8[n].text) {
 		    free(p->table_utf8[n].text);
 		}
