@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.63 2013/02/02 16:44:52 tom Exp $ */
+/* $XTermId: charset.c,v 1.67 2013/02/03 16:09:44 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -131,6 +131,8 @@ static const OtherCharsetRec otherCharsets[] =
 int
 lcStrCmp(const char *s, const char *t)
 {
+    int result = 0;
+
     while (*s || *t) {
 	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
 	    s++;
@@ -139,15 +141,19 @@ lcStrCmp(const char *s, const char *t)
 	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
 	    s++;
 	    t++;
-	} else
-	    return 1;
+	} else {
+	    result = 1;
+	    break;
+	}
     }
-    return 0;
+    return result;
 }
 
 static int
 compare1(const char *s, const char *t, size_t n)
 {
+    int result = 0;
+
     while (n && (*s || *t)) {
 	--n;
 	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
@@ -157,10 +163,12 @@ compare1(const char *s, const char *t, size_t n)
 	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
 	    s++;
 	    t++;
-	} else
-	    return 1;
+	} else {
+	    result = 1;
+	    break;
+	}
     }
-    return 0;
+    return result;
 }
 
 static unsigned int
@@ -547,8 +555,16 @@ closestLocaleCharset(FontEncPtr enc)
     const LocaleCharsetRec *result = 0;
 
     if (enc != 0) {
-	result = findLocaleByCharset(enc->name);
+	const FontencCharsetRec *fc = getFontencByName(enc->name);
+	if (fc != 0) {
+	    result = findLocaleByCharset(fc->name);
+	} else {
+	    result = findLocaleByCharset(enc->name);
+	}
     }
+    TRACE(("closestLocaleCharset(%s) ->%s\n",
+	   enc ? enc->name : "?",
+	   result ? result->name : "?"));
     return result;
 }
 
@@ -731,14 +747,31 @@ getFontencByName(const char *encoding_name)
 {
     const FontencCharsetRec *result = 0;
     const FontencCharsetRec *fc;
+    char *gr_special;
 
     for (fc = fontencCharsets; fc->name != 0; ++fc) {
 	if (!lcStrCmp(encoding_name, fc->name)
-	    || !lcStrCmp(encoding_name, fc->xlfd)) {
+	    || (strstr(fc->name, ":GL") == 0
+		&& !lcStrCmp(encoding_name, fc->xlfd))) {
 	    result = fc;
 	    break;
 	}
     }
+
+    /*
+     * Luit treats ":GR" specially in its charset tables, essentially to
+     * distinguish the case it uses for JIS X 201 from other possibilities.
+     */
+    if (result == 0
+	&& strchr(encoding_name, ':') == 0
+	&& (gr_special = malloc(strlen(encoding_name) + 4)) != 0) {
+	sprintf(gr_special, "%s:GR", encoding_name);
+	result = getFontencByName(gr_special);
+	free(gr_special);
+    }
+    TRACE(("getFontencByName(%s) ->%s\n",
+	   encoding_name,
+	   result ? result->name : "?"));
     return result;
 }
 

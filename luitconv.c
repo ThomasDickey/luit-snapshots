@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.91 2013/02/02 16:50:30 tom Exp $
+ * $XTermId: luitconv.c,v 1.92 2013/02/03 14:34:29 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -612,6 +612,7 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 	    data->rev_index[data->len_index].ch = my_code;
 	    data->len_index++;
 	}
+	iconv_close(my_desc);
     }
 }
 
