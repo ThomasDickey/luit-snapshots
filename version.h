@@ -1,6 +1,6 @@
 /*
- * $XTermId: version.h,v 1.37 2013/02/03 16:15:24 tom Exp $
+ * $XTermId: version.h,v 1.38 2013/02/09 12:02:05 tom Exp $
  *
  * http://invisible-island.net/luit/
  */
-#define LUIT_VERSION "1.2-20130203"
+#define LUIT_VERSION "1.2-20130209"

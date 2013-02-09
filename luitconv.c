@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.97 2013/02/09 02:05:40 tom Exp $
+ * $XTermId: luitconv.c,v 1.101 2013/02/09 16:18:53 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -670,18 +670,17 @@ findEncodingAlias(const char *encoding_name)
 	{ "microsoft-cp1250",   "windows-1250" },
 	{ "microsoft-cp1251",   "windows-1251" },
 	{ "microsoft-cp1252",   "windows-1252" },
-	/* other character sets */
+	/* EUC aliases */
+	{ "ksx1001.1997-0",     "eucKR" }, /* fontenc -> ksc5601.1987-0 */
+	/* other (non-ISO-2022) character sets */
+	{ "gb2312.1980-0",	"GB2312" },
 #if 0
+	/* FIXME - these will require integrating functions from other.c */
 	{ "big5.eten-0",	"BIG-5" },
 	{ "big5hkscs-0",        "BIG5-HKSCS" },
 	{ "gb18030.2000-0",     "GB18030" },
 	{ "gb18030.2000-1",     "GB18030" },
-	{ "gb2312.1980-0",	"GB2312" },
 	{ "gbk-0",	        "GBK" },
-	{ "jisx0201.1976-0",    "EUC-JP" },
-	{ "jisx0208.1990-0",    "EUC-JP" },
-	{ "jisx0212.1990-0",    "EUC-JP" },
-	{ "ksc5601.1987-0",	"JOHAB" },
 #endif
     };
     /* *INDENT-ON* */
@@ -1233,7 +1232,7 @@ compare_locales(const void *a, const void *b)
 /*
  * Report a list of the built-in encodings (used for fallback)
  */
-void
+int
 reportBuiltinCharsets(void)
 {
     size_t j, k;
@@ -1255,18 +1254,23 @@ reportBuiltinCharsets(void)
 	printf("\tData: [%04X..%04X] defined %u\n",
 	       lo, hi, (unsigned) p->length);
     }
+    return EXIT_SUCCESS;
 }
 
 /*
  * Obtain a list of supported locales, and for each obtain the corresponding
  * charset.
  */
-void
+int
 reportIconvCharsets(void)
 {
 #if !defined(HAVE_LANGINFO_CODESET)
+    int rc = EXIT_FAILURE;
+
     Message("nl_langinfo(CODESET) not supported\n");
 #else
+    int rc = EXIT_SUCCESS;
+
     FILE *fp;
     char *old_locale;
     char **allLs = 0;
@@ -1403,6 +1407,7 @@ reportIconvCharsets(void)
 #endif
 	} else {
 	    Message("No encodings found\n");
+	    rc = EXIT_FAILURE;
 	}
 #ifdef NO_LEAKS
 	for (n = 0; n < useLs; ++n) {
@@ -1412,11 +1417,13 @@ reportIconvCharsets(void)
 #endif
     } else {
 	Message("No locales found\n");
+	rc = EXIT_FAILURE;
     }
 
     /* cleanup */
     free(old_locale);
 #endif
+    return rc;
 }
 
 #ifdef NO_LEAKS

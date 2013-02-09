@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.74 2013/02/08 21:29:52 tom Exp $
+ * $XTermId: fontenc.c,v 1.77 2013/02/09 14:28:01 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -930,9 +930,10 @@ reportOneFontenc(const char *alias, const char *path)
  * Make a report of the encoding files which could be loaded using either
  * the fontenc library (using its hardcoded tables) or dynamically via luit.
  */
-void
+int
 reportFontencCharsets(void)
 {
+    int rc = EXIT_FAILURE;
     int n;
 
     printf("Available encodings listed in:\n\t%s\n", FontEncDirectory());
@@ -944,16 +945,26 @@ reportFontencCharsets(void)
 		   encodings_dir[n].path);
 	    encodings_dir[n].data = reportOneFontenc(encodings_dir[n].alias,
 						     encodings_dir[n].path);
+	    if (encodings_dir[n].data != 0) {
+		rc = EXIT_SUCCESS;
+	    }
 	}
     }
+
+    if (rc != EXIT_SUCCESS) {
+	Warning("no encodings found\n");
+    }
+    return rc;
 }
 
 /*
  * Regurgitate an encoding from the in-memory copy.
  */
-static void
+static int
 showOneCharset(const char *name, FontEncPtr data)
 {
+    int rc = EXIT_FAILURE;
+
     if (data != 0) {
 	FontMapPtr mp;
 	int n;
@@ -1003,44 +1014,42 @@ showOneCharset(const char *name, FontEncPtr data)
 	}
 	printf("# vile:tblmode\n");
 	printf("ENDENCODING\n");
+	rc = EXIT_SUCCESS;
     } else {
 	Warning("no encoding data found for %s\n", name);
     }
+    return rc;
 }
 
-void
+int
 showFontencCharset(const char *name)
 {
-    showOneCharset(name, lookupOneFontenc(name));
+    return showOneCharset(name, lookupOneFontenc(name));
 }
 
 #ifdef USE_ICONV
 /*
  * Display built-in encoding as ".enc" format.
  */
-void
+int
 showBuiltinCharset(const char *name)
 {
     FontEncPtr data = luitGetFontEnc(name, umBUILTIN);
-
-    if (data != 0) {
-	showOneCharset(name, data);
-	luitFreeFontEnc(data);
-    }
+    int rc = showOneCharset(name, data);
+    luitFreeFontEnc(data);
+    return rc;
 }
 
 /*
  * Display iconv encoding as ".enc" format.
  */
-void
+int
 showIconvCharset(const char *name)
 {
     FontEncPtr data = luitGetFontEnc(name, umICONV);
-
-    if (data != 0) {
-	showOneCharset(name, data);
-	luitFreeFontEnc(data);
-    }
+    int rc = showOneCharset(name, data);
+    luitFreeFontEnc(data);
+    return rc;
 }
 #endif
 
