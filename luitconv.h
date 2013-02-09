@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.h,v 1.30 2013/02/08 22:15:42 tom Exp $
+ * $XTermId: luitconv.h,v 1.31 2013/02/09 13:59:35 tom Exp $
  *
  * Copyright 2010,2013 by Thomas E. Dickey
  *
@@ -166,12 +166,12 @@ typedef struct _FontEncSimpleName {
 #define colOf(code) ((code) & 0xff)
 
 extern unsigned luitRecode(unsigned, void *);
-extern void reportBuiltinCharsets(void);
-extern void reportFontencCharsets(void);
-extern void reportIconvCharsets(void);
-extern void showBuiltinCharset(const char *);
-extern void showFontencCharset(const char *);
-extern void showIconvCharset(const char *);
+extern int reportBuiltinCharsets(void);
+extern int reportFontencCharsets(void);
+extern int reportIconvCharsets(void);
+extern int showBuiltinCharset(const char *);
+extern int showFontencCharset(const char *);
+extern int showIconvCharset(const char *);
 extern FontEncPtr lookupOneFontenc(const char *);
 
 #endif /* LUITCONV_H */

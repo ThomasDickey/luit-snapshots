@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.59 2013/01/29 01:17:10 tom Exp $ */
+/* $XTermId: luit.c,v 1.61 2013/02/09 14:11:17 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -196,10 +196,11 @@ help(const char *program, int fatal)
 }
 
 #ifndef USE_ICONV
-static void
+static int
 needIconvCfg(void)
 {
     Message("You need the iconv configuration for this option\n");
+    return EXIT_FAILURE;
 }
 
 #define reportBuiltinCharsets()  needIconvCfg()
@@ -243,23 +244,17 @@ parseOptions(int argc, char **argv)
 	    fill_fontenc = 1;
 	    i++;
 	} else if (!strcmp(argv[i], "-show-builtin")) {
-	    showBuiltinCharset(getParam(i));
-	    ExitSuccess();
+	    ExitProgram(showBuiltinCharset(getParam(i)));
 	} else if (!strcmp(argv[i], "-show-fontenc")) {
-	    showFontencCharset(getParam(i));
-	    ExitSuccess();
+	    ExitProgram(showFontencCharset(getParam(i)));
 	} else if (!strcmp(argv[i], "-show-iconv")) {
-	    showIconvCharset(getParam(i));
-	    ExitSuccess();
+	    ExitProgram(showIconvCharset(getParam(i)));
 	} else if (!strcmp(argv[i], "-list-builtin")) {
-	    reportBuiltinCharsets();
-	    ExitSuccess();
+	    ExitProgram(reportBuiltinCharsets());
 	} else if (!strcmp(argv[i], "-list-fontenc")) {
-	    reportFontencCharsets();
-	    ExitSuccess();
+	    ExitProgram(reportFontencCharsets());
 	} else if (!strcmp(argv[i], "-list-iconv")) {
-	    reportIconvCharsets();
-	    ExitSuccess();
+	    ExitProgram(reportIconvCharsets());
 	} else if (!strcmp(argv[i], "+oss")) {
 	    outputState->outputFlags &= ~OF_SS;
 	    i++;
