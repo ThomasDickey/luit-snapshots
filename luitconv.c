@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.92 2013/02/03 14:34:29 tom Exp $
+ * $XTermId: luitconv.c,v 1.97 2013/02/09 02:05:40 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -39,8 +39,6 @@
  * into UTF-8, and then use that mapping to construct the reverse mapping
  * from UTF-8 into the original set of single byte values.
  */
-
-#define UCS_REPL        0xfffd
 
 #define MAX8		0x100
 #define MAX16		0x10000
@@ -468,6 +466,8 @@ initialize8bitTable(LuitConv * data)
 {
     unsigned n;
 
+    TRACE(("initialize8bitTable\n"));
+
     data->len_index = 0;
 
     for (n = 0; n < MAX8; ++n) {
@@ -485,7 +485,6 @@ initialize8bitTable(LuitConv * data)
 	converted = iconv(data->iconv_desc, &ip, &in_bytes, &op, &out_bytes);
 	if (converted == (size_t) (-1)) {
 	    TRACE(("convert err %d\n", n));
-	    data->table_utf8[n].ucs = UCS_REPL;
 	} else {
 	    output[sizeof(output) - out_bytes] = 0;
 	    data->table_utf8[n].size = sizeof(output) - out_bytes;
@@ -499,8 +498,6 @@ initialize8bitTable(LuitConv * data)
 		ConvToUTF32(&(data->table_utf8[n].ucs),
 			    data->table_utf8[n].text,
 			    data->table_utf8[n].size);
-	    } else {
-		data->table_utf8[n].ucs = UCS_REPL;
 	    }
 	    trace_convert(data, (size_t) n, 0);
 
@@ -518,20 +515,20 @@ jisxCode(const char *buffer, int length, unsigned *gs)
 
     switch (result) {
     case SS2:
-	*gs = 2;
+	*gs = (length > 1) ? 2 : 1;
 	break;
     case SS3:
-	*gs = 3;
+	*gs = (length > 1) ? 3 : 1;
 	break;
     default:
 	*gs = (result >= 128);
 	break;
     }
 
-    switch (result) {
-    case SS2:
+    switch (*gs) {
+    case 2:
 	/* FALLTHRU */
-    case SS3:
+    case 3:
 	++buffer;
 	--length;
 	/* FALLTHRU */
@@ -569,6 +566,8 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
     LuitConv *data;
     iconv_t my_desc = iconv_open(charset, "UTF-8");
 
+    TRACE(("initialize16bitTable gmax %d\n", gmax));
+
     for (n = 0; n < gmax; ++n) {
 	if ((data = datap[n]) != 0) {
 	    datap[n]->len_index = 0;
@@ -599,7 +598,13 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 		continue;
 	    }
 	    my_code = jisxCode(output, (int) (op - output), &gs);
-	    if ((data = datap[gs]) == 0) {
+	    if (gs >= gmax) {
+		data = (gs == 1) ? datap[0] : 0;
+	    } else {
+		data = datap[gs];
+	    }
+	    if (data == 0) {
+		TRACE(("skip %d:%#x\n", gs, my_code));
 		continue;
 	    }
 	    data->table_utf8[my_code].size = strlen((char *) input);
@@ -789,6 +794,8 @@ luitGetFontEnc(const char *name, UM_MODE mode)
 	&& (mq = TypeCalloc(FontEncSimpleMapRec)) != 0
 	&& (map = TypeCallocN(UCode, lc->table_size)) != 0
 	&& (result = TypeCalloc(FontEncRec)) != 0) {
+	int max_chr = (MIN_UCODE - 1);
+	int min_chr = (MAX_UCODE + 1);
 
 	result->name = strmalloc(name);
 	result->size = (int) lc->table_size;
@@ -798,14 +805,26 @@ luitGetFontEnc(const char *name, UM_MODE mode)
 	mp2->client_data = mq;
 	mp2->next = 0;
 
-	mq->len = (unsigned) result->size;
+	mq->len = (unsigned) lc->table_size;
 	mq->map = map;
 
-	for (n = 0; n < result->size; ++n) {
+	for (n = 0; n < (int) lc->table_size; ++n) {
 	    unsigned ch = lc->rev_index[n].ch;
-	    if (ch < mq->len)
+	    if (ch < mq->len) {
 		map[ch] = (UCode) lc->rev_index[n].ucs;
+		if (ch != lc->rev_index[n].ucs) {
+		    if ((int) ch < min_chr)
+			min_chr = (int) ch;
+		    if ((int) ch > max_chr)
+			max_chr = (int) ch;
+		}
+	    }
 	}
+	result->size = max_chr + 1;
+	if (result->size > 256)
+	    result->first = min_chr;
+	else
+	    result->size = 256;
     } else {
 	if (mp2)
 	    free(mp2);

@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.73 2013/01/29 00:43:18 tom Exp $
+ * $XTermId: fontenc.c,v 1.74 2013/02/08 21:29:52 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -29,12 +29,6 @@
 #ifdef USE_ZLIB
 #include <zlib.h>
 #endif
-
-#define MIN_UCODE 0x0000
-#define MAX_UCODE 0xffff
-
-#define rowOf(code) ((code) / 0x100)
-#define colOf(code) ((code) & 0xff)
 
 #define flatUCode(row,col) (((row) << 8) + (col))
 
