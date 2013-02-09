@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.h,v 1.28 2013/02/02 11:37:29 tom Exp $
+ * $XTermId: luitconv.h,v 1.30 2013/02/08 22:15:42 tom Exp $
  *
  * Copyright 2010,2013 by Thomas E. Dickey
  *
@@ -158,6 +158,12 @@ typedef struct _FontEncSimpleName {
     char **map;
 } FontEncSimpleNameRec, *FontEncSimpleNamePtr;
 #endif /* FONT_ENCODING_POSTSCRIPT */
+
+#define MIN_UCODE 0x0000
+#define MAX_UCODE 0xffff
+
+#define rowOf(code) ((code) / 0x100)
+#define colOf(code) ((code) & 0xff)
 
 extern unsigned luitRecode(unsigned, void *);
 extern void reportBuiltinCharsets(void);
