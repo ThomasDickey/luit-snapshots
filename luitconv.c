@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.101 2013/02/09 16:18:53 tom Exp $
+ * $XTermId: luitconv.c,v 1.105 2013/02/14 00:45:12 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -509,7 +509,7 @@ initialize8bitTable(LuitConv * data)
 }
 
 static UINT
-jisxCode(const char *buffer, int length, unsigned *gs)
+dbcsDecode(const char *buffer, int length, int euc, unsigned *gs)
 {
     UINT result = UChar(buffer[0]);
 
@@ -540,8 +540,10 @@ jisxCode(const char *buffer, int length, unsigned *gs)
 	    result = UChar(buffer[0]);
 	    break;
 	default:
-	    result = (UINT) (0x8080 ^ ((UChar(buffer[0]) << 8)
-				       | UChar(buffer[1])));
+	    result = (UINT) (((UChar(buffer[0]) << 8)
+			      | UChar(buffer[1])));
+	    if (euc)
+		result ^= 0x8080;
 	    break;
 	}
 	break;
@@ -566,7 +568,7 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
     LuitConv *data;
     iconv_t my_desc = iconv_open(charset, "UTF-8");
 
-    TRACE(("initialize16bitTable gmax %d\n", gmax));
+    TRACE(("initialize16bitTable(%s) gmax %d\n", charset, gmax));
 
     for (n = 0; n < gmax; ++n) {
 	if ((data = datap[n]) != 0) {
@@ -575,6 +577,9 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
     }
 
     if (my_desc != NO_ICONV) {
+	int euc = !isOtherCharset(charset);
+
+	TRACE(("...assume %s index\n", euc ? "EUC" : "non-EUC"));
 	for (n = 0; n < MAX16; ++n) {
 	    UCHAR input[80];
 	    ICONV_CONST char *ip = (ICONV_CONST char *) input;
@@ -597,7 +602,7 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 	    if (iconv(my_desc, &ip, &in_bytes, &op, &out_bytes) == (size_t) -1) {
 		continue;
 	    }
-	    my_code = jisxCode(output, (int) (op - output), &gs);
+	    my_code = dbcsDecode(output, (int) (op - output), euc, &gs);
 	    if (gs >= gmax) {
 		data = (gs == 1) ? datap[0] : 0;
 	    } else {
@@ -672,15 +677,15 @@ findEncodingAlias(const char *encoding_name)
 	{ "microsoft-cp1252",   "windows-1252" },
 	/* EUC aliases */
 	{ "ksx1001.1997-0",     "eucKR" }, /* fontenc -> ksc5601.1987-0 */
+	{ "ksxjohab-1",         "JOHAB" },
 	/* other (non-ISO-2022) character sets */
 	{ "gb2312.1980-0",	"GB2312" },
-#if 0
-	/* FIXME - these will require integrating functions from other.c */
 	{ "big5.eten-0",	"BIG-5" },
 	{ "big5hkscs-0",        "BIG5-HKSCS" },
-	{ "gb18030.2000-0",     "GB18030" },
-	{ "gb18030.2000-1",     "GB18030" },
 	{ "gbk-0",	        "GBK" },
+	{ "gb18030.2000-0",     "GB18030" },
+#if 0
+	{ "gb18030.2000-1",     "GB18030" },
 #endif
     };
     /* *INDENT-ON* */

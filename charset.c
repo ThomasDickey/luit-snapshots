@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.67 2013/02/03 16:09:44 tom Exp $ */
+/* $XTermId: charset.c,v 1.70 2013/02/14 00:43:39 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -117,6 +117,7 @@ typedef struct _OtherCharset {
     int (*stack) (unsigned, OtherStatePtr);
 } OtherCharsetRec, *OtherCharsetPtr;
 /* *INDENT-OFF* */
+
 static const OtherCharsetRec otherCharsets[] =
 {
     {"GBK",        init_gbk,     mapping_gbk,     reverse_gbk,     stack_gbk},
@@ -128,15 +129,18 @@ static const OtherCharsetRec otherCharsets[] =
 };
 /* *INDENT-ON* */
 
+#define lcIgnore(c) \
+	(c && (isspace(UChar(c)) || c == '-' || c == '_' || c == '/'))
+
 int
 lcStrCmp(const char *s, const char *t)
 {
     int result = 0;
 
     while (*s || *t) {
-	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
+	if (lcIgnore(*s))
 	    s++;
-	else if (*t && (isspace(UChar(*t)) || *t == '-' || *t == '_'))
+	else if (lcIgnore(*t))
 	    t++;
 	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
 	    s++;
@@ -156,9 +160,9 @@ compare1(const char *s, const char *t, size_t n)
 
     while (n && (*s || *t)) {
 	--n;
-	if (*s && (isspace(UChar(*s)) || *s == '-' || *s == '_'))
+	if (lcIgnore(*s))
 	    s++;
-	else if (*t && (isspace(UChar(*t)) || *t == '-' || *t == '_'))
+	else if (lcIgnore(*t))
 	    t++;
 	else if (*s && *t && tolower(UChar(*s)) == tolower(UChar(*t))) {
 	    s++;
@@ -328,6 +332,31 @@ getFontencCharset(unsigned final, int type, const char *name)
     return result;
 }
 
+static const OtherCharsetRec *
+findOtherCharset(const char *name)
+{
+    const OtherCharsetRec *fc;
+    fc = otherCharsets;
+    while (fc->name) {
+	if (name && !lcStrCmp(fc->name, name))
+	    break;
+	fc++;
+    }
+    return fc;
+}
+
+int
+isOtherCharset(const char *name)
+{
+    const OtherCharsetRec *fc = findOtherCharset(name);
+    int result = (fc->name != 0);
+    if (!result) {
+	result = (!lcStrCmp(name, "Big5") ||
+		  !lcStrCmp(name, "JOHAB"));
+    }
+    return result;
+}
+
 static CharsetPtr
 getOtherCharset(const char *name)
 {
@@ -336,13 +365,7 @@ getOtherCharset(const char *name)
     OtherStatePtr s = NULL;
     CharsetPtr result = NULL;
 
-    fc = otherCharsets;
-    while (fc->name) {
-	if (name && !lcStrCmp(fc->name, name))
-	    break;
-	fc++;
-    }
-
+    fc = findOtherCharset(name);
     if (!fc->name) {
 	VERBOSE(2, ("...no match for '%s' in Other charsets\n", NonNull(name)));
     } else if ((c = TypeCalloc(CharsetRec)) == NULL) {
@@ -400,6 +423,7 @@ getUnknownCharset(int type)
 	return &Unknown94Charset;
     }
 }
+
 const CharsetRec *
 getCharset(unsigned final, int type)
 {

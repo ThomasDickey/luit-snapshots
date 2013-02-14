@@ -1,4 +1,4 @@
-/* $XTermId: charset.h,v 1.15 2013/02/02 15:25:06 tom Exp $ */
+/* $XTermId: charset.h,v 1.16 2013/02/13 23:37:57 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -78,6 +78,7 @@ typedef struct _LocaleCharset {
     const char *other;
 } LocaleCharsetRec, *LocaleCharsetPtr;
 
+int isOtherCharset(const char *);
 int lcStrCmp(const char *, const char *);
 const CharsetRec *getUnknownCharset(int);
 const CharsetRec *getCharset(unsigned, int);
