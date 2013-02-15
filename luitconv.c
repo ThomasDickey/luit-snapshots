@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.105 2013/02/14 00:45:12 tom Exp $
+ * $XTermId: luitconv.c,v 1.108 2013/02/15 00:20:58 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -1134,31 +1134,63 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
     if ((result = getFontMapByName(encoding_name)) != 0) {
 	TRACE(("...found in cache\n"));
     } else {
-	if ((mode & umICONV)
-	    && (result = lookupIconv(&encoding_name, &aliased, size)) != 0) {
-	    TRACE(("...lookupIconv succeeded\n"));
-	} else if ((mode & umFONTENC)
-		   && (fontenc = lookupOneFontenc(encoding_name)) != 0) {
-	    result = convertFontEnc(fontenc);
-	} else if (mode & umBUILTIN
-		   && (builtIn = findBuiltinEncoding(encoding_name)) != 0) {
-	    TRACE(("...use built-in charset\n"));
-	    result = initLuitConv(encoding_name, NO_ICONV, builtIn, 0, us8BIT);
-	} else if (mode & umPOSIX) {
-	    unsigned ch;
-	    BuiltInMapping mapping[MAX8];
-	    BuiltInCharsetRec posix;
+	int n;
 
-	    TRACE(("...fallback to POSIX\n"));
-	    memset(&posix, 0, sizeof(posix));
-	    posix.name = encoding_name;
-	    posix.length = SizeOf(mapping);
-	    posix.table = mapping;
-	    for (ch = 0; ch < posix.length; ++ch) {
-		mapping[ch].source = ch;
-		mapping[ch].target = (ch < 128) ? ch : 0;
+	for (n = 0; lookup_order[n] != umNONE; ++n) {
+	    if (!(mode & lookup_order[n]))
+		continue;
+	    switch (lookup_order[n]) {
+	    case umICONV:
+		result = lookupIconv(&encoding_name, &aliased, size);
+		if (result != 0) {
+		    TRACE(("...lookupIconv succeeded\n"));
+		}
+		break;
+	    case umFONTENC:
+		if ((fontenc = lookupOneFontenc(encoding_name)) != 0) {
+		    result = convertFontEnc(fontenc);
+		    if (result != 0) {
+			TRACE(("...convertFontEnc succeeded\n"));
+		    }
+		}
+		break;
+	    case umBUILTIN:
+		if ((builtIn = findBuiltinEncoding(encoding_name)) != 0) {
+		    TRACE(("...use built-in charset\n"));
+		    result = initLuitConv(encoding_name,
+					  NO_ICONV,
+					  builtIn,
+					  0,
+					  us8BIT);
+		}
+		break;
+	    case umPOSIX:
+		{
+		    unsigned ch;
+		    BuiltInMapping mapping[MAX8];
+		    BuiltInCharsetRec posix;
+
+		    TRACE(("...fallback to POSIX\n"));
+		    memset(&posix, 0, sizeof(posix));
+		    posix.name = encoding_name;
+		    posix.length = SizeOf(mapping);
+		    posix.table = mapping;
+		    for (ch = 0; ch < posix.length; ++ch) {
+			mapping[ch].source = ch;
+			mapping[ch].target = (ch < 128) ? ch : 0;
+		    }
+		    result = initLuitConv(encoding_name,
+					  NO_ICONV,
+					  &posix,
+					  0,
+					  us8BIT);
+		}
+		break;
+	    default:
+		break;
 	    }
-	    result = initLuitConv(encoding_name, NO_ICONV, &posix, 0, us8BIT);
+	    if (result != 0)
+		break;
 	}
     }
     if (aliased) {
@@ -1197,6 +1229,8 @@ luitMapCodeValue(unsigned code, FontMapPtr fontmap_ptr)
 	if (&(search->mapping) == fontmap_ptr) {
 	    if (code < search->table_size) {
 		result = search->table_utf8[code].ucs;
+		if (result == 0 && code != 0)
+		    result = code;
 	    }
 	    break;
 	}

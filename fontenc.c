@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.77 2013/02/09 14:28:01 tom Exp $
+ * $XTermId: fontenc.c,v 1.78 2013/02/15 01:46:03 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -511,7 +511,7 @@ fontencSize(FontEncPtr enc)
 {
     size_t result = (size_t) (enc->size ? enc->size : 256);
     if (enc->row_size)
-	result = (result + 2) * (size_t) (enc->row_size);
+	result = (result) * 256;
     return result;
 }
 

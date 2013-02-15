@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.33 2013/01/29 01:12:32 tom Exp $
+.\" $XTermId: luit.man,v 1.35 2013/02/14 11:52:39 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -177,7 +177,7 @@ List the built-in encodings used as a fallback when data from
 \fIiconv\fP or \fIfontenc\fP is missing.
 .IP
 This option relies on \fBluit\fP being configured to use \fIiconv\fP,
-since the \fIfontenc\fP does not supply a list of built-in encodings.
+since the \fIfontenc\fP library does not supply a list of built-in encodings.
 .TP
 .B \-list\-fontenc
 List the encodings provided by \*(``.enc\*('' files originally
@@ -226,12 +226,24 @@ In startup, establish a handshake between parent and child processes.
 This is needed for some older systems, e.g., to successfully copy
 the terminal settings to the pseudo-terminal.
 .TP
+.BI \-prefer " list"
+Set the lookup-order preference for character set information.
+The parameter is a comma-separated list of keywords.
+The default order (listing all keywords) is
+.RS
+.IP
+fontenc,builtin,iconv,posix
+.RE
+.IP
+This option relies on \fBluit\fP being configured to use \fIiconv\fP,
+since the \fIfontenc\fP library does not provide this choice.
+.TP
 .BI \-show\-builtin " encoding"
 Show a built-in encoding, e.g., from a \*(``.enc\*('' file
 using the \*(``.enc\*('' format.
 .IP
 This option relies on \fBluit\fP being configured to use \fIiconv\fP,
-since the \fIfontenc\fP does not supply a list of built-in encodings.
+since the \fIfontenc\fP library does not supply a list of built-in encodings.
 .TP
 .BI \-show\-fontenc " encoding"
 Show a given encoding, e.g., from a \*(``.enc\*('' file
