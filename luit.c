@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.61 2013/02/09 14:11:17 tom Exp $ */
+/* $XTermId: luit.c,v 1.66 2013/02/14 23:27:11 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -59,6 +59,13 @@ int olog = -1;
 int verbose = 0;
 int ignore_locale = 0;
 int fill_fontenc = 0;
+
+#ifdef USE_ICONV
+UM_MODE lookup_order[] =
+{
+    umFONTENC, umBUILTIN, umICONV, umPOSIX, umNONE
+};
+#endif
 
 static volatile int sigwinch_queued = 0;
 static volatile int sigchld_queued = 0;
@@ -141,6 +148,7 @@ help(const char *program, int fatal)
 	DATA("oss", +, "disable single-shifts in output"),
 	DATA("ot", +, "disable interpretation of all sequences in output"),
 	DATA("p", -, "do parent/child handshake"),
+	DATA("prefer", -, "override preference between fontenc/iconv lookups"),
 	DATA("show-builtin enc", -, "show details of a given built-in encoding"),
 	DATA("show-fontenc enc", -, "show details of an \".enc\" encoding file"),
 	DATA("show-iconv enc", -, "show iconv encoding in \".enc\" format"),
@@ -195,7 +203,86 @@ help(const char *program, int fatal)
 	ExitFailure();
 }
 
-#ifndef USE_ICONV
+#ifdef USE_ICONV
+static void
+setLookupOrder(const char *name)
+{
+    /* *INDENT-OFF* */
+    static const struct {
+	UM_MODE order;
+	const char *name;
+    } table[] = {
+	{ umBUILTIN,  "builtin" },
+	{ umFONTENC,  "fontenc" },
+	{ umICONV,    "iconv" },
+	{ umPOSIX,    "posix" },
+    };
+    /* *INDENT-ON* */
+
+    size_t j, k;
+    char *toparse = strmalloc(name);
+    char *tomatch = toparse;
+    char *token;
+    UM_MODE new_list[SizeOf(lookup_order)];
+    size_t limit = SizeOf(lookup_order) - 1;
+    size_t used = 0;
+
+    TRACE(("setLookupOrder(%s)\n", name));
+    while ((token = strtok(tomatch, ",")) != 0) {
+	UM_MODE order = umNONE;
+	size_t length = strlen(token);
+
+	tomatch = 0;
+	for (j = 0; j < SizeOf(table); ++j) {
+	    if (length <= strlen(table[j].name)
+		&& !strncmp(token, table[j].name, length)) {
+		order = table[j].order;
+		break;
+	    }
+	}
+	if (order == umNONE) {
+	    FatalError("invalid item in -prefer option: %s\n", token);
+	}
+	if (used >= limit) {
+	    FatalError("too many items in -prefer option: %s\n", name);
+	}
+	new_list[used++] = order;
+    }
+
+    while (used < limit) {
+	for (j = 0; j < limit; ++j) {
+	    int found = 0;
+	    for (k = 0; k < used; ++k) {
+		if (lookup_order[j] == new_list[k]) {
+		    found = 1;
+		    break;
+		}
+	    }
+	    if (!found) {
+		new_list[used++] = lookup_order[j];
+	    }
+	}
+    }
+
+    VERBOSE(1, ("Lookup order: "));
+    for (j = 0; j < limit; ++j) {
+	lookup_order[j] = new_list[j];
+	if (verbose) {
+	    for (k = 0; k < SizeOf(table); ++k) {
+		if (table[k].order == lookup_order[j]) {
+		    if (j)
+			VERBOSE(1, (","));
+		    VERBOSE(1, ("%s", table[k].name));
+		    break;
+		}
+	    }
+	}
+    }
+    VERBOSE(1, ("\n"));
+
+    free(toparse);
+}
+#else
 static int
 needIconvCfg(void)
 {
@@ -205,6 +292,7 @@ needIconvCfg(void)
 
 #define reportBuiltinCharsets()  needIconvCfg()
 #define reportIconvCharsets()    needIconvCfg()
+#define setLookupOrder(name)     needIconvCfg()
 #define showBuiltinCharset(name) needIconvCfg()
 #define showIconvCharset(name)   needIconvCfg()
 #endif
@@ -243,6 +331,9 @@ parseOptions(int argc, char **argv)
 	} else if (!strcmp(argv[i], "-fill-fontenc")) {
 	    fill_fontenc = 1;
 	    i++;
+	} else if (!strcmp(argv[i], "-prefer")) {
+	    setLookupOrder(getParam(i));
+	    i += 2;
 	} else if (!strcmp(argv[i], "-show-builtin")) {
 	    ExitProgram(showBuiltinCharset(getParam(i)));
 	} else if (!strcmp(argv[i], "-show-fontenc")) {
@@ -684,6 +775,7 @@ condom(int argc, char **argv)
 	IGNORE_RC(pipe(c2p_waitpipe));
     }
 
+    TRACE(("...forking to run %s(%s)\n", path, child_argv[0]));
     pid = fork();
     if (pid < 0) {
 	perror("Couldn't fork");

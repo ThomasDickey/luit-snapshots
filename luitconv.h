@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.h,v 1.31 2013/02/09 13:59:35 tom Exp $
+ * $XTermId: luitconv.h,v 1.34 2013/02/14 11:38:42 tom Exp $
  *
  * Copyright 2010,2013 by Thomas E. Dickey
  *
@@ -31,7 +31,8 @@
 #include <iconv.h>
 
 typedef enum {
-    umPOSIX = 1
+    umNONE = 0
+    ,umPOSIX = 1
     ,umBUILTIN = 2
     ,umFONTENC = 4
     ,umICONV = 8
@@ -106,6 +107,8 @@ typedef struct _BuiltInCharset {
     size_t length;		/* length of table[] */
 } BuiltInCharsetRec;
 
+extern UM_MODE lookup_order[];
+
 extern FontEncPtr luitGetFontEnc(const char *, UM_MODE);
 extern FontMapPtr luitLookupMapping(const char *, UM_MODE, US_SIZE);
 extern FontMapReversePtr luitLookupReverse(FontMapPtr);
@@ -165,13 +168,13 @@ typedef struct _FontEncSimpleName {
 #define rowOf(code) ((code) / 0x100)
 #define colOf(code) ((code) & 0xff)
 
-extern unsigned luitRecode(unsigned, void *);
+extern FontEncPtr lookupOneFontenc(const char *);
 extern int reportBuiltinCharsets(void);
 extern int reportFontencCharsets(void);
 extern int reportIconvCharsets(void);
 extern int showBuiltinCharset(const char *);
 extern int showFontencCharset(const char *);
 extern int showIconvCharset(const char *);
-extern FontEncPtr lookupOneFontenc(const char *);
+extern unsigned luitRecode(unsigned, void *);
 
 #endif /* LUITCONV_H */
