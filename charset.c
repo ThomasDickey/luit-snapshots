@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.70 2013/02/14 00:43:39 tom Exp $ */
+/* $XTermId: charset.c,v 1.72 2013/02/16 01:32:52 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -544,8 +544,35 @@ reportCharsets(void)
 
     printf("\n\nKnown charsets (not all may be available):\n\n");
     for (q = fontencCharsets; q->name; q++) {
-	printf("  %s%s\n",
-	       q->name, q->final ? " (ISO 2022)" : "");
+	const char *csize = "";
+
+	printf("  %s", q->name);
+	switch (q->type) {
+	case T_94:
+	    csize = "94 codes";
+	    break;
+	case T_96:
+	    csize = "96 codes";
+	    break;
+	case T_128:
+	    csize = "128 codes";
+	    break;
+	case T_9494:
+	    csize = "94x94 codes";
+	    break;
+	case T_9696:
+	    csize = "94x96 codes";
+	    break;
+	case T_94192:
+	    csize = "94x192 codes";
+	    break;
+	}
+	if (q->final) {
+	    printf(" (ISO 2022%s%s)", *csize ? ", " : "", csize);
+	} else if (*csize) {
+	    printf(" (%s)", csize);
+	}
+	printf("\n");
     }
 }
 
@@ -625,7 +652,8 @@ findLocaleCharset(const char *charset)
     if (result == 0) {
 	FontEncPtr enc = luitGetFontEnc(charset,
 					(UM_MODE) ((int) umICONV
-						   | (int) umFONTENC));
+						   | (int) umFONTENC
+						   | (int) umBUILTIN));
 	if ((result = closestLocaleCharset(enc)) != 0) {
 	    TRACE(("...matched a LocaleCharset record for %s\n", charset));
 	} else if (canFakeLocaleCharset(enc)) {

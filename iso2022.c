@@ -1,7 +1,7 @@
-/* $XTermId: iso2022.c,v 1.37 2013/01/25 18:50:14 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.38 2013/01/25 18:50:14 tom Exp $ */
 
 /*
-Copyright 2011,2012 by Thomas E. Dickey
+Copyright 2011-2012,2013 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
