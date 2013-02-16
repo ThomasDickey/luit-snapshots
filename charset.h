@@ -1,6 +1,7 @@
-/* $XTermId: charset.h,v 1.16 2013/02/13 23:37:57 tom Exp $ */
+/* $XTermId: charset.h,v 1.17 2013/02/13 23:37:57 tom Exp $ */
 
 /*
+Copyright (c) 2013 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.108 2013/02/15 00:20:58 tom Exp $
+ * $XTermId: luitconv.c,v 1.109 2013/02/16 01:26:16 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -672,6 +672,7 @@ findEncodingAlias(const char *encoding_name)
 	{ "ibm-cp850",		"cp850" },
 	{ "ibm-cp866",		"cp866" },
 	{ "iso646.1973-0",	"US-ASCII" },
+	{ "ISO 646 (1973)",     "US-ASCII" },
 	{ "microsoft-cp1250",   "windows-1250" },
 	{ "microsoft-cp1251",   "windows-1251" },
 	{ "microsoft-cp1252",   "windows-1252" },

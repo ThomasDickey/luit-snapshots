@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.66 2013/02/14 23:27:11 tom Exp $ */
+/* $XTermId: luit.c,v 1.67 2013/02/15 09:26:20 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -254,12 +254,13 @@ setLookupOrder(const char *name)
 	    int found = 0;
 	    for (k = 0; k < used; ++k) {
 		if (lookup_order[j] == new_list[k]) {
-		    found = 1;
-		    break;
+		    ++found;
 		}
 	    }
 	    if (!found) {
 		new_list[used++] = lookup_order[j];
+	    } else if (found > 1) {
+		FatalError("repeated keyword in -prefer option: %s\n", name);
 	    }
 	}
     }
