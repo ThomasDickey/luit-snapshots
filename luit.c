@@ -1,4 +1,4 @@
-/* $XTermId: luit.c,v 1.67 2013/02/15 09:26:20 tom Exp $ */
+/* $XTermId: luit.c,v 1.68 2013/02/16 14:12:58 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -148,7 +148,7 @@ help(const char *program, int fatal)
 	DATA("oss", +, "disable single-shifts in output"),
 	DATA("ot", +, "disable interpretation of all sequences in output"),
 	DATA("p", -, "do parent/child handshake"),
-	DATA("prefer", -, "override preference between fontenc/iconv lookups"),
+	DATA("prefer list", -, "override preference between fontenc/iconv lookups"),
 	DATA("show-builtin enc", -, "show details of a given built-in encoding"),
 	DATA("show-fontenc enc", -, "show details of an \".enc\" encoding file"),
 	DATA("show-iconv enc", -, "show iconv encoding in \".enc\" format"),

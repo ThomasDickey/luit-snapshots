@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.72 2013/02/16 01:32:52 tom Exp $ */
+/* $XTermId: charset.c,v 1.75 2013/02/16 15:11:06 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -92,12 +92,17 @@ static FontencCharsetRec fontencCharsets[] =
     {"KSC 5601",       T_9696,  'C', "ksc5601.1987-0",   0x0000, 0, 0},
     {"JIS X 0212",     T_9696,  'D', "jisx0212.1990-0",  0x0000, 0, 0},
 
+    {"CNS11643-1",     T_9494,  'G', "cns11643-1",       0x0000, 0, 0},
+    {"CNS11643-2",     T_9494,  'H', "cns11643-2",       0x0000, 0, 0},
+    {"CNS11643-3",     T_9494,  'I', "cns11643-3",       0x0000, 0, 0},
+
     {"KOI8-R",         T_128,   0,   "koi8-r",           0x80,   0, 0},
     {"KOI8-U",         T_128,   0,   "koi8-u",           0x80,   0, 0},
     {"KOI8-RU",        T_128,   0,   "koi8-ru",          0x80,   0, 0},
-    {"CP 1252",        T_128,   0,   "microsoft-cp1252", 0x80,   0, 0},
-    {"CP 1251",        T_128,   0,   "microsoft-cp1251", 0x80,   0, 0},
     {"CP 1250",        T_128,   0,   "microsoft-cp1250", 0x80,   0, 0},
+    {"CP 1251",        T_128,   0,   "microsoft-cp1251", 0x80,   0, 0},
+    {"CP 1252",        T_128,   0,   "microsoft-cp1252", 0x80,   0, 0},
+    {"CP 1255",        T_128,   0,   "microsoft-cp1255", 0x80,   0, 0},
 
     {"CP 437",         T_128,   0,   "ibm-cp437",        0x80,   0, 0},
     {"CP 850",         T_128,   0,   "ibm-cp850",        0x80,   0, 0},
@@ -497,6 +502,7 @@ static const LocaleCharsetRec localeCharsets[] =
     {"CP1250",     0, 2, "ASCII", NULL,         "CP 1250",       NULL,         NULL},
     {"CP1251",     0, 2, "ASCII", NULL,         "CP 1251",       NULL,         NULL},
     {"CP1252",     0, 2, "ASCII", NULL,         "CP 1252",       NULL,         NULL},
+    {"CP1255",     0, 2, "ASCII", NULL,         "CP 1255",       NULL,         NULL},
     {"CP437",      0, 2, "ASCII", NULL,         "CP 437",        NULL,         NULL},
     {"CP850",      0, 2, "ASCII", NULL,         "CP 850",        NULL,         NULL},
     {"CP852",      0, 2, "ASCII", NULL,         "CP 852",        NULL,         NULL},
@@ -507,6 +513,7 @@ static const LocaleCharsetRec localeCharsets[] =
     {"eucJP",      0, 1, "ASCII", "JIS X 0208", "JIS X 0201:GR", "JIS X 0212", NULL},
     {"eucKR",      0, 1, "ASCII", "KSC 5601",   NULL,            NULL,         NULL},
     {"eucCN",      0, 1, "ASCII", "GB 2312",    NULL,            NULL,         NULL},
+    {"eucTW",      0, 1, "ASCII", "CNS11643-1", "CNS11643-2",    "CNS11643-3", NULL},
     {"Big5",       0, 1, "ASCII", "Big 5",      NULL,            NULL,         NULL},
 
     {"gbk",        0, 1, NULL,    NULL,         NULL,            NULL,         "GBK"},

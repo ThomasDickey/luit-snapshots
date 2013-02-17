@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.78 2013/02/15 01:46:03 tom Exp $
+ * $XTermId: fontenc.c,v 1.82 2013/02/17 02:01:37 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -75,7 +75,7 @@ FontEncDirectory(void)
 	    dir = strmalloc(c);
 	    if (!dir)
 		return NULL;
-	} else {
+	} else if (default_dir[0] != '\0') {
 	    dir = default_dir;
 	}
     }
@@ -129,7 +129,7 @@ getFileBuffer(char **bufferp, size_t *lengthp, FILE *fp)
 	    if (extra[have] == '\n') {
 		found = 1;
 	    }
-	    if (isspace(extra[have])) {
+	    if (isspace(UChar(extra[have]))) {
 		extra[have] = '\0';
 	    } else {
 		break;
@@ -254,53 +254,55 @@ loadEncodingsDir(void)
 	int n, found;
 	int row = 0;
 
-	if (path == 0)
-	    FatalError("cannot find encodings.dir\n");
-	if ((fp = fopen(path, "r")) == 0)
+	if (path == 0) {
+	    TRACE(("cannot find encodings.dir\n"));
+	} else if ((fp = fopen(path, "r")) == 0) {
 	    FatalError("cannot open %s\n", path);
-	while (getFileBuffer(&buffer, &length, fp) != 0) {
-	    ++row;
-	    if (*buffer == '\0')
-		continue;
-	    if (encodings_dir == 0) {
-		char *next = 0;
-		long count = strtol(buffer, &next, 10);
-		if (count <= 0) {
-		    FatalError("found no count in %s\n", path);
-		}
-		entries = (size_t) count;
-		encodings_dir = calloc(entries + 1, sizeof(*encodings_dir));
+	} else {
+	    while (getFileBuffer(&buffer, &length, fp) != 0) {
+		++row;
+		if (*buffer == '\0')
+		    continue;
 		if (encodings_dir == 0) {
-		    FatalError("cannot allocate %ld encodings\n", count);
-		}
-	    } else if ((value = strchr(buffer, ' ')) != 0) {
-		*value++ = '\0';
-		/* get rid of duplicates - they do occur */
-		for (n = found = 0; n < used; ++n) {
-		    if (!strcmp(buffer, encodings_dir[n].alias)) {
-			found = 1;
-			break;
+		    char *next = 0;
+		    long count = strtol(buffer, &next, 10);
+		    if (count <= 0) {
+			FatalError("found no count in %s\n", path);
 		    }
-		}
-		if (!found) {
-		    encodings_dir[used].alias = strmalloc(buffer);
-		    encodings_dir[used].path = absolutePath(value, path);
-		    ++used;
-		}
+		    entries = (size_t) count;
+		    encodings_dir = calloc(entries + 1, sizeof(*encodings_dir));
+		    if (encodings_dir == 0) {
+			FatalError("cannot allocate %ld encodings\n", count);
+		    }
+		} else if ((value = strchr(buffer, ' ')) != 0) {
+		    *value++ = '\0';
+		    /* get rid of duplicates - they do occur */
+		    for (n = found = 0; n < used; ++n) {
+			if (!strcmp(buffer, encodings_dir[n].alias)) {
+			    found = 1;
+			    break;
+			}
+		    }
+		    if (!found) {
+			encodings_dir[used].alias = strmalloc(buffer);
+			encodings_dir[used].path = absolutePath(value, path);
+			++used;
+		    }
 
-		if (++entry >= entries)
-		    break;
-	    } else {
-		FatalError("incorrect format of line %d:%s\n", row, buffer);
+		    if (++entry >= entries)
+			break;
+		} else {
+		    FatalError("incorrect format of line %d:%s\n", row, buffer);
+		}
 	    }
-	}
-	fclose(fp);
-	free(buffer);
-	if (used > 1) {
-	    qsort(encodings_dir,
-		  (size_t) used,
-		  sizeof(encodings_dir[0]),
-		  compare_aliases);
+	    fclose(fp);
+	    free(buffer);
+	    if (used > 1) {
+		qsort(encodings_dir,
+		      (size_t) used,
+		      sizeof(encodings_dir[0]),
+		      compare_aliases);
+	    }
 	}
     }
 }
@@ -358,7 +360,17 @@ trim_or_fill(FontEncSimpleMapPtr mp, int size)
 #define trim_or_fill(mp, size)	/* nothing */
 #endif
 
+static size_t
+fontencSize(FontEncPtr enc)
+{
+    size_t result = (size_t) (enc->size ? enc->size : 256);
+    if (enc->row_size)
+	result = (result) * 256;
+    return result;
+}
+
 #ifndef USE_FONTENC
+#ifdef USE_ZLIB
 static char *
 skipBlanks(char *value)
 {
@@ -504,16 +516,24 @@ fontencIndex(FontEncPtr enc, unsigned from)
     }
     return result;
 }
-#endif /* USE_FONTENC */
 
-static size_t
-fontencSize(FontEncPtr enc)
+static void
+defineCode(FontEncPtr enc, int from, int to)
 {
-    size_t result = (size_t) (enc->size ? enc->size : 256);
-    if (enc->row_size)
-	result = (result) * 256;
-    return result;
+    int inx = fontencIndex(enc, (unsigned) from);
+
+    if (inx >= 0) {
+	int first = fontencFirst(enc);
+	FontEncSimpleMapPtr data = enc->mappings->client_data;
+	int limit = (int) fontencSize(enc);
+
+	if (inx >= first && (unsigned) inx < data->len && inx < limit) {
+	    data->map[inx - first] = (UCode) to;
+	}
+    }
 }
+#endif /* USE_ZLIB */
+#endif /* USE_FONTENC */
 
 /*
  * fontenc uses this indexing scheme to reduce tablesize.
@@ -548,24 +568,6 @@ fontencUnmap(FontEncSimpleMapPtr map, int from)
     }
     return result;
 }
-
-#ifndef USE_FONTENC
-static void
-defineCode(FontEncPtr enc, int from, int to)
-{
-    int inx = fontencIndex(enc, (unsigned) from);
-
-    if (inx >= 0) {
-	int first = fontencFirst(enc);
-	FontEncSimpleMapPtr data = enc->mappings->client_data;
-	int limit = (int) fontencSize(enc);
-
-	if (inx >= first && (unsigned) inx < data->len && inx < limit) {
-	    data->map[inx - first] = (UCode) to;
-	}
-    }
-}
-#endif /* !USE_FONTENC */
 
 unsigned
 luitRecode(unsigned code, void *client_data)
@@ -622,10 +624,9 @@ static FontEncPtr
 loadFontEncRec(const char *charset, const char *path)
 {
     FontEncPtr result;
-#ifdef USE_FONTENC
+#if defined(USE_FONTENC)
     result = FontEncReallyLoad(charset, path);
-#else
-#ifdef USE_ZLIB
+#elif defined(USE_ZLIB)
     gzFile fp;
     char *buffer = 0;
     size_t length = 0;
@@ -801,8 +802,11 @@ loadFontEncRec(const char *charset, const char *path)
 
     if (result->name == 0)
 	result->name = strmalloc(charset);
-#endif /* USE_ZLIB */
-#endif /* USE_FONTENC */
+#else
+    (void) charset;
+    (void) path;
+    result = 0;
+#endif /* USE_FONTENC/USE_ZLIB */
     return result;
 }
 

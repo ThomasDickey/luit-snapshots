@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.70 2013/01/29 00:05:54 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.71 2013/02/17 01:16:07 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1444,7 +1444,7 @@ test -d "$oldincludedir" && {
 $1="[$]$1 $cf_header_path_list"
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_INTEL_COMPILER version: 4 updated: 2010/05/26 05:38:42
+dnl CF_INTEL_COMPILER version: 5 updated: 2013/02/10 10:41:05
 dnl -----------------
 dnl Check if the given compiler is really the Intel compiler for Linux.  It
 dnl tries to imitate gcc, but does not return an error when it finds a mismatch
@@ -1458,6 +1458,7 @@ dnl $1 = GCC (default) or GXX
 dnl $2 = INTEL_COMPILER (default) or INTEL_CPLUSPLUS
 dnl $3 = CFLAGS (default) or CXXFLAGS
 AC_DEFUN([CF_INTEL_COMPILER],[
+AC_REQUIRE([AC_CANONICAL_HOST])
 ifelse([$2],,INTEL_COMPILER,[$2])=no
 
 if test "$ifelse([$1],,[$1],GCC)" = yes ; then
@@ -2272,7 +2273,7 @@ if test "$with_dmalloc" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ENCODINGS_DIR version: 1 updated: 2013/01/28 19:04:42
+dnl CF_WITH_ENCODINGS_DIR version: 2 updated: 2013/02/16 20:11:32
 dnl ---------------------
 dnl Configure option to specify the location of encodings.dir, for programs
 dnl that must read it directly.
@@ -2309,6 +2310,7 @@ xauto|xyes|xno)
 	;;
 esac
 AC_MSG_RESULT($ENCODINGS_DIR_FILE)
+test $ENCODINGS_DIR_FILE = unknown && ENCODINGS_DIR_FILE=
 AC_SUBST(ENCODINGS_DIR_FILE)
 AC_DEFINE_UNQUOTED(ENCODINGS_DIR_FILE, "$ENCODINGS_DIR_FILE")
 ])dnl
@@ -2382,7 +2384,7 @@ AC_CHECK_FUNCS( \
 )
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 42 updated: 2012/01/07 08:26:49
+dnl CF_XOPEN_SOURCE version: 43 updated: 2013/02/10 10:41:05
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -2392,6 +2394,7 @@ dnl Parameters:
 dnl	$1 is the nominal value for _XOPEN_SOURCE
 dnl	$2 is the nominal value for _POSIX_C_SOURCE
 AC_DEFUN([CF_XOPEN_SOURCE],[
+AC_REQUIRE([AC_CANONICAL_HOST])
 
 cf_XOPEN_SOURCE=ifelse([$1],,500,[$1])
 cf_POSIX_C_SOURCE=ifelse([$2],,199506L,[$2])
