@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.133 2013/02/15 10:49:44 tom Exp $
+  $XTermId: luit.log.html,v 1.136 2013/02/17 01:14:46 tom Exp $
   -->
 
 <html>
@@ -43,10 +43,13 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
-  <p><a id="t20130215" name="t20130215">2013/02/15</a> -</p>
+  <p><a id="t20130216" name="t20130216">2013/02/16</a> -</p>
 
   <ul>
     <li>bump to 2.0, reflecting changes</li>
+
+    <li>add character-set entries for CP1255 and CNS-11643 planes
+    1-3 to allow use of some of the remaining ".enc" files.</li>
 
     <li>modify <code>-list</code> option to show character set
     sizes.</li>
@@ -112,6 +115,8 @@
     when opening the other side of the connection.</li>
 
     <li>fix issues from Coverity scan; all were minor.</li>
+
+    <li>update config.guess, config.sub</li>
   </ul>
 
   <p><a id="t20121014" name="t20121014">2012/10/14</a> -</p>

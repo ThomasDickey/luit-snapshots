@@ -1,4 +1,4 @@
-.\" $XTermId: luit.man,v 1.35 2013/02/14 11:52:39 tom Exp $
+.\" $XTermId: luit.man,v 1.36 2013/02/16 15:17:03 tom Exp $
 .\"
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -234,6 +234,15 @@ The default order (listing all keywords) is
 .IP
 fontenc,builtin,iconv,posix
 .RE
+.IP
+The default order uses \fBfontenc\fP first because this allows \fBluit\fP
+to start more rapidly (about 0.1 seconds) than using \fBiconv\fP for
+complex encodings such as eucJP.
+However, you may find that
+the iconv implementation is more accurate or complete.
+In that case, you can use the \fB\-show-iconv\fP option to obtain
+a text file which can be used as an encoding with the \fBfontenc\fP
+configuration.
 .IP
 This option relies on \fBluit\fP being configured to use \fIiconv\fP,
 since the \fIfontenc\fP library does not provide this choice.

@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.109 2013/02/16 01:26:16 tom Exp $
+ * $XTermId: luitconv.c,v 1.111 2013/02/17 02:01:20 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -422,7 +422,7 @@ sizeofIconvTable(const char *encoding_name, unsigned limit)
 	unsigned total = 0;
 	size_t in_bytes;
 	UCHAR input[80];
-	char *ip;
+	ICONV_CONST char *ip;
 	size_t out_bytes;
 	char output[80];
 	char *op;
@@ -434,9 +434,9 @@ sizeofIconvTable(const char *encoding_name, unsigned limit)
 	    if ((in_bytes = (size_t) ConvToUTF8(input, n, sizeof(input))) == 0) {
 		continue;
 	    }
-	    ip = (char *) input;
+	    ip = (ICONV_CONST char *) input;
 	    op = output;
-	    ip[in_bytes] = 0;
+	    input[in_bytes] = 0;
 	    out_bytes = sizeof(output);
 	    (void) iconv(my_desc, NULL, NULL, NULL, NULL);
 	    if (iconv(my_desc, &ip, &in_bytes, &op, &out_bytes) == (size_t) -1) {
@@ -582,7 +582,7 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 	TRACE(("...assume %s index\n", euc ? "EUC" : "non-EUC"));
 	for (n = 0; n < MAX16; ++n) {
 	    UCHAR input[80];
-	    ICONV_CONST char *ip = (ICONV_CONST char *) input;
+	    ICONV_CONST char *ip;
 	    char output[80];
 	    char *op = output;
 	    size_t in_bytes;
@@ -594,9 +594,9 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 	    if ((in_bytes = (size_t) ConvToUTF8(input, n, sizeof(input))) == 0) {
 		continue;
 	    }
-	    ip = (char *) input;
+	    ip = (ICONV_CONST char *) input;
 	    op = output;
-	    ip[in_bytes] = 0;
+	    input[in_bytes] = 0;
 	    out_bytes = sizeof(output);
 	    (void) iconv(my_desc, NULL, NULL, NULL, NULL);
 	    if (iconv(my_desc, &ip, &in_bytes, &op, &out_bytes) == (size_t) -1) {
@@ -1331,7 +1331,7 @@ reportIconvCharsets(void)
 	    s = buffer + strlen(buffer);
 	    while (s != buffer) {
 		--s;
-		if (isspace(*s))
+		if (isspace(UChar(*s)))
 		    *s = '\0';
 		else
 		    break;
