@@ -1,5 +1,5 @@
 /*
- * $XTermId: fontenc.c,v 1.82 2013/02/17 02:01:37 tom Exp $
+ * $XTermId: fontenc.c,v 1.86 2013/02/17 12:02:42 tom Exp $
  *
  * Copyright 2013 by Thomas E. Dickey
  *
@@ -120,7 +120,7 @@ getFileBuffer(char **bufferp, size_t *lengthp, FILE *fp)
     if (*bufferp != 0)
 	**bufferp = '\0';
 
-    while (fgets(extra, sizeof(extra) - 1, fp)) {
+    while (fgets(extra, (int) sizeof(extra) - 1, fp)) {
 	size_t have = strlen(extra);
 	int found = 0;
 	finished = 0;
@@ -179,7 +179,7 @@ getGzipBuffer(char **bufferp, size_t *lengthp, gzFile fp)
 	    if (extra[have] == '\n') {
 		found = 1;
 	    }
-	    if (isspace(extra[have])) {
+	    if (isspace(UChar(extra[have]))) {
 		extra[have] = '\0';
 	    } else {
 		break;
@@ -211,7 +211,7 @@ absolutePath(char *given, char *refPath)
     char *leaf;
 
     if (*given != '/') {
-	if (!strncmp(given, "./", 2)) {
+	if (!strncmp(given, "./", (size_t) 2)) {
 	    given += 2;
 	}
 	result = malloc(strlen(refPath) + strlen(given) + 2);
@@ -237,6 +237,20 @@ compare_aliases(const void *a, const void *b)
     const ENCODINGS_DIR *p = a;
     const ENCODINGS_DIR *q = b;
     return strcmp(p->alias, q->alias);
+}
+
+static char *
+skipToWhite(char *value)
+{
+    char *result = 0;
+    while (*value != '\0') {
+	if (isspace(UChar(*value))) {
+	    result = value;
+	    break;
+	}
+	++value;
+    }
+    return result;
 }
 
 static void
@@ -274,7 +288,7 @@ loadEncodingsDir(void)
 		    if (encodings_dir == 0) {
 			FatalError("cannot allocate %ld encodings\n", count);
 		    }
-		} else if ((value = strchr(buffer, ' ')) != 0) {
+		} else if ((value = skipToWhite(buffer)) != 0) {
 		    *value++ = '\0';
 		    /* get rid of duplicates - they do occur */
 		    for (n = found = 0; n < used; ++n) {
@@ -374,7 +388,7 @@ fontencSize(FontEncPtr enc)
 static char *
 skipBlanks(char *value)
 {
-    while (isspace(*value))
+    while (isspace(UChar(*value)))
 	++value;
     return value;
 }
@@ -382,7 +396,7 @@ skipBlanks(char *value)
 static char *
 skipNonblanks(char *value)
 {
-    while (*value != '\0' && !isspace(*value))
+    while (*value != '\0' && !isspace(UChar(*value)))
 	++value;
     return value;
 }
@@ -434,7 +448,7 @@ getLineType(char *line, char **nextp)
 
     if (*line == '\0' || *line == '#') {
 	result = ftComment;
-    } else if (isdigit(*line)) {
+    } else if (isdigit(UChar(*line))) {
 	result = ftDefine;
     } else if (!StrCaseCmp(line, "ALIAS")) {
 	result = ftAlias;
@@ -550,8 +564,8 @@ fontencUnmap(FontEncSimpleMapPtr map, int from)
 	    if (map->row_size == 0) {
 		result = from;
 	    } else {
-		int row = (from / map->row_size);
-		int col = (from % map->row_size);
+		int row = (from / (int) map->row_size);
+		int col = (from % (int) map->row_size);
 		result = (row * 256) + col;
 	    }
 	} else {
@@ -638,7 +652,7 @@ loadFontEncRec(const char *charset, const char *path)
 
     (void) charset;
 
-    if ((result = calloc(1, sizeof(*result))) == 0)
+    if ((result = calloc((size_t) 1, sizeof(*result))) == 0)
 	return 0;
 
     fp = gzopen(path, "r");

@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.75 2013/02/16 15:11:06 tom Exp $ */
+/* $XTermId: charset.c,v 1.76 2013/02/17 21:47:50 tom Exp $ */
 
 /*
 Copyright 2010-2012,2013 by Thomas E. Dickey
@@ -51,7 +51,10 @@ static const CharsetRec Unknown9696Charset =
 
 /*
  * The "name" given is useful on the command-line.
- * The "xlfd" column is the name given in the X font-encoding package.
+ * The "xlfd" column is the name given in the X font-encoding package, where
+ * that has a corresponding built-in table or ".enc" file.  Other names (such
+ * as "dec-technical" are chosen for consistency with other entries in the
+ * table.
  */
 /* *INDENT-OFF* */
 static FontencCharsetRec fontencCharsets[] =
@@ -61,7 +64,7 @@ static FontencCharsetRec fontencCharsets[] =
     {"JIS X 0201:GL",  T_94,    'J', "jisx0201.1976-0",  0x00,   0, 0},
     {"JIS X 0201:GR",  T_94,    'I', "jisx0201.1976-0",  0x80,   0, 0},
     {"DEC Special",    T_94,    '0', "dec-special",      0x00,   0, 0},
-    {"DEC Technical",  T_94,    '>', "dec-dectech",      0x00,   0, 0},
+    {"DEC Technical",  T_94,    '>', "dec-technical",    0x00,   0, 0},
 
     {"ISO 8859-1",     T_96,    'A', "iso8859-1",        0x80,   0, 0},
     {"ISO 8859-2",     T_96,    'B', "iso8859-2",        0x80,   0, 0},
