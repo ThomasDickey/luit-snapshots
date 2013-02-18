@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.111 2013/02/17 02:01:20 tom Exp $
+ * $XTermId: luitconv.c,v 1.114 2013/02/17 15:01:00 tom Exp $
  *
  * Copyright 2010-2012,2013 by Thomas E. Dickey
  *
@@ -515,13 +515,13 @@ dbcsDecode(const char *buffer, int length, int euc, unsigned *gs)
 
     switch (result) {
     case SS2:
-	*gs = (length > 1) ? 2 : 1;
+	*gs = (unsigned) ((length > 1) ? 2 : 1);
 	break;
     case SS3:
-	*gs = (length > 1) ? 3 : 1;
+	*gs = (unsigned) ((length > 1) ? 3 : 1);
 	break;
     default:
-	*gs = (result >= 128);
+	*gs = (unsigned) ((result >= 128));
 	break;
     }
 
@@ -632,7 +632,7 @@ luitReverse(unsigned code, void *client_data GCC_UNUSED)
     unsigned result = code;
     LuitConv *data = (LuitConv *) client_data;
 
-    TRACE(("luitReverse 0x%04X %p\n", code, data));
+    TRACE(("luitReverse 0x%04X %p\n", code, (void *) data));
 
     if (data != 0) {
 	ReverseData *p;
@@ -1036,7 +1036,7 @@ loadCompositeCharset(iconv_t my_desc, const char *composite_name)
 		break;
 	    }
 
-	    if ((work[g] = newLuitConv(csize)) == 0)
+	    if ((work[g] = newLuitConv((size_t) csize)) == 0)
 		break;
 	    work[g]->encoding_name = strmalloc(fc->name);
 	    work[g]->iconv_desc = my_desc;
@@ -1198,7 +1198,7 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
 	free(aliased);
     }
 
-    TRACE(("...luitLookupMapping ->%p\n", result));
+    TRACE(("...luitLookupMapping ->%p\n", (void *) result));
     return result;
 }
 
@@ -1208,7 +1208,7 @@ luitLookupReverse(FontMapPtr fontmap_ptr)
     FontMapReversePtr result = 0;
     LuitConv *search;
 
-    TRACE(("luitLookupReverse %p\n", fontmap_ptr));
+    TRACE(("luitLookupReverse %p\n", (void *) fontmap_ptr));
     for (search = all_conversions; search != 0; search = search->next) {
 	if (fontmap_ptr == &(search->mapping)) {
 	    TRACE(("...found %s\n", search->encoding_name));
@@ -1327,7 +1327,7 @@ reportIconvCharsets(void)
     if ((fp = popen("locale -a", "r")) != 0) {
 	char buffer[BUFSIZ];
 	char *s;
-	while (fgets(buffer, sizeof(buffer) - 1, fp) != 0) {
+	while (fgets(buffer, (int) sizeof(buffer) - 1, fp) != 0) {
 	    s = buffer + strlen(buffer);
 	    while (s != buffer) {
 		--s;
@@ -1506,7 +1506,7 @@ luitDestroyReverse(FontMapReversePtr reverse)
 void
 luitconv_leaks(void)
 {
-    TRACE(("luitconv_leaks %p\n", all_conversions));
+    TRACE(("luitconv_leaks %p\n", (void *) all_conversions));
     while (all_conversions != 0) {
 	luitDestroyReverse(&(all_conversions->reverse));
     }
