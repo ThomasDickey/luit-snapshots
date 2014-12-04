@@ -1,7 +1,7 @@
-/* $XTermId: charset.c,v 1.76 2013/02/17 21:47:50 tom Exp $ */
+/* $XTermId: charset.c,v 1.78 2014/12/03 21:52:36 tom Exp $ */
 
 /*
-Copyright 2010-2012,2013 by Thomas E. Dickey
+Copyright 2010-2013,2014 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -110,6 +110,7 @@ static FontencCharsetRec fontencCharsets[] =
     {"CP 437",         T_128,   0,   "ibm-cp437",        0x80,   0, 0},
     {"CP 850",         T_128,   0,   "ibm-cp850",        0x80,   0, 0},
     {"CP 852",         T_128,   0,   "ibm-cp852",        0x80,   0, 0},
+    {"CP 865",         T_128,   0,   "ibm-cp865",        0x80,   0, 0},
     {"CP 866",         T_128,   0,   "ibm-cp866",        0x80,   0, 0},
 
     {"Big 5",          T_94192, 0,   "big5.eten-0",      0x8000, 0, 0},
@@ -509,6 +510,7 @@ static const LocaleCharsetRec localeCharsets[] =
     {"CP437",      0, 2, "ASCII", NULL,         "CP 437",        NULL,         NULL},
     {"CP850",      0, 2, "ASCII", NULL,         "CP 850",        NULL,         NULL},
     {"CP852",      0, 2, "ASCII", NULL,         "CP 852",        NULL,         NULL},
+    {"CP865",      0, 2, "ASCII", NULL,         "CP 865",        NULL,         NULL},
     {"CP866",      0, 2, "ASCII", NULL,         "CP 866",        NULL,         NULL},
     {"TCVN",       0, 2, "ASCII", NULL,         "TCVN",          NULL,         NULL},
 

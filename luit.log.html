@@ -1,7 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 2006-2012,2013 by Thomas E. Dickey                              *
+ * Copyright 2006-2013,2014 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,8 +19,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.137 2013/02/17 11:35:52 tom Exp $
+  $XTermId: luit.log.html,v 1.143 2014/12/03 21:54:36 tom Exp $
   -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
 <html>
 <head>
@@ -36,12 +36,41 @@
 
 <body>
   <hr>
-  Copyright 2006-2012,2013 by <a href=
+  Copyright 2006-2013,2014 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a>
   <hr>
 
   <p>This file contains a list of the changes that I have made for
   luit.</p>
+
+  <p><a id="t20141203" name="t20141203">2014/12/03</a> -</p>
+
+  <ul>
+    <li>add table entries for luit to work as expected with
+    <em>CP865 &mdash; MS-DOS with Nordic letters</em>. This code
+    page was commonly used on BBSes in Norway, Denmark and Sweden
+    running the MBBS and compatible systems in the 90s (patch by
+    Hans Petter Jansson).</li>
+
+    <li>add to search-list for encodings.dir file to accommodate
+    Fedora.</li>
+
+    <li>updated configure macros:
+
+      <ul>
+        <li>fixes for Clang and MinGW, Solaris and Unixware.</li>
+
+        <li>improve "docs" rule in makefile.</li>
+
+        <li>CF_RPATH_HACK: use sort and uniq rather than sort -u,
+        to work with HPUX 11.11, etc.</li>
+
+        <li>CF_ADD_LIBS: filter duplicate library names</li>
+      </ul>
+    </li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
 
   <p><a id="t20130217" name="t20130217">2013/02/17</a> -</p>
 
@@ -531,7 +560,7 @@
     install-sh, mkdirs.sh).</li>
   </ul>
 
-  <p><a id="t20080820" name="t20080820">2006/8/20</a> -</p>
+  <p><a id="t20060820" name="t20060820">2006/8/20</a> -</p>
 
   <ul>
     <li>import snapshot from XFree86 (last change 2005/2/9).</li>

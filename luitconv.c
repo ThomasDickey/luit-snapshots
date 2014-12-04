@@ -1,7 +1,7 @@
 /*
- * $XTermId: luitconv.c,v 1.114 2013/02/17 15:01:00 tom Exp $
+ * $XTermId: luitconv.c,v 1.116 2014/12/03 21:52:26 tom Exp $
  *
- * Copyright 2010-2012,2013 by Thomas E. Dickey
+ * Copyright 2010-2013,2014 by Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -670,6 +670,7 @@ findEncodingAlias(const char *encoding_name)
 	{ "TCVN-0",		"TCVN5712-1:1993" },
 	{ "ibm-cp437",		"cp437" },
 	{ "ibm-cp850",		"cp850" },
+	{ "ibm-cp865",		"cp865" },
 	{ "ibm-cp866",		"cp866" },
 	{ "iso646.1973-0",	"US-ASCII" },
 	{ "ISO 646 (1973)",     "US-ASCII" },

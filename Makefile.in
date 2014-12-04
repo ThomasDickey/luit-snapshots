@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.22 2013/01/14 09:43:30 tom Exp $
+## $XTermId: Makefile.in,v 1.24 2014/01/05 20:19:47 tom Exp $
 ##
-## Copyright 2006-2012,2013 by Thomas E. Dickey
+## Copyright 2006-2013,2014 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -82,7 +82,7 @@ HDRS		= charset.h config.h iso2022.h luit.h luitconv.h other.h parser.h sys.h
 
 all :	$(PROGRAMS)
 ################################################################################
-.SUFFIXES : .i .html .$(manext) .man .ps .pdf .txt
+.SUFFIXES : .i .html .$(manext)
 
 .c$o :
 	@RULE_CC@
@@ -94,18 +94,6 @@ all :	$(PROGRAMS)
 
 .man.$(manext) :
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $< $@ $(appsdir)
-
-.$(manext).html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
-
-.$(manext).ps :
-	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
-
-.$(manext).txt :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | nroff -Tascii -man | col -bx" >$@
-
-.ps.pdf :
-	ps2pdf $*.ps
 ################################################################################
 $(OBJS) : $(HDRS)
 
@@ -140,17 +128,17 @@ uninstall-man \
 uninstall-full ::
 	-$(RM) $(MANDIR)/$(actual_luit).$(manext)
 
-mostlyclean :
+mostlyclean ::
 	-$(RM) *$o *.[is] .pure core *~ *.bak *.BAK *.out *.tmp
 
-clean : mostlyclean
+clean :: mostlyclean
 	-$(RM) $(PROGRAMS)
 
-distclean : clean
+distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log config.h
 	-$(RM) luit.html *.pdf *.ps *.txt *.$(manext)
 
-realclean : distclean
+realclean :: distclean
 	-$(RM) tags TAGS
 
 maintainer-clean : realclean
@@ -172,15 +160,6 @@ depend : $(TABLES)
 $(BINDIR) \
 $(MANDIR) :
 	mkdir -p $@
-################################################################################
-docs :: luit.html \
-	luit.pdf \
-	luit.ps \
-	luit.txt
-luit.html : luit.$(manext)
-luit.pdf : luit.ps
-luit.ps : luit.$(manext)
-luit.txt : luit.$(manext)
 ################################################################################
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
