@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.24 2014/01/05 20:19:47 tom Exp $
+## $XTermId: Makefile.in,v 1.25 2015/07/06 22:10:10 tom Exp $
 ##
-## Copyright 2006-2013,2014 by Thomas E. Dickey
+## Copyright 2006-2014,2015 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -135,7 +135,7 @@ clean :: mostlyclean
 	-$(RM) $(PROGRAMS)
 
 distclean :: clean
-	-$(RM) Makefile config.status config.cache config.log config.h
+	-$(RM) Makefile config.status config.cache config.log config.h man2html.tmp
 	-$(RM) luit.html *.pdf *.ps *.txt *.$(manext)
 
 realclean :: distclean
