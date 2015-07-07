@@ -1,7 +1,7 @@
 /*
- * $XTermId: luitconv.c,v 1.116 2014/12/03 21:52:26 tom Exp $
+ * $XTermId: luitconv.c,v 1.117 2015/07/06 22:41:28 tom Exp $
  *
- * Copyright 2010-2013,2014 by Thomas E. Dickey
+ * Copyright 2010-2014,2015 by Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -608,7 +608,8 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 	    } else {
 		data = datap[gs];
 	    }
-	    if (data == 0) {
+	    if ((data == 0)
+		|| (my_code >= data->table_size)) {
 		TRACE(("skip %d:%#x\n", gs, my_code));
 		continue;
 	    }

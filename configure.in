@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.44 2014/01/05 20:20:14 tom Exp $
+dnl $XTermId: configure.in,v 1.45 2015/07/06 22:10:30 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2013,2014 by Thomas E. Dickey
+dnl Copyright 2006-2014,2015 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -180,6 +180,7 @@ fi
 
 CF_WITH_ENCODINGS_DIR
 CF_WITH_LOCALE_ALIAS
+CF_WITH_MAN2HTML
 
 CF_DISABLE_LEAKS
 CF_ENABLE_TRACE
@@ -195,4 +196,4 @@ CF_DISABLE_RPATH_HACK
 AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 AC_OUTPUT(Makefile,,,cat)
-CF_MAKE_DOCS(luit,[$(manext)])
+CF_MAKE_DOCS(luit,[\$(manext)])
