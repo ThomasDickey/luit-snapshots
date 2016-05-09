@@ -1,6 +1,6 @@
 <!--
  *****************************************************************************
- * Copyright 2006-2013,2014 by Thomas E. Dickey                              *
+ * Copyright 2006-2014,2016 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -19,7 +19,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.148 2015/07/06 22:09:49 tom Exp $
+  $XTermId: luit.log.html,v 1.156 2016/05/08 22:46:33 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -36,12 +36,57 @@
 
 <body>
   <hr>
-  Copyright 2006-2013,2014 by <a href=
+  Copyright 2006-2015,2016 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a>
   <hr>
 
   <p>This file contains a list of the changes that I have made for
   luit.</p>
+
+  <p><a id="t20160508" name="t20160508">2016/05/08</a> -</p>
+
+  <ul>
+    <li>adapt Solaris fix for C11 changes from xterm #325.</li>
+
+    <li>modify <code>parseArgs</code> to check for a special case,
+    e.g., from xterm, where a shell command that cannot be exec'd
+    is passed as a single parameter. For that case, run the command
+    via the shell.</li>
+
+    <li>reset <code>IEXTEN</code> when turning off canonical mode,
+    needed to make <code>lnext</code> control/V work consistently
+    on BSD platforms (report/patch by Christian Weisgerber).</li>
+
+    <li>updated configure macros:
+
+      <dl>
+        <dt>CF_FUNC_POLL</dt>
+
+        <dd>add a fallback to checking with
+        <code>posix_openpt()</code>, in case someone's running the
+        configure script in batch mode.</dd>
+
+        <dt>CF_LD_RPATH_OPT</dt>
+
+        <dd>change FreeBSD to use <code>-Wl,-rpath</code> rather
+        than <code>-rpath</code> option. According to FreeBSD
+        #178732, either works since FreeBSD 4.x; however
+        <code>scons</code> does not accept anything except the
+        <code>-Wl,-rpath</code> form.</dd>
+
+        <dt>CF_WITH_MAN2HTML</dt>
+
+        <dd>use configured shell rather than
+        <code>/bin/sh</code></dd>
+
+        <dt>CF_XOPEN_SOURCE</dt>
+
+        <dd>add a case for OS/2</dd>
+      </dl>
+    </li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
 
   <p><a id="t20150706" name="t20150706">2015/07/06</a> -</p>
 
@@ -270,9 +315,11 @@
         posix_openpt. Bug report for xterm by Christian Ebert for
         9.8.0 says screensize does not work for the pty.</dd>
 
-        <dt>CF_XOPEN_SOURCE fixes for redefinition of _XOPEN_SOURCE
-        on a few platforms: Mac OS X, IRIX64. Also workarounds for
-        header inconsistencies with OpenBSD and MirBSD.</dt>
+        <dt>CF_XOPEN_SOURCE</dt>
+
+        <dd>fixes for redefinition of _XOPEN_SOURCE on a few
+        platforms: Mac OS X, IRIX64. Also workarounds for header
+        inconsistencies with OpenBSD and MirBSD.</dd>
       </dl>
     </li>
   </ul>

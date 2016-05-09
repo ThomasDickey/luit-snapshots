@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.68 2013/02/16 14:12:58 tom Exp $ */
+/* $XTermId: luit.c,v 1.69 2016/05/06 08:53:21 tom Exp $ */
 
 /*
-Copyright 2010-2012,2013 by Thomas E. Dickey
+Copyright 2010-2013,2016 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -499,6 +499,29 @@ parseOptions(int argc, char **argv)
     return i;
 }
 
+static char *
+getShell(void)
+{
+    const char *shell;
+    if ((shell = getenv("SHELL")) == 0)
+	shell = "/bin/sh";
+    return strmalloc(shell);
+}
+
+static int
+isSpecialCommand(int argc, char **argv)
+{
+    int result = 0;
+    if (argc == 1) {
+	size_t len = strlen(argv[0]);
+	size_t chk = strcspn(argv[0], "~`!$^&*(){}|\\<>?\"' \t");
+	if (len != chk) {
+	    result = 1;
+	}
+    }
+    return result;
+}
+
 static int
 parseArgs(int argc, char **argv,
 	  char *argv0,
@@ -509,16 +532,8 @@ parseArgs(int argc, char **argv,
     char **child_argv = NULL;
 
     if (argc <= 0) {
-	char *shell;
-	shell = getenv("SHELL");
-	if (shell) {
-	    path = strmalloc(shell);
-	    if (!path)
-		goto bail;
-	} else {
-	    path = strmalloc("/bin/sh");
-	    if (!path)
-		goto bail;
+	if ((path = getShell()) == NULL) {
+	    goto bail;
 	}
 	child_argv = malloc(2 * sizeof(char *));
 	if (!child_argv)
@@ -528,6 +543,13 @@ parseArgs(int argc, char **argv,
 	else
 	    child_argv[0] = my_basename(path);
 	child_argv[1] = NULL;
+    } else if (isSpecialCommand(argc, argv)) {
+	path = strmalloc("sh");
+	child_argv = malloc(4 * sizeof(char *));
+	child_argv[0] = argv0 ? argv0 : path;
+	child_argv[1] = strmalloc("-c");
+	child_argv[2] = argv[0];
+	child_argv[3] = NULL;
     } else {
 	path = strmalloc(argv[0]);
 	if (!path)
@@ -847,7 +869,7 @@ child(char *line, char *path, char *const argv[])
     }
 
     execvp(path, argv);
-    perror("Couldn't exec");
+    perror(path);
     ExitFailure();
 }
 

@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.45 2015/07/06 22:10:30 tom Exp $
+dnl $XTermId: configure.in,v 1.46 2016/05/08 22:29:18 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2014,2015 by Thomas E. Dickey
+dnl Copyright 2006-2015,2016 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -91,6 +91,11 @@ CF_CHECK_TYPE([nfds_t],[unsigned long],[
 ])
 
 CF_SYS_TIME_SELECT 
+
+# workaround for divergence of xterm/luit in the [CF_FUNC_GRANTPT] macro...
+AC_CHECK_FUNCS(grantpt)
+disable_openpty=$ac_cv_func_grantpt
+
 CF_FUNC_GRANTPT
 CF_FUNC_POLL
 

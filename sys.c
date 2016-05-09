@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.51 2013/01/27 21:47:10 tom Exp $ */
+/* $XTermId: sys.c,v 1.54 2016/05/07 00:22:22 tom Exp $ */
 
 /*
-Copyright 2010-2012,2013 by Thomas E. Dickey
+Copyright 2010-2013,2016 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -88,8 +88,11 @@ int ignore_unused;
 static int opened_tty = -1;
 #endif
 
-#if defined(I_PUSH) && defined(HAVE_STROPTS_H)
-#define USE_STREAMS 1
+#if defined(I_FIND) && defined(I_PUSH)
+#define PUSH_FAILS(fd,name) ioctl(fd, I_FIND, name) == 0 \
+			 && ioctl(fd, I_PUSH, name) < 0
+#else
+#define PUSH_FAILS(fd,name) ioctl(fd, I_PUSH, name) < 0
 #endif
 
 static int saved_tio_valid = 0;
@@ -280,7 +283,7 @@ setRawTermios(void)
     rc = tcgetattr(0, &tio);
     if (rc < 0)
 	return rc;
-    tio.c_lflag &= (unsigned) ~(ECHO | ICANON | ISIG);
+    tio.c_lflag &= (unsigned) ~(ECHO | ICANON | IEXTEN | ISIG);
     tio.c_iflag &= (unsigned) ~(ICRNL | IXOFF | IXON | ISTRIP);
 #ifdef ONLCR
     tio.c_oflag &= (unsigned) ~ONLCR;
@@ -473,12 +476,10 @@ allocatePty(int *pty_return, char **line_return)
 int
 openTty(char *line)
 {
-    int rc;
     int tty = -1;
 
     TRACE(("openTty(%s)\n", line));
 
-    (void) rc;
     tty = open(line, O_RDWR
 #if defined(TIOCSCTTY) && defined(O_NOCTTY)
     /*
@@ -508,8 +509,7 @@ openTty(char *line)
      *
      * Cygwin as of 2009/10/12 lacks this call, but has O_NOCTTY.
      */
-    rc = ioctl(tty, TIOCSCTTY, (char *) 0);
-    if (rc < 0) {
+    if (ioctl(tty, TIOCSCTTY, (char *) 0) < 0) {
 	TRACE_ERR("openTty - ioctl(TIOCSCTTY)");
 	goto bail;
     }
@@ -518,16 +518,14 @@ openTty(char *line)
     /* HPUX and Solaris */
 #ifdef HAVE_GRANTPT_PTEM
     TRACE(("...setup stream\n"));
-    rc = ioctl(tty, I_PUSH, "ptem");
-    if (rc < 0) {
+    if (PUSH_FAILS(tty, "ptem")) {
 	TRACE_ERR("openTty - push ptem");
 	goto bail;
     }
 #endif
 
 #ifdef HAVE_GRANTPT_LDTERM
-    rc = ioctl(tty, I_PUSH, "ldterm");
-    if (rc < 0) {
+    if (PUSH_FAILS(tty, "ldterm")) {
 	TRACE_ERR("openTty - push ldterm");
 	goto bail;
     }
@@ -535,8 +533,7 @@ openTty(char *line)
 
     /* Solaris */
 #ifdef HAVE_GRANTPT_TTCOMPAT
-    rc = ioctl(tty, I_PUSH, "ttcompat");
-    if (rc < 0) {
+    if (PUSH_FAILS(tty, "ttcompat")) {
 	TRACE_ERR("openTty - push ttcompat");
 	goto bail;
     }
