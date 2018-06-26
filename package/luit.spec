@@ -1,8 +1,8 @@
 Summary: luit - Locale and ISO 2022 support for Unicode terminals
 %define AppProgram luit
-%define AppVersion 20160508
+%define AppVersion 20180626
 %define UseProgram b%{AppProgram}
-# $XTermId: luit.spec,v 1.53 2016/05/08 22:46:33 tom Exp $
+# $XTermId: luit.spec,v 1.54 2018/06/26 09:17:17 tom Exp $
 Name: %{AppProgram}
 Version: %{AppVersion}
 Release: 1

@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.46 2016/05/08 22:29:18 tom Exp $
+dnl $XTermId: configure.in,v 1.47 2018/06/26 09:21:54 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2015,2016 by Thomas E. Dickey
+dnl Copyright 2006-2016,2018 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -41,7 +41,7 @@ CF_MAKE_TAGS
 AC_CONST
 
 AC_PATH_XTRA
-CF_XOPEN_SOURCE
+CF_XOPEN_SOURCE(600)
 CF_SIGWINCH
 CF_SVR4
 CF_SYSV
