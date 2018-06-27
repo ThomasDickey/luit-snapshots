@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.69 2016/05/06 08:53:21 tom Exp $ */
+/* $XTermId: luit.c,v 1.71 2018/06/27 20:41:53 tom Exp $ */
 
 /*
-Copyright 2010-2013,2016 by Thomas E. Dickey
+Copyright 2010-2016,2018 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -227,7 +227,7 @@ setLookupOrder(const char *name)
     size_t limit = SizeOf(lookup_order) - 1;
     size_t used = 0;
 
-    TRACE(("setLookupOrder(%s)\n", name));
+    TRACE(("setLookupOrder(%s)\n", NonNull(name)));
     while ((token = strtok(tomatch, ",")) != 0) {
 	UM_MODE order = umNONE;
 	size_t length = strlen(token);
@@ -798,7 +798,7 @@ condom(int argc, char **argv)
 	IGNORE_RC(pipe(c2p_waitpipe));
     }
 
-    TRACE(("...forking to run %s(%s)\n", path, child_argv[0]));
+    TRACE(("...forking to run %s(%s)\n", NonNull(path), NonNull(child_argv[0])));
     pid = fork();
     if (pid < 0) {
 	perror("Couldn't fork");
@@ -830,7 +830,10 @@ child(char *line, char *path, char *const argv[])
     int tty;
     int pgrp;
 
-    TRACE(("child %s\n", path));
+    TRACE(("child %s\n", NonNull(path)));
+    if (path == NULL)
+	ExitFailure();
+
     pgrp = setsid();
     if (pgrp < 0) {
 	kill(getppid(), SIGABRT);

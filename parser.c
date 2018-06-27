@@ -1,7 +1,7 @@
-/* $XTermId: parser.c,v 1.22 2013/01/14 01:56:45 tom Exp $ */
+/* $XTermId: parser.c,v 1.24 2018/06/27 20:41:53 tom Exp $ */
 
 /*
-Copyright 2011-2012,2013 by Thomas E. Dickey
+Copyright 2011-2013,2018 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -202,9 +202,14 @@ resolveLocale(const char *locale)
     int rc;
     int found = 0;
 
-    TRACE(("resolveLocale(%s)\n", locale));
+    TRACE(("resolveLocale(%s)\n", NonNull(locale)));
+    if (locale == NULL)
+	ExitFailure();
 
-    TRACE(("...looking in %s\n", locale_alias));
+    TRACE(("...looking in %s\n", NonNull(locale_alias)));
+    if (locale_alias == NULL)
+	ExitFailure();
+
     f = fopen(locale_alias, "r");
 
     if (f != NULL) {
@@ -221,7 +226,7 @@ resolveLocale(const char *locale)
 
 	if (!found) {
 	    if (resolved == NULL) {
-		TRACE(("...not found in %s\n", locale_alias));
+		TRACE(("...not found in %s\n", NonNull(locale_alias)));
 		resolved = strmalloc(locale);
 	    }
 	}
@@ -242,7 +247,7 @@ resolveLocale(const char *locale)
 	    && strcmp(locale, "POSIX")
 	    && strcmp(locale, "US-ASCII")
 	    && (improved = nl_langinfo(CODESET)) != 0) {
-	    TRACE(("...nl_langinfo ->%s\n", improved));
+	    TRACE(("...nl_langinfo ->%s\n", NonNull(improved)));
 	    free(resolved);
 	    resolved = strmalloc(improved);
 	} else
@@ -252,6 +257,6 @@ resolveLocale(const char *locale)
 	}
     }
 
-    TRACE(("...resolveLocale ->%s\n", resolved));
+    TRACE(("...resolveLocale ->%s\n", NonNull(resolved)));
     return resolved;
 }

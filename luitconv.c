@@ -1,7 +1,7 @@
 /*
- * $XTermId: luitconv.c,v 1.117 2015/07/06 22:41:28 tom Exp $
+ * $XTermId: luitconv.c,v 1.120 2018/06/27 20:52:15 tom Exp $
  *
- * Copyright 2010-2014,2015 by Thomas E. Dickey
+ * Copyright 2010-2015,2018 by Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -226,7 +226,7 @@ try_iconv_open(const char *guess, char **alias)
     iconv_t result;
 
     strcpy(encoding_name, guess);
-    TRACE(("try_iconv_open(%s)\n", encoding_name));
+    TRACE(("try_iconv_open(%s)\n", NonNull(encoding_name)));
     result = iconv_open("UTF-8", encoding_name);
 
     /*
@@ -298,7 +298,7 @@ try_iconv_open(const char *guess, char **alias)
 		result = iconv_open("UTF-8", encoding_name);
 		if (result != NO_ICONV) {
 		    TRACE(("...iconv_open'd with different name \"%s\"\n",
-			   encoding_name));
+			   NonNull(encoding_name)));
 		    break;
 		}
 	    }
@@ -427,7 +427,8 @@ sizeofIconvTable(const char *encoding_name, unsigned limit)
 	char output[80];
 	char *op;
 
-	TRACE(("sizeofIconvTable(%s, %u) opened...\n", encoding_name, limit));
+	TRACE(("sizeofIconvTable(%s, %u) opened...\n",
+	       NonNull(encoding_name), limit));
 	for (n = 0; n < MAX16; ++n) {
 	    if (!legalUCode(n))
 		continue;
@@ -454,7 +455,7 @@ sizeofIconvTable(const char *encoding_name, unsigned limit)
 	if (total > 256)
 	    result = MAX16;
     }
-    TRACE(("sizeofIconvTable(%s, %u) = %u\n", encoding_name, limit, result));
+    TRACE(("sizeofIconvTable(%s, %u) = %u\n", NonNull(encoding_name), limit, result));
     return result;
 }
 
@@ -568,7 +569,7 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
     LuitConv *data;
     iconv_t my_desc = iconv_open(charset, "UTF-8");
 
-    TRACE(("initialize16bitTable(%s) gmax %d\n", charset, gmax));
+    TRACE(("initialize16bitTable(%s) gmax %d\n", NonNull(charset), gmax));
 
     for (n = 0; n < gmax; ++n) {
 	if ((data = datap[n]) != 0) {
@@ -696,11 +697,11 @@ findEncodingAlias(const char *encoding_name)
     size_t n;
     const char *result = 0;
 
-    TRACE(("findEncodingAlias(%s)\n", encoding_name));
+    TRACE(("findEncodingAlias(%s)\n", NonNull(encoding_name)));
     for (n = 0; n < SizeOf(table); ++n) {
 	if (!lcStrCmp(encoding_name, table[n].luit_name)) {
 	    result = table[n].iconv_name;
-	    TRACE(("... matched '%s'\n", result));
+	    TRACE(("... matched '%s'\n", NonNull(result)));
 	    break;
 	}
     }
@@ -718,7 +719,7 @@ initializeBuiltInTable(LuitConv * data,
 
     TRACE(("initializing %s '%s'\n",
 	   enc_file ? "external" : "built-in",
-	   builtIn->name));
+	   NonNull(builtIn->name)));
     (void) enc_file;
 
     data->len_index = 0;
@@ -874,7 +875,7 @@ finishIconvTable(LuitConv * latest)
     latest->reverse.reverse = luitReverse;
     latest->reverse.data = latest;
     all_conversions = latest;
-    TRACE(("...finished LuitConv table for \"%s\"\n", latest->encoding_name));
+    TRACE(("...finished LuitConv table for \"%s\"\n", NonNull(latest->encoding_name)));
 }
 
 static FontMapPtr
@@ -915,7 +916,7 @@ initLuitConv(const char *encoding_name,
 	break;
     }
 
-    TRACE(("initLuitConv(%s) %u\n", encoding_name, (unsigned) length));
+    TRACE(("initLuitConv(%s) %u\n", NonNull(encoding_name), (unsigned) length));
     if ((latest = newLuitConv(length)) != 0) {
 	latest->encoding_name = strmalloc(encoding_name);
 	latest->iconv_desc = my_desc;
@@ -952,7 +953,7 @@ convertFontEnc(FontEncPtr fontenc)
     BuiltInMapping *mapping;
     FontMapPtr result = 0;
 
-    TRACE(("convertFontEnc: %s\n", fontenc->name));
+    TRACE(("convertFontEnc: %s\n", NonNull(fontenc->name)));
 
     while (mp != 0) {
 	if (mp->type == FONT_ENCODING_UNICODE)
@@ -1020,7 +1021,7 @@ loadCompositeCharset(iconv_t my_desc, const char *composite_name)
 	const FontencCharsetRec *fc = getCompositePart(composite_name, g);
 	work[g] = 0;
 	if (fc != 0 && !knownCharset(fc)) {
-	    TRACE(("part %d:%s (%s)\n", g, fc->name, fc->xlfd));
+	    TRACE(("part %d:%s (%s)\n", g, NonNull(fc->name), NonNull(fc->xlfd)));
 
 	    switch (fc->type) {
 	    case T_94:
@@ -1077,7 +1078,7 @@ getFontMapByName(const char *encoding_name)
 	    break;
 	}
     }
-    TRACE(("getFontMapByName(%s) %s\n", encoding_name,
+    TRACE(("getFontMapByName(%s) %s\n", NonNull(encoding_name),
 	   result ? "OK" : "FAIL"));
     return result;
 }
@@ -1102,7 +1103,7 @@ lookupIconv(const char **encoding_name, char **aliased, US_SIZE size)
 		*aliased = 0;
 	    }
 	    *encoding_name = alias;
-	    TRACE(("...retry '%s'\n", *encoding_name));
+	    TRACE(("...retry '%s'\n", NonNull(*encoding_name)));
 	    my_desc = try_iconv_open(*encoding_name, aliased);
 	}
     }
@@ -1132,7 +1133,8 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
     const BuiltInCharsetRec *builtIn;
     char *aliased = 0;
 
-    TRACE(("luitLookupMapping '%s' mode %u size %u\n", encoding_name, mode, size));
+    TRACE(("luitLookupMapping '%s' mode %u size %u\n",
+	   NonNull(encoding_name), mode, size));
 
     if ((result = getFontMapByName(encoding_name)) != 0) {
 	TRACE(("...found in cache\n"));
@@ -1213,7 +1215,7 @@ luitLookupReverse(FontMapPtr fontmap_ptr)
     TRACE(("luitLookupReverse %p\n", (void *) fontmap_ptr));
     for (search = all_conversions; search != 0; search = search->next) {
 	if (fontmap_ptr == &(search->mapping)) {
-	    TRACE(("...found %s\n", search->encoding_name));
+	    TRACE(("...found %s\n", NonNull(search->encoding_name)));
 	    result = &(search->reverse);
 	    break;
 	}

@@ -1,7 +1,7 @@
-/* $XTermId: iso2022.c,v 1.38 2013/01/25 18:50:14 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.40 2018/06/27 20:41:53 tom Exp $ */
 
 /*
-Copyright 2011-2012,2013 by Thomas E. Dickey
+Copyright 2011-2013,2018 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,7 +46,7 @@ static void
 trace_charset(const char *tag, const CharsetRec * ptr)
 {
     if (ptr != NULL) {
-	TRACE(("%s:", tag));
+	TRACE(("%s:", NonNull(tag)));
 	TRACE((" name:%s", NonNull(ptr->name)));
 	TRACE((" type:%d", ptr->type));
 	if (ptr->final)
@@ -72,7 +72,7 @@ trace_charset(const char *tag, const CharsetRec * ptr)
 static void
 trace_iso2022(const char *tag, const Iso2022Ptr ptr)
 {
-    TRACE(("%s:\n", tag));
+    TRACE(("%s:\n", NonNull(tag)));
     trace_charset("\tGL()", GL(ptr));
     trace_charset("\tGR()", GR(ptr));
     trace_charset("\tG0()", G0(ptr));
@@ -284,7 +284,7 @@ initIso2022(const char *locale, const char *charset, Iso2022Ptr i)
     const CharsetRec *other = NULL;
     int rc;
 
-    TRACE(("initIso2022(locale=%s, charset=%s)\n", locale, NonNull(charset)));
+    TRACE(("initIso2022(locale=%s, charset=%s)\n", NonNull(locale), NonNull(charset)));
     rc = getLocaleState(locale, charset, &gl, &gr, &g0, &g1, &g2, &g3, &other);
     if (rc < 0) {
 	if (charset) {
