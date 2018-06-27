@@ -1,7 +1,7 @@
-/* $XTermId: charset.c,v 1.78 2014/12/03 21:52:36 tom Exp $ */
+/* $XTermId: charset.c,v 1.80 2018/06/27 20:41:53 tom Exp $ */
 
 /*
-Copyright 2010-2013,2014 by Thomas E. Dickey
+Copyright 2010-2014,2018 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -300,7 +300,9 @@ getFontencCharset(unsigned final, int type, const char *name)
     FontMapReversePtr reverse;
     CharsetPtr result = NULL;
 
-    TRACE(("getFontencCharset(final %#x, type %d, name %s)\n", final, type, name));
+    TRACE(("getFontencCharset(final %#x, type %d, name %s)\n",
+	   final, type, NonNull(name)));
+
     fc = fontencCharsets;
     while (fc->name) {
 	if (((fc->type == type && fc->final == final) ||
@@ -667,11 +669,11 @@ findLocaleCharset(const char *charset)
 						   | (int) umFONTENC
 						   | (int) umBUILTIN));
 	if ((result = closestLocaleCharset(enc)) != 0) {
-	    TRACE(("...matched a LocaleCharset record for %s\n", charset));
+	    TRACE(("...matched a LocaleCharset record for %s\n", NonNull(charset)));
 	} else if (canFakeLocaleCharset(enc)) {
 	    LocaleCharsetRec *temp = &fakeLocaleCharset;
 
-	    TRACE(("...fake a LocaleCharset record for %s\n", charset));
+	    TRACE(("...fake a LocaleCharset record for %s\n", NonNull(charset)));
 
 	    memset(temp, 0, sizeof(*temp));
 	    temp->name = strmalloc(charset);
@@ -681,7 +683,8 @@ findLocaleCharset(const char *charset)
 	    result = temp;
 
 	} else {
-	    TRACE(("...do not know how to fake LocaleCharset for %s\n", charset));
+	    TRACE(("...do not know how to fake LocaleCharset for %s\n",
+		   NonNull(charset)));
 	}
 	luitFreeFontEnc(enc);
     }
@@ -712,8 +715,8 @@ matchLocaleCharset(const char *charset)
 
     const LocaleCharsetRec *p = 0;
 
-    TRACE(("matchLocaleCharset(%s)\n", charset));
-    if (*charset != '\0') {
+    TRACE(("matchLocaleCharset(%s)\n", NonNull(charset)));
+    if (!IsEmpty(charset)) {
 	char *euro;
 	char source[MAX_KEYWORD_LENGTH + 1];
 
@@ -764,7 +767,7 @@ getLocaleState(const char *locale,
     const LocaleCharsetRec *p;
 
     TRACE(("getLocaleState(locale=%s, charset=%s)\n", locale, NonNull(charset)));
-    if (!charset) {
+    if (IsEmpty(charset)) {
 	if (ignore_locale) {
 	    charset = locale;
 	} else {
@@ -853,7 +856,8 @@ getCompositeCharset(const char *encoding_name)
     if ((fc = getFontencByName(encoding_name)) != 0) {
 	if ((lc = findLocaleByCharset(fc->name)) != 0) {
 	    result = lc->name;
-	    TRACE(("getCompositeCharset(%s) ->%s\n", encoding_name, result));
+	    TRACE(("getCompositeCharset(%s) ->%s\n",
+		   NonNull(encoding_name), NonNull(result)));
 	}
     }
     return result;

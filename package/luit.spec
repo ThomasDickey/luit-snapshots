@@ -1,8 +1,8 @@
 Summary: luit - Locale and ISO 2022 support for Unicode terminals
 %define AppProgram luit
-%define AppVersion 20180626
+%define AppVersion 20180627
 %define UseProgram b%{AppProgram}
-# $XTermId: luit.spec,v 1.54 2018/06/26 09:17:17 tom Exp $
+# $XTermId: luit.spec,v 1.56 2018/06/27 21:53:25 tom Exp $
 Name: %{AppProgram}
 Version: %{AppVersion}
 Release: 1
@@ -31,13 +31,13 @@ adds a symbolic link for "xterm-filter".
 %build
 
 INSTALL_PROGRAM='${INSTALL}' \
-	./configure \
-		--program-prefix=b \
-		--target %{_target_platform} \
-		--prefix=%{_prefix} \
-		--bindir=%{_bindir} \
-		--libdir=%{_libdir} \
-		--mandir=%{_mandir}
+%configure \
+  --program-prefix=b \
+  --target %{_target_platform} \
+  --prefix=%{_prefix} \
+  --bindir=%{_bindir} \
+  --libdir=%{_libdir} \
+  --mandir=%{_mandir}
 
 make
 

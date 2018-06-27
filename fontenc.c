@@ -1,7 +1,7 @@
 /*
- * $XTermId: fontenc.c,v 1.86 2013/02/17 12:02:42 tom Exp $
+ * $XTermId: fontenc.c,v 1.87 2018/06/27 21:28:28 tom Exp $
  *
- * Copyright 2013 by Thomas E. Dickey
+ * Copyright 2013,2018 by Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -142,6 +142,8 @@ getFileBuffer(char **bufferp, size_t *lengthp, FILE *fp)
 		if (*bufferp == 0)
 		    return 0;
 		*lengthp = need;
+	    } else if (*bufferp == 0) {
+		return 0;
 	    }
 	    strcpy(*bufferp + used, extra);
 	    used += have;
@@ -536,7 +538,7 @@ defineCode(FontEncPtr enc, int from, int to)
 {
     int inx = fontencIndex(enc, (unsigned) from);
 
-    if (inx >= 0) {
+    if (inx >= 0 && enc->mappings != NULL) {
 	int first = fontencFirst(enc);
 	FontEncSimpleMapPtr data = enc->mappings->client_data;
 	int limit = (int) fontencSize(enc);

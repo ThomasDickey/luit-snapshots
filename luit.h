@@ -1,7 +1,7 @@
-/* $XTermId: luit.h,v 1.22 2013/01/23 10:02:12 tom Exp $ */
+/* $XTermId: luit.h,v 1.23 2018/06/27 09:25:47 tom Exp $ */
 
 /*
-Copyright 2010-2012,2013 by Thomas E. Dickey
+Copyright 2010-2013,2018 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -65,6 +65,7 @@ void FatalError(const char *f,...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
 
 #define VERBOSE(level,params) if (verbose >= level) Message params
 
+#define IsEmpty(s) ((s) == 0 || (*(s)) == '\0')
 #define NonNull(s) ((s) ? (s) : "<null>")
 
 #endif /* LUIT_LUIT_H */

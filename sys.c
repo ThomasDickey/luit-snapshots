@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.54 2016/05/07 00:22:22 tom Exp $ */
+/* $XTermId: sys.c,v 1.56 2018/06/27 20:41:53 tom Exp $ */
 
 /*
-Copyright 2010-2013,2016 by Thomas E. Dickey
+Copyright 2010-2016,2018 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -328,7 +328,7 @@ fix_pty_perms(char *line)
     if (rc < 0)
 	return -1;
 
-    TRACE(("fix_pty_perms sees %s\n", line));
+    TRACE(("fix_pty_perms sees %s\n", NonNull(line)));
     TRACE(("..pty owned by %ld/%ld\n", (long) s.st_uid, (long) s.st_gid));
     TRACE(("...but you are %ld/%ld\n", (long) getuid(), (long) getgid()));
 
@@ -408,7 +408,7 @@ allocatePty(int *pty_return, char **line_return)
 	goto bsd;
     }
 
-    TRACE(("ptsname '%s'\n", line));
+    TRACE(("ptsname '%s'\n", NonNull(line)));
     fix_pty_perms(line);
 
     *pty_return = pty;
@@ -478,7 +478,9 @@ openTty(char *line)
 {
     int tty = -1;
 
-    TRACE(("openTty(%s)\n", line));
+    TRACE(("openTty(%s)\n", NonNull(line)));
+    if (line == NULL)
+	ExitFailure();
 
     tty = open(line, O_RDWR
 #if defined(TIOCSCTTY) && defined(O_NOCTTY)
