@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.83 2018/06/27 22:45:58 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.84 2018/06/28 08:12:30 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -981,7 +981,7 @@ ifelse([$5],,AC_MSG_WARN(Cannot find $3 library),[$5])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 12 updated: 2018/06/26 16:06:28
+dnl CF_FUNC_GRANTPT version: 13 updated: 2018/06/28 04:10:16
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -993,7 +993,10 @@ stropts.h \
 
 cf_func_grantpt="grantpt ptsname"
 case $host_os in
-(darwin[[0-9]].*)
+(xdarwin[[0-9]].*)
+	;;
+(openbsd[[0-9]].*)
+	# The POSIX entrypoints exist, but have never worked.
 	;;
 (*)
 	cf_func_grantpt="$cf_func_grantpt posix_openpt"
