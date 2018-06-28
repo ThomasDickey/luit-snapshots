@@ -1,6 +1,26 @@
-.\" $XTermId: luit.man,v 1.36 2013/02/16 15:17:03 tom Exp $
+.\" $XTermId: luit.man,v 1.38 2018/06/28 08:38:33 tom Exp $
+.\" ---------------------------------------------------------------------------
+.\" Copyright 2006-2016,2018 by Thomas E. Dickey
+.\" Copyright (c) 2001 by Juliusz Chroboczek
 .\"
+.\" Permission is hereby granted, free of charge, to any person obtaining a
+.\" copy of this software and associated documentation files (the "Software"),
+.\" to deal in the Software without restriction, including without limitation
+.\" the rights to use, copy, modify, merge, publish, distribute, sublicense,
+.\" and/or sell copies of the Software, and to permit persons to whom the
+.\" Software is furnished to do so, subject to the following conditions:
 .\"
+.\" The above copyright notice and this permission notice shall be included in
+.\" all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+.\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+.\" THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+.\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+.\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+.\" DEALINGS IN THE SOFTWARE.
+.\" ---------------------------------------------------------------------------
 .\" Escape single quotes in literal strings from groff's Unicode transform.
 .ie \n(.g .ds AQ \(aq
 .el       .ds AQ '
@@ -9,7 +29,8 @@
 .ie \n(.g .ds '' \(rq
 .el       .ds '' ''
 .de bP
-.IP \(bu 4
+.ie n  .IP \(bu 4
+.el    .IP \(bu 2
 ..
 .TH LUIT 1 __vendorversion__
 .SH NAME
@@ -185,7 +206,8 @@ distributed with the \fIfontenc\fP library.
 .TP
 .B \-list\-iconv
 List the encodings and locales supported by the \fIiconv\fP library.
-\fBLuit\fP adapts its internal tables of \fIfontenc\fP names to \fIiconv\fP encodings.
+\fBLuit\fP adapts its internal tables of \fIfontenc\fP names
+to \fIiconv\fP encodings.
 .IP
 To make scripting simpler,
 .B luit
