@@ -19,7 +19,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: luit.log.html,v 1.160 2018/06/28 08:00:25 tom Exp $
+  $XTermId: luit.log.html,v 1.163 2018/12/12 02:43:10 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -42,6 +42,41 @@
 
   <p>This file contains a list of the changes that I have made for
   luit.</p>
+
+  <p><a id="t20181211" name="t20181211">2018/12/11</a> -</p>
+
+  <ul>
+    <li>build-fixes/updates for cygwin to accommodate
+    configure-macro changes.</li>
+
+    <li>updated configure macros:
+
+      <ul>
+        <li><code>CF_CC_ENV_FLAGS</code>, add check for
+        preprocessor-options in <code>$CFLAGS</code>.</li>
+
+        <li><code>CF_FUNC_GRANTPT</code>, amend the
+        <code>posix_openpt</code> vs <code>grantpt</code> change to
+        work with BSDs</li>
+
+        <li><code>CF_GNU_SOURCE</code>, fixes a regression for
+        Cygwin. The check for _DEFAULT_SOURCE should apply to
+        "recent" Cygwin (since early 2016), and except for "NEWLIB"
+        vs "GLIBC" in the test, acts the same if I pretend that
+        "newlib" is the GNU C library. Without this, the check
+        falls through to the _XOPEN_SOURCE test, which breaks the
+        pseudoterminal checks for xterm.</li>
+
+        <li><code>CF_LD_RPATH_OPT</code>, suppress check if
+        <code>--disable-rpath</code> is given.</li>
+
+        <li><code>CF_XOPEN_SOURCE</code>, add midnightbsd to
+        special cases with freebsd</li>
+      </ul>
+    </li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
 
   <p><a id="t20180628" name="t20180628">2018/06/28</a> -</p>
 

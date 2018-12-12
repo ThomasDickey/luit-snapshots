@@ -1,5 +1,5 @@
 /*
- * $XTermId: luitconv.c,v 1.120 2018/06/27 20:52:15 tom Exp $
+ * $XTermId: luitconv.c,v 1.121 2018/12/12 02:42:15 tom Exp $
  *
  * Copyright 2010-2015,2018 by Thomas E. Dickey
  *
@@ -30,6 +30,10 @@
 #ifdef HAVE_LANGINFO_CODESET
 #include <locale.h>
 #include <langinfo.h>
+#endif
+
+#ifndef ICONV_CONST
+#define ICONV_CONST		/* nothing */
 #endif
 
 /*
