@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.47 2018/06/26 09:21:54 tom Exp $
+dnl $XTermId: configure.in,v 1.48 2019/12/31 22:07:23 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2016,2018 by Thomas E. Dickey
+dnl Copyright 2006-2018,2019 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -157,7 +157,7 @@ esac
 CF_WITH_ZLIB
 if test "x$ac_cv_func_zError" = xyes
 then
-	AC_DEFINE(USE_ZLIB)
+	AC_DEFINE(USE_ZLIB,1,[Define to 1 if we can link with zlib])
 fi
 
 if test "$with_fontenc" = yes
