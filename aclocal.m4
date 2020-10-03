@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.89 2019/12/31 22:09:05 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.94 2020/10/03 16:20:23 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2018,2019 by Thomas E. Dickey
+dnl Copyright 2006-2019,2020 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -23,6 +23,10 @@ dnl WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
+dnl ---------------------------------------------------------------------------
+dnl See
+dnl     https://invisible-island.net/autoconf/autoconf.html
+dnl     https://invisible-island.net/autoconf/my-autoconf.html
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
 dnl AM_ICONV version: 12 updated: 2007/07/30 19:12:03
@@ -97,7 +101,7 @@ size_t iconv();
   AC_SUBST(LIBICONV)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl AM_LANGINFO_CODESET version: 4 updated: 2015/04/18 08:56:57
+dnl AM_LANGINFO_CODESET version: 5 updated: 2020/03/10 18:53:47
 dnl -------------------
 dnl Inserted as requested by gettext 0.10.40
 dnl File from /usr/share/aclocal
@@ -110,7 +114,7 @@ AC_DEFUN([AM_LANGINFO_CODESET],
 [
 AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
 	[AC_TRY_LINK([#include <langinfo.h>],
-	[char* cs = nl_langinfo(CODESET);],
+	[char* cs = nl_langinfo(CODESET); (void)cs],
 	am_cv_langinfo_codeset=yes,
 	am_cv_langinfo_codeset=no)
 	])
@@ -146,10 +150,11 @@ define([CF_ACVERSION_COMPARE],
 [ifelse([$8], , ,[$8])],
 [ifelse([$9], , ,[$9])])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_CFLAGS version: 13 updated: 2017/02/25 18:57:40
+dnl CF_ADD_CFLAGS version: 14 updated: 2020/04/04 16:16:13
 dnl -------------
 dnl Copy non-preprocessor flags to $CFLAGS, preprocessor flags to $CPPFLAGS
-dnl The second parameter if given makes this macro verbose.
+dnl $1 = flags to add
+dnl $2 = if given makes this macro verbose.
 dnl
 dnl Put any preprocessor definitions that use quoted strings in $EXTRA_CPPFLAGS,
 dnl to simplify use of $CPPFLAGS in compiler checks, etc., that are easily
@@ -650,7 +655,7 @@ if test ".$system_name" != ".$cf_cv_system_name" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_ERRNO version: 12 updated: 2015/04/18 08:56:57
+dnl CF_CHECK_ERRNO version: 13 updated: 2020/03/10 18:53:47
 dnl --------------
 dnl Check for data that is usually declared in <stdio.h> or <errno.h>, e.g.,
 dnl the 'errno' variable.  Define a DECL_xxx symbol if we must declare it
@@ -668,7 +673,7 @@ AC_CACHE_CHECK(if external $1 is declared, cf_cv_dcl_$1,[
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h> ],
-	ifelse([$2],,int,[$2]) x = (ifelse([$2],,int,[$2])) $1,
+	ifelse([$2],,int,[$2]) x = (ifelse([$2],,int,[$2])) $1; (void)x,
 	[cf_cv_dcl_$1=yes],
 	[cf_cv_dcl_$1=no])
 ])
@@ -740,7 +745,7 @@ if test $ac_cv_type_$1 = no; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CLANG_COMPILER version: 2 updated: 2013/11/19 19:23:35
+dnl CF_CLANG_COMPILER version: 3 updated: 2020/08/28 04:10:22
 dnl -----------------
 dnl Check if the given compiler is really clang.  clang's C driver defines
 dnl __GNUC__ (fooling the configure script into setting $GCC to yes) but does
@@ -771,61 +776,11 @@ cf_save_CFLAGS="$cf_save_CFLAGS -Qunused-arguments"
 	ifelse([$3],,CFLAGS,[$3])="$cf_save_CFLAGS"
 	AC_MSG_RESULT($ifelse([$2],,CLANG_COMPILER,[$2]))
 fi
-])
-dnl ---------------------------------------------------------------------------
-dnl CF_CONST_X_STRING version: 1 updated: 2019/04/08 17:50:29
-dnl -----------------
-dnl The X11R4-X11R6 Xt specification uses an ambiguous String type for most
-dnl character-strings.
-dnl
-dnl It is ambiguous because the specification accommodated the pre-ANSI
-dnl compilers bundled by more than one vendor in lieu of providing a standard C
-dnl compiler other than by costly add-ons.  Because of this, the specification
-dnl did not take into account the use of const for telling the compiler that
-dnl string literals would be in readonly memory.
-dnl
-dnl As a workaround, one could (starting with X11R5) define XTSTRINGDEFINES, to
-dnl let the compiler decide how to represent Xt's strings which were #define'd. 
-dnl That does not solve the problem of using the block of Xt's strings which
-dnl are compiled into the library (and is less efficient than one might want).
-dnl
-dnl Xt specification 7 introduces the _CONST_X_STRING symbol which is used both
-dnl when compiling the library and compiling using the library, to tell the
-dnl compiler that String is const.
-AC_DEFUN([CF_CONST_X_STRING],
-[
-AC_TRY_COMPILE(
-[
-#include <stdlib.h>
-#include <X11/Intrinsic.h>
-],
-[String foo = malloc(1)],[
 
-AC_CACHE_CHECK(for X11/Xt const-feature,cf_cv_const_x_string,[
-	AC_TRY_COMPILE(
-		[
-#define _CONST_X_STRING	/* X11R7.8 (perhaps) */
-#undef  XTSTRINGDEFINES	/* X11R5 and later */
-#include <stdlib.h>
-#include <X11/Intrinsic.h>
-		],[String foo = malloc(1); *foo = 0],[
-			cf_cv_const_x_string=no
-		],[
-			cf_cv_const_x_string=yes
-		])
+if test "x$CLANG_COMPILER" = "xyes" ; then
+	CF_APPEND_TEXT(CFLAGS,-Wno-error=implicit-function-declaration)
+fi
 ])
-
-case $cf_cv_const_x_string in
-(no)
-	CF_APPEND_TEXT(CPPFLAGS,-DXTSTRINGDEFINES)
-	;;
-(*)
-	CF_APPEND_TEXT(CPPFLAGS,-D_CONST_X_STRING)
-	;;
-esac
-
-])
-])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_DISABLE_ECHO version: 13 updated: 2015/04/18 08:56:57
 dnl ---------------
@@ -918,6 +873,36 @@ AC_MSG_RESULT($with_trace)
 if test "$with_trace" = "yes"
 then
 	AC_DEFINE(OPT_TRACE,1,[Define to 1 if you want to enable debugging trace])
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ENABLE_WARNINGS version: 7 updated: 2020/08/29 09:05:21
+dnl ------------------
+dnl Configure-option to enable gcc warnings
+dnl
+dnl $1 = extra options to add, if supported
+dnl $2 = option for checking attributes.  By default, this is done when
+dnl      warnings are enabled.  For other values:
+dnl      yes: always do this, e.g., to use in generated library-headers
+dnl      no: never do this
+AC_DEFUN([CF_ENABLE_WARNINGS],[
+if ( test "$GCC" = yes || test "$GXX" = yes )
+then
+CF_FIX_WARNINGS(CFLAGS)
+CF_FIX_WARNINGS(CPPFLAGS)
+CF_FIX_WARNINGS(LDFLAGS)
+AC_MSG_CHECKING(if you want to turn on gcc warnings)
+CF_ARG_ENABLE(warnings,
+	[  --enable-warnings       test: turn on gcc compiler warnings],
+	[with_warnings=yes],
+	[with_warnings=no])
+AC_MSG_RESULT($with_warnings)
+if test "$with_warnings" = "yes"
+then
+	ifelse($2,,[CF_GCC_ATTRIBUTES])
+	CF_GCC_WARNINGS($1)
+fi
+ifelse($2,yes,[CF_GCC_ATTRIBUTES])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -1050,6 +1035,40 @@ ifelse([$4],,[
 else
 ifelse([$5],,AC_MSG_WARN(Cannot find $3 library),[$5])
 fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_FIX_WARNINGS version: 2 updated: 2020/08/28 15:08:28
+dnl ---------------
+dnl Warning flags do not belong in CFLAGS, CPPFLAGS, etc.  Any of gcc's
+dnl "-Werror" flags can interfere with configure-checks.  Those go into
+dnl EXTRA_CFLAGS.
+dnl
+dnl $1 = variable name to repair
+define([CF_FIX_WARNINGS],[
+if ( test "$GCC" = yes || test "$GXX" = yes )
+then
+	case [$]$1 in
+	(*-Werror=*)
+		CF_VERBOSE(repairing $1: [$]$1)
+		cf_temp_flags=
+		for cf_temp_scan in [$]$1
+		do
+			case "x$cf_temp_scan" in
+			(x-Werror=*)
+				CF_APPEND_TEXT(EXTRA_CFLAGS,"$cf_temp_scan")
+				;;
+			(*)
+				CF_APPEND_TEXT(cf_temp_flags,"$cf_temp_scan")
+				;;
+			esac
+		done
+		$1="$cf_temp_flags"
+		CF_VERBOSE(... fixed [$]$1)
+		CF_VERBOSE(... extra $EXTRA_CFLAGS)
+		;;
+	esac
+fi
+AC_SUBST(EXTRA_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_FUNC_GRANTPT version: 14 updated: 2018/08/12 04:58:46
@@ -1271,14 +1290,14 @@ int main(void) {
 test "$cf_cv_working_poll" = "yes" && AC_DEFINE(HAVE_WORKING_POLL,1,[Define to 1 if the poll function seems to work])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_ATTRIBUTES version: 17 updated: 2015/04/12 15:39:00
+dnl CF_GCC_ATTRIBUTES version: 19 updated: 2020/08/29 09:05:21
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
 dnl to documentation, unrecognized directives cause older compilers to barf.
 AC_DEFUN([CF_GCC_ATTRIBUTES],
 [
-if test "$GCC" = yes
+if ( test "$GCC" = yes || test "$GXX" = yes )
 then
 cat > conftest.i <<EOF
 #ifndef GCC_PRINTF
@@ -1315,7 +1334,7 @@ cat > conftest.$ac_ext <<EOF
 extern void wow(char *,...) GCC_SCANFLIKE(1,2);
 extern void oops(char *,...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
 extern void foo(void) GCC_NORETURN;
-int main(int argc GCC_UNUSED, char *argv[[]] GCC_UNUSED) { return 0; }
+int main(int argc GCC_UNUSED, char *argv[[]] GCC_UNUSED) { (void)argc; (void)argv; return 0; }
 EOF
 	cf_printf_attribute=no
 	cf_scanf_attribute=no
@@ -1398,12 +1417,13 @@ CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
 CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 36 updated: 2019/09/07 13:38:36
+dnl CF_GCC_WARNINGS version: 38 updated: 2020/08/28 15:08:28
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
 dnl
 dnl	-Wconversion (useful in older versions of gcc, but not in gcc 2.7.x)
+dnl	-Winline (usually not worthwhile)
 dnl	-Wredundant-decls (system headers make this too noisy)
 dnl	-Wtraditional (combines too many unrelated messages, only a few useful)
 dnl	-Wwrite-strings (too noisy, but should review occasionally).  This
@@ -1440,7 +1460,7 @@ then
 
 	AC_CHECKING([for $CC warning options])
 	cf_save_CFLAGS="$CFLAGS"
-	EXTRA_CFLAGS="-Wall"
+	EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
 	for cf_opt in \
 		wd1419 \
 		wd1683 \
@@ -1459,11 +1479,10 @@ then
 		fi
 	done
 	CFLAGS="$cf_save_CFLAGS"
-elif test "$GCC" = yes
+elif test "$GCC" = yes && test "$GCC_VERSION" != "unknown"
 then
 	AC_CHECKING([for $CC warning options])
 	cf_save_CFLAGS="$CFLAGS"
-	EXTRA_CFLAGS=
 	cf_warn_CONST=""
 	test "$with_ext_const" = yes && cf_warn_CONST="Wwrite-strings"
 	cf_gcc_warnings="Wignored-qualifiers Wlogical-op Wvarargs"
@@ -1481,7 +1500,7 @@ then
 		Wpointer-arith \
 		Wshadow \
 		Wstrict-prototypes \
-		Wundef $cf_gcc_warnings $cf_warn_CONST $1
+		Wundef Wno-inline $cf_gcc_warnings $cf_warn_CONST $1
 	do
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
 		if AC_TRY_EVAL(ac_compile); then
@@ -2224,6 +2243,17 @@ $1=`echo "$2" | \
 		-e 's/-[[UD]]'"$3"'\(=[[^ 	]]*\)\?[$]//g'`
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_RESTORE_XTRA_FLAGS version: 1 updated: 2020/01/11 16:47:45
+dnl ---------------------
+dnl Restore flags saved in CF_SAVE_XTRA_FLAGS
+dnl $1 = name of current macro
+define([CF_RESTORE_XTRA_FLAGS],
+[
+LIBS="$cf_save_LIBS_$1"
+CFLAGS="$cf_save_CFLAGS_$1"
+CPPFLAGS="$cf_save_CPPFLAGS_$1"
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_RPATH_HACK version: 11 updated: 2013/09/01 13:02:00
 dnl -------------
 AC_DEFUN([CF_RPATH_HACK],
@@ -2341,7 +2371,32 @@ CF_VERBOSE(...checked $1 [$]$1)
 AC_SUBST(EXTRA_LDFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SIGWINCH version: 2 updated: 2019/03/23 19:54:44
+dnl CF_SAVE_XTRA_FLAGS version: 1 updated: 2020/01/11 16:46:44
+dnl ------------------
+dnl Use this macro to save CFLAGS/CPPFLAGS/LIBS before checks against X headers
+dnl and libraries which do not update those variables.
+dnl
+dnl $1 = name of current macro
+define([CF_SAVE_XTRA_FLAGS],
+[
+cf_save_LIBS_$1="$LIBS"
+cf_save_CFLAGS_$1="$CFLAGS"
+cf_save_CPPFLAGS_$1="$CPPFLAGS"
+LIBS="$LIBS ${X_PRE_LIBS} ${X_LIBS} ${X_EXTRA_LIBS}"
+for cf_X_CFLAGS in $X_CFLAGS
+do
+	case "x$cf_X_CFLAGS" in
+	x-[[IUD]]*)
+		CPPFLAGS="$CPPFLAGS $cf_X_CFLAGS"
+		;;
+	*)
+		CFLAGS="$CFLAGS $cf_X_CFLAGS"
+		;;
+	esac
+done
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_SIGWINCH version: 3 updated: 2020/03/10 18:53:47
 dnl -----------
 dnl Use this macro after CF_XOPEN_SOURCE, but do not require it (not all
 dnl programs need this test).
@@ -2356,7 +2411,7 @@ AC_CACHE_CHECK(if SIGWINCH is defined,cf_cv_define_sigwinch,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <sys/signal.h>
-],[int x = SIGWINCH],
+],[int x = SIGWINCH; (void)x],
 	[cf_cv_define_sigwinch=yes],
 	[AC_TRY_COMPILE([
 #undef _XOPEN_SOURCE
@@ -2364,7 +2419,7 @@ AC_CACHE_CHECK(if SIGWINCH is defined,cf_cv_define_sigwinch,[
 #undef _POSIX_C_SOURCE
 #include <sys/types.h>
 #include <sys/signal.h>
-],[int x = SIGWINCH],
+],[int x = SIGWINCH; (void)x],
 	[cf_cv_define_sigwinch=maybe],
 	[cf_cv_define_sigwinch=no])
 ])
@@ -2386,7 +2441,7 @@ do
 #if SIGWINCH != $cf_sigwinch
 make an error
 #endif
-int x = SIGWINCH],
+int x = SIGWINCH; (void)x],
 	[cf_cv_fixup_sigwinch=$cf_sigwinch
 	 break])
 
@@ -2456,7 +2511,7 @@ static struct termio d_tio;
 test "$cf_cv_svr4" = yes && AC_DEFINE(SVR4,1,[Define to 1 if this is an SVR4 system])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SYSV version: 15 updated: 2012/10/04 05:24:07
+dnl CF_SYSV version: 16 updated: 2020/01/11 16:46:44
 dnl -------
 dnl Check if this is a SYSV platform, e.g., as used in <X11/Xos.h>, and whether
 dnl defining it will be helpful.  The following features are used to check:
@@ -2471,6 +2526,10 @@ dnl
 dnl c) compile with type definitions that differ on SYSV hosts from standard C.
 AC_DEFUN([CF_SYSV],
 [
+AC_REQUIRE([AC_PATH_XTRA])
+
+CF_SAVE_XTRA_FLAGS([CF_SYSV])
+
 AC_CHECK_HEADERS( \
 termios.h \
 stdlib.h \
@@ -2517,6 +2576,8 @@ sys_errlist[0] = "";		/* Cygwin mis-declares this */
 [cf_cv_sysv=no])
 ])
 test "$cf_cv_sysv" = yes && AC_DEFINE(SYSV,1,[Define to 1 if this is an SYSV system])
+
+CF_RESTORE_XTRA_FLAGS([CF_SYSV])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_SYS_ERRLIST version: 6 updated: 2001/12/30 13:03:23
@@ -2609,6 +2670,14 @@ AC_DEFUN([CF_VERBOSE],
 CF_MSG_LOG([$1])
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITHOUT_X version: 1 updated: 2020/03/03 18:27:24
+dnl ------------
+dnl Use this to cancel the check for X headers/libraries which would be pulled
+dnl in via CF_GCC_WARNINGS.
+define([CF_WITHOUT_X],
+AC_DEFUN([CF_CONST_X_STRING],[echo "skipping X-const check";])dnl
+[])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_WITH_DBMALLOC version: 7 updated: 2010/06/21 17:26:47
 dnl ----------------
 dnl Configure-option for dbmalloc.  The optional parameter is used to override
@@ -2639,7 +2708,7 @@ if test "$with_dmalloc" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ENCODINGS_DIR version: 5 updated: 2019/12/31 17:08:21
+dnl CF_WITH_ENCODINGS_DIR version: 6 updated: 2020/10/03 12:19:31
 dnl ---------------------
 dnl Configure option to specify the location of encodings.dir, for programs
 dnl that must read it directly.
@@ -2655,10 +2724,16 @@ CF_VERBOSE()
 case "x$ENCODINGS_DIR_FILE" in
 (xauto|xyes|xno)
 	ENCODINGS_DIR_FILE=unknown
-	for cf_path in \
-		/usr/X11*/lib/X11/fonts \
-		/usr/share/fonts/X11 \
-		/usr/share/X11/fonts
+	for cf_leaf in lib share
+	do
+		for cf_path in \
+			/usr/X11R7/$cf_leaf/X11/fonts \
+			/usr/X11R6/$cf_leaf/X11/fonts \
+			/usr/local/$cf_leaf/X11/fonts \
+			/opt/local/$cf_leaf/fonts/X11 \
+			/opt/X11/$cf_leaf/X11/fonts \
+			/usr/$cf_leaf/fonts/X11 \
+			/usr/$cf_leaf/X11/fonts
 		do
 			test -d "$cf_path" || continue
 			cf_encodings_dir=$cf_path/encodings/encodings.dir
@@ -2668,6 +2743,7 @@ case "x$ENCODINGS_DIR_FILE" in
 				break
 			fi
 		done
+	done
 	;;
 (*)
 	if test ! -f "$ENCODINGS_DIR_FILE" ; then
@@ -2682,7 +2758,7 @@ AC_SUBST(ENCODINGS_DIR_FILE)
 AC_DEFINE_UNQUOTED(ENCODINGS_DIR_FILE, "$ENCODINGS_DIR_FILE", [Define to pathname of file used for encodings directory])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_LOCALE_ALIAS version: 7 updated: 2015/07/06 17:59:27
+dnl CF_WITH_LOCALE_ALIAS version: 9 updated: 2020/10/03 12:19:31
 dnl --------------------
 dnl Configure option to specify the location of locale.alias, for programs that
 dnl must read it directly.
@@ -2698,16 +2774,18 @@ CF_VERBOSE()
 case "x$LOCALE_ALIAS_FILE" in
 (xauto|xyes|xno)
 	LOCALE_ALIAS_FILE=unknown
-	for cf_path in \
-		/usr/openwin/lib/locale \
-		/usr/lib/X11/locale \
-		/usr/share/X11/locale \
-		/usr/X11R7/lib/X11/locale \
-		/usr/X11R6/lib/X11/locale \
-		/usr/X11R5/lib/X11/locale \
-		/usr/X11/lib/X11/locale \
-		/usr/X11/share/X11/locale
+	for cf_leaf in lib share
+	do
+		for cf_path in \
+			/usr/openwin/$cf_leaf/locale \
+			/usr/$cf_leaf/X11/locale \
+			/usr/X11R7/$cf_leaf/X11/locale \
+			/usr/X11R6/$cf_leaf/X11/locale \
+			/opt/local/$cf_leaf/X11/locale \
+			/opt/X11/$cf_leaf/X11/locale \
+			/usr/X11/$cf_leaf/X11/locale
 		do
+			test -d $cf_path || continue
 			cf_alias_file=$cf_path/locale.alias
 			CF_VERBOSE(testing $cf_alias_file)
 			if test -f $cf_alias_file ; then
@@ -2715,6 +2793,8 @@ case "x$LOCALE_ALIAS_FILE" in
 				break
 			fi
 		done
+		test "$LOCALE_ALIAS_FILE" = unknown || break
+	done
 	;;
 (*)
 	if test ! -f "$LOCALE_ALIAS_FILE" ; then
@@ -3139,7 +3219,7 @@ else
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_BODY version: 4 updated: 2012/05/07 19:39:45
+dnl CF__GRANTPT_BODY version: 5 updated: 2020/03/10 18:53:47
 dnl ----------------
 dnl Body for workability check of grantpt.
 define([CF__GRANTPT_BODY],[
@@ -3150,6 +3230,7 @@ define([CF__GRANTPT_BODY],[
 	char *slave;
 	struct termios tio;
 
+	(void)tio;
 	signal(SIGALRM, my_timeout);
 
 	if (alarm(2) == 9)
@@ -3203,11 +3284,12 @@ define([CF__GRANTPT_BODY],[
 	${cf_cv_main_return:-return}(code);
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_HEAD version: 3 updated: 2012/01/29 17:13:14
+dnl CF__GRANTPT_HEAD version: 4 updated: 2020/03/10 18:53:47
 dnl ----------------
 dnl Headers for workability check of grantpt.
 define([CF__GRANTPT_HEAD],[
 #include <stdlib.h>
+#include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
 #include <signal.h>
@@ -3231,6 +3313,7 @@ static void failed(int code)
 
 static void my_timeout(int sig)
 {
+	(void)sig;
 	exit(99);
 }
 ])
