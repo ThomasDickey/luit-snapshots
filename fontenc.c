@@ -1,7 +1,7 @@
-/* $XTermId: fontenc.c,v 1.87 2018/06/27 21:28:28 tom Exp */
+/* $XTermId: fontenc.c,v 1.90 2020/10/03 14:00:41 tom Exp $ */
 
 /*
-Copyright 2013-2018,2019 by Thomas E. Dickey
+Copyright 2013-2019,2020 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -59,9 +59,9 @@ extern FontEncPtr FontEncReallyLoad(const char *charset, const char *fontFileNam
  * compiled-in default value which can be overridden by an environment
  * variable.
  */
+#ifndef USE_FONTENC
 extern char *FontEncDirectory(void);
 
-#ifndef USE_FONTENC
 char *
 FontEncDirectory(void)
 {
@@ -206,7 +206,7 @@ getGzipBuffer(char **bufferp, size_t *lengthp, gzFile fp)
 #endif /* USE_FONTENC */
 
 static char *
-absolutePath(char *given, char *refPath)
+absolutePath(char *given, const char *refPath)
 {
     char *result;
     char *leaf;
@@ -259,7 +259,7 @@ loadEncodingsDir(void)
 {
     if (encodings_dir == 0) {
 	FILE *fp;
-	char *path = FontEncDirectory();
+	const char *path = FontEncDirectory();
 	char *buffer = 0;
 	size_t entry = 0;
 	size_t length = 0;

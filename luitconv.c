@@ -1,7 +1,7 @@
-/* $XTermId: luitconv.c,v 1.122 2019/01/06 20:53:24 tom Exp $ */
+/* $XTermId: luitconv.c,v 1.123 2020/10/03 14:23:42 tom Exp $ */
 
 /*
-Copyright 2010-2018,2019 by Thomas E. Dickey
+Copyright 2010-2019,2020 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -340,7 +340,7 @@ static void
 trace_convert(LuitConv * data, size_t which, unsigned gs)
 {
     size_t j;
-    char gsbuf[10];
+    char gsbuf[20];
 
     if (gs) {
 	sprintf(gsbuf, "G%u ", gs);
