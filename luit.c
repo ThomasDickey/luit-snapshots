@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.71 2018/06/27 20:41:53 tom Exp $ */
+/* $XTermId: luit.c,v 1.72 2021/01/13 22:33:17 tom Exp $ */
 
 /*
-Copyright 2010-2016,2018 by Thomas E. Dickey
+Copyright 2010-2018,2021 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -37,8 +37,6 @@ THE SOFTWARE.
 #include <parser.h>
 #include <iso2022.h>
 
-static void parent(int, int);
-
 static int pipe_option = 0;
 static int p2c_waitpipe[2];
 static int c2p_waitpipe[2];
@@ -72,10 +70,10 @@ static volatile int sigchld_queued = 0;
 
 static int convert(int, int);
 static int condom(int, char **);
-static void child(char *, char *, char *const *);
+static void child(int sfd, char *, char *, char *const *);
 
 void
-Message(const char *f,...)
+Message(const char *f, ...)
 {
     va_list args;
     va_start(args, f);
@@ -84,7 +82,7 @@ Message(const char *f,...)
 }
 
 void
-Warning(const char *f,...)
+Warning(const char *f, ...)
 {
     va_list args;
     va_start(args, f);
@@ -95,7 +93,7 @@ Warning(const char *f,...)
 }
 
 void
-FatalError(const char *f,...)
+FatalError(const char *f, ...)
 {
     va_list args;
     va_start(args, f);
@@ -641,7 +639,7 @@ main(int argc, char **argv)
 	}
     } else {
 	if (converter)
-	    rc = convert(0, 1);
+	    rc = convert(STDIN_FILENO, STDOUT_FILENO);
 	else
 	    rc = condom(argc - i, argv + i);
     }
@@ -693,7 +691,7 @@ sigchldHandler(int sig GCC_UNUSED)
 }
 
 static int
-setup_io(int pty)
+setup_io(int sfd, int pty)
 {
     int rc;
     int val;
@@ -704,30 +702,30 @@ setup_io(int pty)
 #endif
     installHandler(SIGCHLD, sigchldHandler);
 
-    rc = copyTermios(0, pty);
+    rc = copyTermios(sfd, pty);
     if (rc < 0)
 	FatalError("Couldn't copy terminal settings\n");
 
-    rc = setRawTermios();
+    rc = setRawTermios(sfd);
     if (rc < 0)
 	FatalError("Couldn't set terminal to raw\n");
 
-    val = fcntl(0, F_GETFL, 0);
+    val = fcntl(sfd, F_GETFL, 0);
     if (val >= 0) {
-	(void) fcntl(0, F_SETFL, val | O_NONBLOCK);
+	(void) fcntl(sfd, F_SETFL, val | O_NONBLOCK);
     }
     val = fcntl(pty, F_GETFL, 0);
     if (val >= 0) {
 	(void) fcntl(pty, F_SETFL, val | O_NONBLOCK);
     }
 
-    setWindowSize(0, pty);
+    setWindowSize(sfd, pty);
 
     return rc;
 }
 
 static void
-cleanup_io(int pty)
+cleanup_io(int sfd, int pty)
 {
     int val;
 
@@ -736,9 +734,9 @@ cleanup_io(int pty)
 #endif
     installHandler(SIGCHLD, SIG_DFL);
 
-    val = fcntl(0, F_GETFL, 0);
+    val = fcntl(sfd, F_GETFL, 0);
     if (val >= 0) {
-	(void) fcntl(0, F_SETFL, val & ~O_NONBLOCK);
+	(void) fcntl(sfd, F_SETFL, val & ~O_NONBLOCK);
     }
     val = fcntl(pty, F_GETFL, 0);
     if (val >= 0) {
@@ -766,6 +764,115 @@ read_waitpipe(int fds[2])
     IGNORE_RC(read(fds[0], tmp, (size_t) 1));
 }
 
+static void
+child(int sfd, char *line, char *path, char *const argv[])
+{
+    int tty;
+    int pgrp;
+
+    TRACE(("child %s\n", NonNull(path)));
+    if (path == NULL)
+	ExitFailure();
+
+    pgrp = setsid();
+    if (pgrp < 0) {
+	kill(getppid(), SIGABRT);
+	ExitFailure();
+    }
+
+    tty = openTty(line);
+    if (tty < 0) {
+	kill(getppid(), SIGABRT);
+	ExitFailure();
+    }
+
+    if (pipe_option) {
+	write_waitpipe(c2p_waitpipe);
+    }
+
+    setWindowSize(sfd, tty);
+    close(STDIN_FILENO);
+    if (tty != STDIN_FILENO)
+	dup2(tty, STDIN_FILENO);
+
+    close(STDOUT_FILENO);
+    if (tty != STDOUT_FILENO)
+	dup2(tty, STDOUT_FILENO);
+
+    close(STDERR_FILENO);
+    if (tty != STDERR_FILENO)
+	dup2(tty, STDERR_FILENO);
+
+    if (tty > 2)
+	close(tty);
+
+    if (pipe_option) {
+	read_waitpipe(p2c_waitpipe);
+	close_waitpipe(0);
+    }
+
+    execvp(path, argv);
+    perror(path);
+    ExitFailure();
+}
+
+static void
+parent(int sfd, int pty)
+{
+    unsigned char buf[BUFFER_SIZE];
+    int i;
+    int rc;
+
+    if (pipe_option) {
+	read_waitpipe(c2p_waitpipe);
+    }
+
+    if (verbose) {
+	reportIso2022("Output", outputState);
+    }
+    setup_io(sfd, pty);
+
+    if (pipe_option) {
+	write_waitpipe(p2c_waitpipe);
+	close_waitpipe(1);
+    }
+
+    for (;;) {
+	rc = waitForInput(sfd, pty);
+
+	if (sigwinch_queued) {
+	    sigwinch_queued = 0;
+	    setWindowSize(sfd, pty);
+	}
+
+	if (sigchld_queued && exitOnChild)
+	    break;
+
+	if (rc > 0) {
+	    if (rc & IO_Closed) {
+		break;
+	    }
+	    if (rc & IO_CanWrite) {
+		i = (int) read(pty, buf, (size_t) BUFFER_SIZE);
+		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
+		    break;
+		if (i > 0)
+		    copyOut(outputState, sfd, buf, (unsigned) i);
+	    }
+	    if (rc & IO_CanRead) {
+		i = (int) read(sfd, buf, (size_t) BUFFER_SIZE);
+		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
+		    break;
+		if (i > 0)
+		    copyIn(inputState, pty, buf, i);
+	    }
+	}
+    }
+
+    restoreTermios(sfd);
+    cleanup_io(sfd, pty);
+}
+
 static int
 condom(int argc, char **argv)
 {
@@ -775,6 +882,7 @@ condom(int argc, char **argv)
     char *path = 0;
     char **child_argv = 0;
     int rc;
+    int sfd = STDIN_FILENO;
 
     rc = parseArgs(argc, argv, child_argv0,
 		   &path, &child_argv);
@@ -810,7 +918,7 @@ condom(int argc, char **argv)
 	if (pipe_option) {
 	    close_waitpipe(1);
 	}
-	child(line, path, child_argv);
+	child(sfd, line, path, child_argv);
     } else {
 	if (pipe_option) {
 	    close_waitpipe(0);
@@ -818,119 +926,10 @@ condom(int argc, char **argv)
 	free(child_argv);
 	free(path);
 	free(line);
-	parent(pid, pty);
+	parent(sfd, pty);
     }
 
     return 0;
-}
-
-static void
-child(char *line, char *path, char *const argv[])
-{
-    int tty;
-    int pgrp;
-
-    TRACE(("child %s\n", NonNull(path)));
-    if (path == NULL)
-	ExitFailure();
-
-    pgrp = setsid();
-    if (pgrp < 0) {
-	kill(getppid(), SIGABRT);
-	ExitFailure();
-    }
-
-    tty = openTty(line);
-    if (tty < 0) {
-	kill(getppid(), SIGABRT);
-	ExitFailure();
-    }
-
-    if (pipe_option) {
-	write_waitpipe(c2p_waitpipe);
-    }
-
-    setWindowSize(0, tty);
-    close(0);
-    if (tty != 0)
-	dup2(tty, 0);
-
-    close(1);
-    if (tty != 1)
-	dup2(tty, 1);
-
-    close(2);
-    if (tty != 2)
-	dup2(tty, 2);
-
-    if (tty > 2)
-	close(tty);
-
-    if (pipe_option) {
-	read_waitpipe(p2c_waitpipe);
-	close_waitpipe(0);
-    }
-
-    execvp(path, argv);
-    perror(path);
-    ExitFailure();
-}
-
-static void
-parent(int pid GCC_UNUSED, int pty)
-{
-    unsigned char buf[BUFFER_SIZE];
-    int i;
-    int rc;
-
-    if (pipe_option) {
-	read_waitpipe(c2p_waitpipe);
-    }
-
-    if (verbose) {
-	reportIso2022("Output", outputState);
-    }
-    setup_io(pty);
-
-    if (pipe_option) {
-	write_waitpipe(p2c_waitpipe);
-	close_waitpipe(1);
-    }
-
-    for (;;) {
-	rc = waitForInput(0, pty);
-
-	if (sigwinch_queued) {
-	    sigwinch_queued = 0;
-	    setWindowSize(0, pty);
-	}
-
-	if (sigchld_queued && exitOnChild)
-	    break;
-
-	if (rc > 0) {
-	    if (rc & IO_Closed) {
-		break;
-	    }
-	    if (rc & IO_CanWrite) {
-		i = (int) read(pty, buf, (size_t) BUFFER_SIZE);
-		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
-		    break;
-		if (i > 0)
-		    copyOut(outputState, 0, buf, (unsigned) i);
-	    }
-	    if (rc & IO_CanRead) {
-		i = (int) read(0, buf, (size_t) BUFFER_SIZE);
-		if ((i == 0) || ((i < 0) && (errno != EAGAIN)))
-		    break;
-		if (i > 0)
-		    copyIn(inputState, pty, buf, i);
-	    }
-	}
-    }
-
-    restoreTermios();
-    cleanup_io(pty);
 }
 
 #ifdef NO_LEAKS

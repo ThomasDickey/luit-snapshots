@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.56 2018/06/27 20:41:53 tom Exp $ */
+/* $XTermId: sys.c,v 1.57 2021/01/13 22:13:03 tom Exp $ */
 
 /*
-Copyright 2010-2016,2018 by Thomas E. Dickey
+Copyright 2010-2018,2021 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -255,32 +255,32 @@ copyTermios(int sfd, int dfd)
 }
 
 static int
-saveTermios(void)
+saveTermios(int sfd)
 {
     int rc;
-    rc = tcgetattr(0, &saved_tio);
+    rc = tcgetattr(sfd, &saved_tio);
     if (rc >= 0)
 	saved_tio_valid = 1;
     return rc;
 }
 
 int
-restoreTermios(void)
+restoreTermios(int sfd)
 {
     if (!saved_tio_valid)
 	return -1;
-    return tcsetattr(0, TCSAFLUSH, &saved_tio);
+    return tcsetattr(sfd, TCSAFLUSH, &saved_tio);
 }
 
 int
-setRawTermios(void)
+setRawTermios(int sfd)
 {
     struct termios tio;
     int rc;
 
     if (!saved_tio_valid)
-	saveTermios();
-    rc = tcgetattr(0, &tio);
+	saveTermios(sfd);
+    rc = tcgetattr(sfd, &tio);
     if (rc < 0)
 	return rc;
     tio.c_lflag &= (unsigned) ~(ECHO | ICANON | IEXTEN | ISIG);
@@ -299,7 +299,7 @@ setRawTermios(void)
     tio.c_cc[VMIN] = 0;
     tio.c_cc[VTIME] = 0;
 #endif
-    rc = tcsetattr(0, TCSAFLUSH, &tio);
+    rc = tcsetattr(sfd, TCSAFLUSH, &tio);
     if (rc < 0)
 	return rc;
     return 0;

@@ -1,7 +1,7 @@
-/* $XTermId: sys.h,v 1.22 2013/01/29 01:15:31 tom Exp $ */
+/* $XTermId: sys.h,v 1.23 2021/01/13 22:13:24 tom Exp $ */
 
 /*
-Copyright 2010-2012,2013 by Thomas E. Dickey
+Copyright 2010-2013,2021 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -48,8 +48,8 @@ int waitForInput(int fd1, int fd2);
 int setWindowSize(int sfd, int dfd);
 int installHandler(int signum, void (*handler) (int));
 int copyTermios(int sfd, int dfd);
-int restoreTermios(void);
-int setRawTermios(void);
+int restoreTermios(int sfd);
+int setRawTermios(int sfd);
 char *my_basename(char *path);
 int allocatePty(int *pty_return, char **line_return);
 int openTty(char *line);

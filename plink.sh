@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.7 2010/11/28 23:55:35 tom Exp $
+# $XTermId: plink.sh,v 1.8 2021/01/13 22:41:56 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2005,2010 by Thomas E. Dickey
+# Copyright 2001-2010,2021 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -45,7 +45,7 @@ do
 		;;
 	-l*)
 		echo "testing if $OPT is needed"
-		if ( eval $LINKIT $* >/dev/null 2>/dev/null )
+		if ( eval "$LINKIT" "$@" >/dev/null 2>/dev/null )
 		then
 			: echo ...no
 		else
@@ -58,4 +58,4 @@ do
 		;;
 	esac
 done
-eval $LINKIT
+eval "$LINKIT"
