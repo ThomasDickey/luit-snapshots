@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        *
  * DEALINGS IN THE SOFTWARE.                                                  *
  ******************************************************************************
-  $XTermId: luit.log.html,v 1.177 2021/01/13 22:54:05 tom Exp $
+  $XTermId: luit.log.html,v 1.182 2021/02/14 21:47:45 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -42,6 +42,16 @@
 
   <p>This file contains a list of the changes that I have made for
   luit.</p>
+
+  <p><a id="t20210214" name="t20210214">2021/02/14</a> -</p>
+
+  <ul>
+    <li>add <code>annotate-enc</code> script, use that to annotate
+    the ".enc" files.</li>
+
+    <li>add built-in encoding apl-ibm (prompted by patch by Jerome
+    Ibanes).</li>
+  </ul>
 
   <p><a id="t20210114" name="t20210114">2021/01/14</a> -</p>
 
@@ -202,12 +212,10 @@
 
   <ul>
     <li>add table entries for luit to work as expected with
-    <em>CP865
-    &Atilde;&fnof;&AElig;&rsquo;&Atilde;&sbquo;&Acirc;&cent;&Atilde;&fnof;&Acirc;&cent;&Atilde;&cent;&acirc;&sbquo;&not;&Aring;&iexcl;&Atilde;&sbquo;&Acirc;&not;&Atilde;&fnof;&Acirc;&cent;&Atilde;&cent;&acirc;&euro;&scaron;&Acirc;&not;
-    MS-DOS with Nordic letters</em>. This code page was commonly
-    used on BBSes in Norway, Denmark and Sweden running the MBBS
-    and compatible systems in the 90s (patch by Hans Petter
-    Jansson).</li>
+    <em>CP865 &mdash; MS-DOS with Nordic letters</em>. This code
+    page was commonly used on BBSes in Norway, Denmark and Sweden
+    running the MBBS and compatible systems in the 90s (patch by
+    Hans Petter Jansson).</li>
 
     <li>add to search-list for encodings.dir file to accommodate
     Fedora.</li>
@@ -566,7 +574,7 @@
     assembly...).</li>
 
     <li>add rpm spec-file (see <a href=
-    "ftp://invisible-island.net/RPMS">my ftp area</a> for
+    "ftp://ftp.invisible-island.net/RPMS">my ftp area</a> for
     binaries).</li>
 
     <li>add <code>-alias</code> option to allow override of

@@ -1,7 +1,7 @@
-/* $XTermId: charset.c,v 1.80 2018/06/27 20:41:53 tom Exp $ */
+/* $XTermId: charset.c,v 1.81 2021/02/14 21:47:45 tom Exp $ */
 
 /*
-Copyright 2010-2014,2018 by Thomas E. Dickey
+Copyright 2010-2018,2021 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -99,6 +99,7 @@ static FontencCharsetRec fontencCharsets[] =
     {"CNS11643-2",     T_9494,  'H', "cns11643-2",       0x0000, 0, 0},
     {"CNS11643-3",     T_9494,  'I', "cns11643-3",       0x0000, 0, 0},
 
+    {"APL2",           T_128,   0,   "apl2",             0x80,   0, 0},
     {"KOI8-R",         T_128,   0,   "koi8-r",           0x80,   0, 0},
     {"KOI8-U",         T_128,   0,   "koi8-u",           0x80,   0, 0},
     {"KOI8-RU",        T_128,   0,   "koi8-ru",          0x80,   0, 0},
