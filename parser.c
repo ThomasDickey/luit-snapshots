@@ -1,7 +1,7 @@
-/* $XTermId: parser.c,v 1.24 2018/06/27 20:41:53 tom Exp $ */
+/* $XTermId: parser.c,v 1.25 2021/01/19 23:54:28 tom Exp $ */
 
 /*
-Copyright 2011-2013,2018 by Thomas E. Dickey
+Copyright 2011-2018,2021 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -153,8 +153,7 @@ parseTwoTokenLine(FILE *f, char *first, char *second)
     if (tok != TOK_KEYWORD) {
 	rc = -2;
     } else {
-	len = strlen(keyword);
-	if (keyword[len - 1] == ':')
+	if ((len = strlen(keyword)) != 0 && keyword[len - 1] == ':')
 	    keyword[len - 1] = '\0';
 	strcpy(first, keyword);
 
