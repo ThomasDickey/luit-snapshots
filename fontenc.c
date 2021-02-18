@@ -1,7 +1,7 @@
-/* $XTermId: fontenc.c,v 1.90 2020/10/03 14:00:41 tom Exp $ */
+/* $XTermId: fontenc.c,v 1.95 2021/02/18 21:41:52 tom Exp $ */
 
 /*
-Copyright 2013-2019,2020 by Thomas E. Dickey
+Copyright 2013-2020,2021 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ FontEncDirectory(void)
     }
     return dir;
 }
-#endif
+#endif /* !USE_FONTENC */
 
 /*
  * fontenc uses an "encodings.dir" file which can appear in the X fonts tree in
@@ -98,6 +98,7 @@ FontEncDirectory(void)
  * of the ".enc" file, and may be unrelated to the actual filename.
  */
 typedef struct {
+    int used;
     char *alias;
     char *path;
     FontEncPtr data;
@@ -203,7 +204,7 @@ getGzipBuffer(char **bufferp, size_t *lengthp, gzFile fp)
     return !finished ? *bufferp : 0;
 }
 #endif /* USE_ZLIB */
-#endif /* USE_FONTENC */
+#endif /* !USE_FONTENC */
 
 static char *
 absolutePath(char *given, const char *refPath)
@@ -369,11 +370,11 @@ trim_or_fill(FontEncSimpleMapPtr mp, int size)
 	trimCharMap(mp, size);
     }
 }
-#else
+#else /* USE_FONTENC */
 #define fillCharMap(mp, size)	/* nothing */
 #define trimCharMap(mp, size)	/* nothing */
 #define trim_or_fill(mp, size)	/* nothing */
-#endif
+#endif /* !USE_FONTENC */
 
 static size_t
 fontencSize(FontEncPtr enc)
@@ -548,7 +549,7 @@ defineCode(FontEncPtr enc, int from, int to)
     }
 }
 #endif /* USE_ZLIB */
-#endif /* USE_FONTENC */
+#endif /* !USE_FONTENC */
 
 /*
  * fontenc uses this indexing scheme to reduce tablesize.
@@ -817,7 +818,7 @@ loadFontEncRec(const char *charset, const char *path)
 
     if (result->name == 0)
 	result->name = strmalloc(charset);
-#else
+#else /* !USE_FONTENC && !USE_ZLIB */
     (void) charset;
     (void) path;
     result = 0;
@@ -843,13 +844,19 @@ lookupOneFontenc(const char *name)
 	if (encodings_dir != 0) {
 	    for (n = 0; encodings_dir[n].alias != 0; ++n) {
 		if (!StrCaseCmp(name, encodings_dir[n].alias)) {
-		    if ((result = encodings_dir[n].data) == 0) {
+		    if ((result = encodings_dir[n].data) == 0
+			&& encodings_dir[n].used == 0) {
 			result = loadFontEncRec(encodings_dir[n].alias,
 						encodings_dir[n].path);
 			if (result == 0) {
 			    Warning("cannot load data for %s\n",
 				    encodings_dir[n].path);
+			} else {
+			    VERBOSE(1, ("load alias \"%s\" from \"%s\"\n",
+					encodings_dir[n].alias,
+					encodings_dir[n].path));
 			}
+			encodings_dir[n].used = 1;
 			encodings_dir[n].data = result;
 		    }
 		    break;
@@ -882,6 +889,23 @@ fontmapTypename(int type)
     return result;
 }
 
+static FontEncSimpleMapPtr
+findUnicodeMapping(FontEncPtr data)
+{
+    FontEncSimpleMapPtr mq = 0;
+    FontMapPtr mp;
+
+    for (mp = data->mappings; mp != NULL; mp = mp->next) {
+	if (mp->type == FONT_ENCODING_UNICODE) {
+	    mq = mp->client_data;
+	    if (mq->map == NULL)
+		mq = NULL;
+	    break;
+	}
+    }
+    return mq;
+}
+
 /*
  * Read an encoding file, report summary statistics.
  */
@@ -895,7 +919,6 @@ reportOneFontenc(const char *alias, const char *path)
 	int hi_char = -1;
 	int num_def = 0;
 	int inx;
-	FontMapPtr mp;
 	FontEncSimpleMapPtr mq;
 
 	printf("\tName: %s\n", data->name);
@@ -917,14 +940,8 @@ reportOneFontenc(const char *alias, const char *path)
 	} else {
 	    printf("\tBase: %04X\n", data->first);
 	}
-	mq = 0;
-	for (mp = data->mappings; mp != 0; mp = mp->next) {
-	    if (mp->type == FONT_ENCODING_UNICODE) {
-		mq = mp->client_data;
-		break;
-	    }
-	}
-	if (mq != 0 && mq->map != 0) {
+	mq = findUnicodeMapping(data);
+	if (mq != 0) {
 	    trim_or_fill(mq, (int) fontencSize(data));
 	    for (n = 0; n < (int) mq->len; ++n) {
 		inx = fontencUnmap(mq, n);
@@ -1046,6 +1063,70 @@ showFontencCharset(const char *name)
     return showOneCharset(name, lookupOneFontenc(name));
 }
 
+/*
+ * Returns 94, 96 or 128 for an 8-bit character-set, based on the mapping.
+ */
+int
+typeOfFontenc(FontEncPtr enc)
+{
+    FontEncSimpleMapPtr mp = findUnicodeMapping(enc);
+    int result = 0;
+
+    if (mp != NULL) {
+	int limit = (int) fontencSize(enc);
+	int n;
+	int hi = 0;
+	int lo = limit;
+
+	for (n = 0; n < limit; ++n) {
+	    UCode target = mp->map[n - mp->first];
+	    if (target != 0 && target != n) {
+		if (n > hi)
+		    hi = n;
+		if (n < lo)
+		    lo = n;
+	    }
+	}
+	if (lo >= 128 && lo < 160) {
+	    result = 128;
+	} else if (lo >= 160 && hi < 256) {
+	    result = 96;
+	} else {
+	    result = hi - lo + 1;
+	}
+	VERBOSE(2, ("character-set size %d\n", result));
+    }
+    return result;
+}
+
+/*
+ * Returns 0x00 or 0x80 for an 8-bit character-set, according to where the
+ * lowest mapping is done.
+ */
+unsigned
+shiftOfFontenc(FontEncPtr enc)
+{
+    FontEncSimpleMapPtr mp = findUnicodeMapping(enc);
+    unsigned result = 0x80;
+
+    if (mp != NULL) {
+	int limit = (int) fontencSize(enc);
+	int n;
+
+	for (n = 0; n < limit; ++n) {
+	    UCode target = mp->map[n - mp->first];
+	    if (n >= 128) {
+		break;
+	    } else if (target != 0 && target != n) {
+		result = 0;
+		break;
+	    }
+	}
+	VERBOSE(2, ("character-set offset %u\n", result));
+    }
+    return result;
+}
+
 #ifdef USE_ICONV
 /*
  * Display built-in encoding as ".enc" format.
@@ -1070,7 +1151,7 @@ showIconvCharset(const char *name)
     luitFreeFontEnc(data);
     return rc;
 }
-#endif
+#endif /* USE_ICONV */
 
 #ifdef NO_LEAKS
 static void
@@ -1144,4 +1225,4 @@ fontenc_leaks(void)
 	free(encodings_dir);
     }
 }
-#endif
+#endif /* NOLEAKS */

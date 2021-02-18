@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: annotate-enc,v 1.7 2021/02/13 16:11:04 tom Exp $
+# $XTermId: annotate-enc,v 1.12 2021/02/18 10:41:35 tom Exp $
 # -----------------------------------------------------------------------------
 # Copyright 2021 by Thomas E. Dickey
 #
@@ -70,6 +70,16 @@ sub parse_unicode() {
     }
 }
 
+sub private_use($) {
+    my $value  = shift;
+    my $result = 0;
+    my $lo     = hex '0xE000';
+    my $hi     = hex '0xF8FF';
+    $value = hex $value;
+    $result = 1 if ( $value >= $lo and $value <= $hi );
+    return $result;
+}
+
 sub expected($$$$) {
     my $path = shift;
     my $line = shift;
@@ -80,9 +90,10 @@ sub expected($$$$) {
 }
 
 sub parse_encoding($) {
-    my $path  = shift;
-    my @data  = &read_file($path);
-    my $state = 0;
+    my $path   = shift;
+    my @data   = &read_file($path);
+    my $state  = 0;
+    my $ignore = 0;
     my %mapped;
     for my $n ( 0 .. $#data ) {
         my $data = $data[$n];
@@ -91,7 +102,7 @@ sub parse_encoding($) {
         if ( $data =~ /^#/ ) {
             printf "[%d:%d]", $state, $n + 1 if ($opt_v);
             printf "%s\n", $data;
-	    next;
+            next;
         }
         if ( $state == 0 ) {
             if ( $data =~ /^STARTENCODING\s+.*$/ ) {
@@ -103,23 +114,34 @@ sub parse_encoding($) {
         }
         elsif ( $state == 1 ) {
             if ( $data =~ /^SIZE\s+(0x)?[[:xdigit:]]+$/ ) {
-                $state++;
+
+                # ignore
             }
-            else {
-                &expected( $path, $n, $data, "SIZE" );
+            elsif ( $data =~ /^ALIAS\s+[[:alnum:].-]+$/ ) {
+
+                # ignore
             }
-        }
-        elsif ( $state == 2 ) {
-            if ( $data =~ /^STARTMAPPING\s+unicode$/ ) {
+            elsif ( $data =~ /^STARTMAPPING\s+unicode$/ ) {
                 $state++;
+                $ignore = 0;
+            }
+            elsif ( $data =~ /^STARTMAPPING\s+[[:alnum:].-]+$/ ) {
+                $state++;
+                $ignore = 1;
             }
             else {
                 &expected( $path, $n, $data, "STARTMAPPING" );
             }
         }
-        elsif ( $state == 3 ) {
+        elsif ( $state == 2 ) {
             if ( $data =~ /^ENDMAPPING\b/ ) {
                 $state++;
+            }
+            elsif ($ignore) {
+            }
+            elsif ( $data =~ /^UNDEFINE(\s+0x[[:xdigit:]]){1,2}/ ) {
+
+                # ignore
             }
             elsif ( $data =~ /^0x[[:xdigit:]]+\s+0x[[:xdigit:]]+.*/ ) {
                 my $source = $data;
@@ -134,7 +156,11 @@ sub parse_encoding($) {
                     next;
                 }
                 my $expect = "";
-                if ( $annotations{$target} ) {
+                if ( &private_use($target) ) {
+
+                    # ignore
+                }
+                elsif ( $annotations{$target} ) {
                     $expect = $annotations{$target};
                 }
                 else {
@@ -147,7 +173,7 @@ sub parse_encoding($) {
                     $actual =~ s/^[^#]*#\s*//;
                     $actual = "" if ( $actual eq "XXX" );
                 }
-                if ( $actual ne "" and index($actual, $expect) != 0 ) {
+                if ( $actual ne "" and index( $actual, $expect ) != 0 ) {
                     &expected( $path, $n, $data, "Description: $expect" );
                     next;
                 }
@@ -159,7 +185,11 @@ sub parse_encoding($) {
                 }
                 $mapped{$target} = $source;
                 $data =~ s/\s*#.*//;
-                $data .= "\t# $expect";
+                $data .= "\t# $expect" if ( $expect ne "" );
+            }
+            elsif ( $data =~ /^0x[[:xdigit:]]+(\s+0\b)?\s*(#.*)?$/ ) {
+
+                #ignore
             }
             else {
                 &expected( $path, $n, $data, "mapping" );

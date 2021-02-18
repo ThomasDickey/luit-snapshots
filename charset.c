@@ -1,4 +1,4 @@
-/* $XTermId: charset.c,v 1.81 2021/02/14 21:47:45 tom Exp $ */
+/* $XTermId: charset.c,v 1.83 2021/02/18 20:00:36 tom Exp $ */
 
 /*
 Copyright 2010-2018,2021 by Thomas E. Dickey
@@ -48,6 +48,8 @@ static const CharsetRec Unknown9494Charset =
 {"Unknown (94x94)", T_9494, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
 static const CharsetRec Unknown9696Charset =
 {"Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
+
+#define EmptyFontenc {0, 0, 0, 0, 0, 0, 0}
 
 /*
  * The "name" given is useful on the command-line.
@@ -115,7 +117,16 @@ static FontencCharsetRec fontencCharsets[] =
     {"CP 866",         T_128,   0,   "ibm-cp866",        0x80,   0, 0},
 
     {"Big 5",          T_94192, 0,   "big5.eten-0",      0x8000, 0, 0},
-    {0,                0,       0,   0,                  0,      0, 0}
+
+    /*
+     * Several empty slots are reserved, to allow for non-ISO-2022 character
+     * sets to be defined in ".enc" files.
+     */
+    EmptyFontenc,	/* G0, from ".enc" file */
+    EmptyFontenc,	/* G1, from ".enc" file */
+    EmptyFontenc,	/* G2, from ".enc" file */
+    EmptyFontenc,	/* G3, from ".enc" file */
+    EmptyFontenc
 };
 /* *INDENT-ON* */
 
@@ -292,6 +303,39 @@ cpSize(FontencCharsetPtr fc)
 }
 #endif
 
+static int
+addFontencCharset(const char *name, FontEncPtr f)
+{
+    FontencCharsetPtr fc = fontencCharsets;
+    FontencCharsetPtr limit = fc + SizeOf(fontencCharsets);
+    int result = 0;
+    int c_size = typeOfFontenc(f);
+    int c_type;
+
+    if (c_size <= 94) {
+	c_type = T_94;
+    } else if (c_size <= 96) {
+	c_type = T_96;
+    } else if (c_size <= 128) {
+	c_type = T_128;
+    } else {
+	VERBOSE(1, ("unexpected character-set size: %d\n", c_size));
+	return 0;
+    }
+
+    while (fc->name) {
+	fc++;
+    }
+    if (fc < (limit - 1)) {
+	result = 1;
+	fc->name = strdup(name);
+	fc->xlfd = strdup(name);
+	fc->type = c_type;
+	fc->shift = shiftOfFontenc(f);
+    }
+    return result;
+}
+
 static CharsetPtr
 getFontencCharset(unsigned final, int type, const char *name)
 {
@@ -457,12 +501,14 @@ const CharsetRec *
 getCharsetByName(const char *name)
 {
     const CharsetRec *c;
+    FontEncPtr f;
+    int type = T_94;
 
     VERBOSE(2, ("getCharsetByName(%s)\n", NonNull(name)));
     TRACE(("getCharsetByName(%s)\n", NonNull(name)));
 
     if (name == NULL)
-	return getUnknownCharset(T_94);
+	return getUnknownCharset(type);
 
     c = getCachedCharset(0, 0, name);
     if (c)
@@ -476,7 +522,17 @@ getCharsetByName(const char *name)
     if (c)
 	return c;
 
-    return getUnknownCharset(T_94);
+    /*
+     * If we did not find the name in a table, look for a ".enc" * file.
+     */
+    if ((f = lookupOneFontenc(name)) != 0) {
+	if (addFontencCharset(name, f)) {
+	    c = getFontencCharset(0, 0, name);
+	    if (c)
+		return c;
+	}
+    }
+    return getUnknownCharset(type);
 }
 /* *INDENT-OFF* */
 static const LocaleCharsetRec localeCharsets[] =
