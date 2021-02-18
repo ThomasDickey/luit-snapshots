@@ -1,7 +1,7 @@
-/* $XTermId: luitconv.h,v 1.35 2019/01/06 20:53:36 tom Exp $ */
+/* $XTermId: luitconv.h,v 1.37 2021/02/18 19:23:20 tom Exp $ */
 
 /*
-Copyright 2010-2013,2019 by Thomas E. Dickey
+Copyright 2010-2019,2021 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -130,7 +130,7 @@ extern void luitDestroyReverse(FontMapReversePtr);
 #define MapCodeValue(code, fontmap_ptr) \
 	luitMapCodeValue(code, fontmap_ptr)
 
-#else
+#else /* !USE_ICONV */
 
 #include <X11/fonts/fontenc.h>
 
@@ -143,7 +143,7 @@ extern void luitDestroyReverse(FontMapReversePtr);
 #define MapCodeValue(code, fontmap_ptr) \
 	FontEncRecode(code, fontmap_ptr)
 
-#endif
+#endif /* USE_ICONV */
 
 typedef unsigned short UCode;
 
@@ -175,6 +175,8 @@ extern int reportIconvCharsets(void);
 extern int showBuiltinCharset(const char *);
 extern int showFontencCharset(const char *);
 extern int showIconvCharset(const char *);
+extern int typeOfFontenc(FontEncPtr);
 extern unsigned luitRecode(unsigned, void *);
+extern unsigned shiftOfFontenc(FontEncPtr);
 
 #endif /* LUITCONV_H */

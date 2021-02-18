@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.6 2021/01/13 22:52:54 tom Exp $
+# $XTermId: minstall.sh,v 1.7 2021/02/18 21:11:18 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -86,7 +86,8 @@ NEW_FIRST=${NEW_CHAR0}${NEW_CHARS}
 
 # "X" is usually in the miscellaneous section, along with "undocumented".
 # Use that to guess an appropriate section.
-X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
+X_MANPAGE=X
+X_MANSECT=`man $X_MANPAGE 2>&1 | grep $X_MANPAGE'([^)]*)' | head -n 1 | tr '\012' '\040' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
 test -z "$X_MANSECT" && X_MANSECT=$suffix
 
 sed	-e 's%__vendorversion__%"X Window System"%' \

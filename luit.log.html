@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        *
  * DEALINGS IN THE SOFTWARE.                                                  *
  ******************************************************************************
-  $XTermId: luit.log.html,v 1.182 2021/02/14 21:47:45 tom Exp $
+  $XTermId: luit.log.html,v 1.186 2021/02/18 21:13:02 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -43,14 +43,30 @@
   <p>This file contains a list of the changes that I have made for
   luit.</p>
 
+  <p><a id="t20210218" name="t20210218">2021/02/18</a> -</p>
+
+  <ul>
+    <li>repair/improve the check for X manpage's section, using a
+    fix from xterm patch #302.</li>
+
+    <li>if a &ldquo;<code>.enc</code>&rdquo; file is found, but no
+    built-in character set description is found, add that to the
+    internal font-encoding table to allow it to be used, like the
+    built-in character sets.</li>
+
+    <li>modify <code>annotate-enc</code> to handle the external
+    &ldquo;<code>.enc</code>&rdquo; which were used with the older
+    <code>luit</code>.</li>
+  </ul>
+
   <p><a id="t20210214" name="t20210214">2021/02/14</a> -</p>
 
   <ul>
     <li>add <code>annotate-enc</code> script, use that to annotate
     the ".enc" files.</li>
 
-    <li>add built-in encoding apl-ibm (prompted by patch by Jerome
-    Ibanes).</li>
+    <li>add built-in encoding <code>apl2</code> (prompted by patch
+    by Jerome Ibanes).</li>
   </ul>
 
   <p><a id="t20210114" name="t20210114">2021/01/14</a> -</p>
