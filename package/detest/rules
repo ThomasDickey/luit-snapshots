@@ -1,5 +1,5 @@
 #!/usr/bin/make -f
-# $XTermId: rules,v 1.5 2010/05/31 20:32:51 tom Exp $
+# $XTermId: rules,v 1.6 2022/01/12 00:01:06 tom Exp $
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
@@ -37,7 +37,7 @@ clean:
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k 
+	dh_prep
 	dh_installdirs
 	$(MAKE) prefix=$(CURDIR)/debian/bluit/usr install
 
@@ -46,6 +46,7 @@ binary-indep: build install
 binary-arch: build install
 	dh_testdir
 	dh_testroot
+	dh_installchangelogs luit.log.html
 	dh_installdocs
 	dh_installman
 	dh_strip

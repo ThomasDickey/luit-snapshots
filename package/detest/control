@@ -1,21 +1,17 @@
 Source: bluit
 Section: utils
 Priority: optional
+Standards-Version: 4.6.0.1
 Maintainer: Thomas E. Dickey <dickey@invisible-island.net>
 Homepage: http://invisible-island.net/luit/
-Build-Depends: debhelper (>= 6),
+Build-Depends: debhelper-compat (= 13),
   libfontenc-dev,
-  libglib2.0-0,
-  libice6,
-  libncurses5-dev,
-  libpcre3,
-  libsm6,
-  libxt-dev,
   pkg-config,
-  xutils-dev
-Standards-Version: 3.8.3
+  xutils-dev,
+  zlib1g
 
 Package: bluit
+Provides: luit
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: locale and ISO 2022 support for Unicode terminals
@@ -24,6 +20,9 @@ Description: locale and ISO 2022 support for Unicode terminals
  locale's  encoding  into  UTF-8,  and convert terminal input from UTF-8
  into the locale's encoding.
  .
- The Xorg version of luit is largely maintained, but embedded in useful
- packages.  This package installs an alternative binary "bluit", and
+ This package installs an alternative binary "bluit", and
  adds it to the Debian alternatives via "xterm-filter".
+ .
+ This is version 2.0 of luit, which can use encoding information from
+ either the font-encoding library, or the standard locale support in
+ the C runtime library.

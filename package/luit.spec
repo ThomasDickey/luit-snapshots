@@ -1,9 +1,9 @@
 Summary: luit - Locale and ISO 2022 support for Unicode terminals
 %define AppProgram luit
-%define AppVersion 20210218
+%define AppVersion 20220111
 %define UseProgram b%{AppProgram}
-# $XTermId: luit.spec,v 1.65 2021/02/18 14:51:57 tom Exp $
-Name: %{AppProgram}
+# $XTermId: luit.spec,v 1.67 2022/01/12 00:55:28 tom Exp $
+Name: %{UseProgram}
 Version: %{AppVersion}
 Release: 1
 License: MIT
@@ -18,9 +18,8 @@ UTF-8 terminal emulator.  It will convert application output  from  the
 locale's  encoding  into  UTF-8,  and convert terminal input from UTF-8
 into the locale's encoding.
 
-The Xorg version of luit is largely unmaintained, but embedded in useful
-packages.  This package installs an alternative binary "bluit", and
-adds a symbolic link for "xterm-filter".
+This package installs an alternative binary "bluit", and adds a symbolic link
+for "xterm-filter".
 
 %prep
 
@@ -62,8 +61,10 @@ strip $RPM_BUILD_ROOT%{_bindir}/%{UseProgram}
 %changelog
 # each patch should add its ChangeLog entries here
 
-* Sat Jun 05 2010 Thomas Dickey
+* Tue Jan 11 2022 Thomas Dickey
+- update URL, install package as "bluit"
 
+* Sat Jun 05 2010 Thomas Dickey
 - Fixes/improvements for FreeBSD and Solaris
 
 * Mon May 31 2010 Thomas Dickey

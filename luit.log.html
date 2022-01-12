@@ -1,6 +1,6 @@
 <!--
  ******************************************************************************
- * Copyright 2006-2020,2021 by Thomas E. Dickey                               *
+ * Copyright 2006-2021,2022 by Thomas E. Dickey                               *
  * All Rights Reserved.                                                       *
  *                                                                            *
  * Permission is hereby granted, free of charge, to any person obtaining a    *
@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        *
  * DEALINGS IN THE SOFTWARE.                                                  *
  ******************************************************************************
-  $XTermId: luit.log.html,v 1.186 2021/02/18 21:13:02 tom Exp $
+  $XTermId: luit.log.html,v 1.191 2022/01/11 23:33:18 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -35,13 +35,27 @@
 </head>
 <body>
   <hr>
-  Copyright 2006-2020,2021 by <a href=
+  Copyright 2006-2021,2022 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a>
 
   <hr>
 
   <p>This file contains a list of the changes that I have made for
   luit.</p>
+
+  <p><a id="t20220111" name="t20220111">2022/01/11</a> -</p>
+
+  <ul>
+    <li>rename <code>package/debian</code> to avoid misuse by
+    Debian build-system.</li>
+
+    <li>updated <code>plink.sh</code>, from xterm, to work around
+    poor performance of gcc on Fedora.</li>
+
+    <li>updated configure macros for compiler-warning fixes.</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
 
   <p><a id="t20210218" name="t20210218">2021/02/18</a> -</p>
 
