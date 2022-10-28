@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.72 2021/01/13 22:33:17 tom Exp $ */
+/* $XTermId: luit.c,v 1.75 2022/10/28 18:46:38 tom Exp $ */
 
 /*
-Copyright 2010-2018,2021 by Thomas E. Dickey
+Copyright 2010-2021,2022 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -569,10 +569,7 @@ parseArgs(int argc, char **argv,
     return 0;
 
   bail:
-    if (path)
-	free(path);
-    if (argv)
-	free(argv);
+    free(path);
     return -1;
 }
 

@@ -1,7 +1,7 @@
-/* $XTermId: luitconv.c,v 1.123 2020/10/03 14:23:42 tom Exp $ */
+/* $XTermId: luitconv.c,v 1.126 2022/10/27 23:52:42 tom Exp $ */
 
 /*
-Copyright 2010-2019,2020 by Thomas E. Dickey
+Copyright 2010-2020,2022 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -575,7 +575,7 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
     TRACE(("initialize16bitTable(%s) gmax %d\n", NonNull(charset), gmax));
 
     for (n = 0; n < gmax; ++n) {
-	if ((data = datap[n]) != 0) {
+	if (datap[n] != 0) {
 	    datap[n]->len_index = 0;
 	}
     }
@@ -640,8 +640,9 @@ luitReverse(unsigned code, void *client_data GCC_UNUSED)
     TRACE(("luitReverse 0x%04X %p\n", code, (void *) data));
 
     if (data != 0) {
+	static const ReverseData zero_key;
 	ReverseData *p;
-	ReverseData key;
+	ReverseData key = zero_key;
 
 	key.ucs = (UINT) code;
 	p = (ReverseData *) bsearch(&key,

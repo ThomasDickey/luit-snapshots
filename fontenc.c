@@ -1,7 +1,7 @@
-/* $XTermId: fontenc.c,v 1.95 2021/02/18 21:41:52 tom Exp $ */
+/* $XTermId: fontenc.c,v 1.97 2022/10/27 23:52:23 tom Exp $ */
 
 /*
-Copyright 2013-2020,2021 by Thomas E. Dickey
+Copyright 2013-2021,2022 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -312,7 +312,6 @@ loadEncodingsDir(void)
 		}
 	    }
 	    fclose(fp);
-	    free(buffer);
 	    if (used > 1) {
 		qsort(encodings_dir,
 		      (size_t) used,
@@ -320,6 +319,7 @@ loadEncodingsDir(void)
 		      compare_aliases);
 	    }
 	}
+	free(buffer);
     }
 }
 
