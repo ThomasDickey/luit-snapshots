@@ -1,6 +1,6 @@
 <!--
  ******************************************************************************
- * Copyright 2006-2021,2022 by Thomas E. Dickey                               *
+ * Copyright 2006-2022,2023 by Thomas E. Dickey                               *
  * All Rights Reserved.                                                       *
  *                                                                            *
  * Permission is hereby granted, free of charge, to any person obtaining a    *
@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        *
  * DEALINGS IN THE SOFTWARE.                                                  *
  ******************************************************************************
-  $XTermId: luit.log.html,v 1.193 2022/10/28 19:59:10 tom Exp $
+  $XTermId: luit.log.html,v 1.196 2023/02/01 23:56:30 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -35,13 +35,22 @@
 </head>
 <body>
   <hr>
-  Copyright 2006-2021,2022 by <a href=
+  Copyright 2006-2022,2023 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a>
 
   <hr>
 
   <p>This file contains a list of the changes that I have made for
   luit.</p>
+
+  <p><a id="t20230201" name="t20230201">2023/02/01</a> -</p>
+
+  <ul>
+    <li>correct conversion to/from codes past BMP (patch by Ben
+    Wong, Debian #1027414)</li>
+
+    <li>fix a few compiler-warnings in configure-checks</li>
+  </ul>
 
   <p><a id="t20221028" name="t20221028">2022/10/28</a> -</p>
 

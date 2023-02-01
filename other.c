@@ -1,6 +1,7 @@
-/* $XTermId: other.c,v 1.15 2013/01/30 01:27:54 tom Exp $ */
+/* $XTermId: other.c,v 1.17 2023/02/01 23:47:05 tom Exp $ */
 
 /*
+Copyright 2006-2013,2023 by Thomas E. Dickey
 Copyright (c) 2002 by Tomohiro KUBOTA
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -122,26 +123,26 @@ stack_utf8(unsigned c, OtherStatePtr s)
 	return (int) c;
     }
     if (s->utf8.buf_ptr == 0) {
-	if ((c & 0x40) == 0)
+	if ((c & 0x40) == 0)	/* Skip continuation bytes 10xx xxxx */
 	    return -1;
 	s->utf8.buf[s->utf8.buf_ptr++] = UChar(c);
-	if ((c & 0x60) == 0x40)
+	if ((c & 0x60) == 0x40)	/* Starts with 110x xxxx */
 	    s->utf8.len = 2;
-	else if ((c & 0x70) == 0x60)
+	else if ((c & 0x70) == 0x60)	/* Starts with 1110 xxxx */
 	    s->utf8.len = 3;
-	else if ((c & 0x78) == 0x70)
+	else if ((c & 0x78) == 0x70)	/* Starts with 1111 0xxx */
 	    s->utf8.len = 4;
 	else
 	    s->utf8.buf_ptr = 0;
 	return -1;
     }
-    if ((c & 0x40) != 0) {
+    if ((c & 0x40) != 0) {	/* Resync if not a continuation 10xx xxxx */
 	s->utf8.buf_ptr = 0;
 	return -1;
     }
     s->utf8.buf[s->utf8.buf_ptr++] = UChar(c);
     if (s->utf8.buf_ptr < s->utf8.len)
-	return -1;
+	return -1;		/* Get the next continuation byte */
     switch (s->utf8.len) {
     case 2:
 	u = ((s->utf8.buf[0] & 0x1F) << 6) | (s->utf8.buf[1] & 0x3F);
@@ -160,7 +161,7 @@ stack_utf8(unsigned c, OtherStatePtr s)
 	else
 	    return u;
     case 4:
-	u = ((s->utf8.buf[0] & 0x03) << 18)
+	u = ((s->utf8.buf[0] & 0x07) << 18)
 	    | ((s->utf8.buf[1] & 0x3F) << 12)
 	    | ((s->utf8.buf[2] & 0x3F) << 6)
 	    | ((s->utf8.buf[3] & 0x3F));

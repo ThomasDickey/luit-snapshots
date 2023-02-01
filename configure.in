@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.49 2020/10/03 12:39:34 tom Exp $
+dnl $XTermId: configure.in,v 1.51 2023/02/01 23:25:21 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2019,2020 by Thomas E. Dickey
+dnl Copyright 2006-2020,2023 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -25,7 +25,7 @@ dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl ---------------------------------------------------------------------------
 
-AC_PREREQ(2.52.20200802)
+AC_PREREQ(2.52.20230114)
 AC_INIT(luit.c)
 AC_CONFIG_HEADER(config.h:config_h.in)
 CF_CHECK_CACHE
@@ -41,7 +41,10 @@ CF_MAKE_TAGS
 AC_CONST
 
 AC_PATH_XTRA
+
 CF_XOPEN_SOURCE(600)
+AC_CHECK_DECL(exit)
+
 CF_SIGWINCH
 CF_SVR4
 CF_SYSV

@@ -1,7 +1,7 @@
-/* $XTermId: iso2022.c,v 1.40 2018/06/27 20:41:53 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.42 2023/02/01 23:54:17 tom Exp $ */
 
 /*
-Copyright 2011-2013,2018 by Thomas E. Dickey
+Copyright 2011-2018,2023 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -134,11 +134,35 @@ outbufUTF8(Iso2022Ptr is, int fd, unsigned c)
 	OUTBUF_MAKE_FREE(is, fd, 2);
 	is->outbuf[is->outbuf_count++] = UChar(0xC0 | ((c >> 6) & 0x1F));
 	is->outbuf[is->outbuf_count++] = UChar(0x80 | (c & 0x3F));
-    } else {
+    } else if (c <= 0xFFFF) {
 	OUTBUF_MAKE_FREE(is, fd, 3);
 	is->outbuf[is->outbuf_count++] = UChar(0xE0 | ((c >> 12) & 0x0F));
 	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 6) & 0x3F));
 	is->outbuf[is->outbuf_count++] = UChar(0x80 | (c & 0x3F));
+    } else if (c <= 0x1FFFFF) {
+	OUTBUF_MAKE_FREE(is, fd, 4);
+	is->outbuf[is->outbuf_count++] = UChar(0xF0 | ((c >> 18) & 0x07));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 12) & 0x3F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 6) & 0x3F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | (c & 0x3F));
+    } else if (c <= 0x03FFFFFF) {
+	OUTBUF_MAKE_FREE(is, fd, 5);
+	is->outbuf[is->outbuf_count++] = UChar(0xF8 | ((c >> 24) & 0x03));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 18) & 0x3f));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 12) & 0x3F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 6) & 0x3F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | (c & 0x3F));
+    } else if (c <= 0x7FFFFFFF) {
+	OUTBUF_MAKE_FREE(is, fd, 6);
+	is->outbuf[is->outbuf_count++] = UChar(0xFC | ((c >> 30) & 0x01));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 24) & 0x3f));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 18) & 0x3f));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 12) & 0x3F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | ((c >> 6) & 0x3F));
+	is->outbuf[is->outbuf_count++] = UChar(0x80 | (c & 0x3F));
+    } else {
+	/* "21 bits ought to be enough for anybody!" -- The Unicode Consortium */
+	Warning("ignoring character beyond UTF-8's 31-bit range: 0x%X.\n", c);
     }
 }
 

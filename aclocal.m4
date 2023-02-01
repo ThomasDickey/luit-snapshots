@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.98 2022/10/02 23:55:56 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.99 2023/02/01 23:20:28 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2021,2022 by Thomas E. Dickey
+dnl Copyright 2006-2022,2023 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -101,7 +101,7 @@ size_t iconv();
   AC_SUBST(LIBICONV)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl AM_LANGINFO_CODESET version: 6 updated: 2021/01/01 16:53:59
+dnl AM_LANGINFO_CODESET version: 7 updated: 2023/01/11 04:05:23
 dnl -------------------
 dnl Inserted as requested by gettext 0.10.40
 dnl File from /usr/share/aclocal
@@ -113,7 +113,9 @@ dnl From Bruno Haible.
 AC_DEFUN([AM_LANGINFO_CODESET],
 [
 AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
-	[AC_TRY_LINK([#include <langinfo.h>],
+	[AC_TRY_LINK([
+$ac_includes_default
+#include <langinfo.h>],
 	[char* cs = nl_langinfo(CODESET); (void)cs],
 	am_cv_langinfo_codeset=yes,
 	am_cv_langinfo_codeset=no)
@@ -1329,7 +1331,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_POLL version: 10 updated: 2021/01/04 19:13:57
+dnl CF_FUNC_POLL version: 11 updated: 2023/01/05 18:51:40
 dnl ------------
 dnl See if the poll function really works.  Some platforms have poll(), but
 dnl it does not work for terminals or files.
@@ -1337,15 +1339,16 @@ AC_DEFUN([CF_FUNC_POLL],[
 tty >/dev/null 2>&1 || { AC_CHECK_FUNCS(posix_openpt) }
 AC_CACHE_CHECK(if poll really works,cf_cv_working_poll,[
 AC_TRY_RUN([
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
+$ac_includes_default
+
 #include <fcntl.h>
+
 #ifdef HAVE_POLL_H
 #include <poll.h>
 #else
 #include <sys/poll.h>
 #endif
+
 int main(void) {
 	struct pollfd myfds;
 	int ret;
@@ -1420,6 +1423,7 @@ then
 	AC_CHECKING([for $CC __attribute__ directives])
 cat > "conftest.$ac_ext" <<EOF
 #line __oline__ "${as_me:-configure}"
+#include <stdio.h>
 #include "confdefs.h"
 #include "conftest.h"
 #include "conftest.i"
@@ -3131,7 +3135,7 @@ AC_CHECK_FUNCS( \
 )
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 62 updated: 2022/10/02 19:55:56
+dnl CF_XOPEN_SOURCE version: 63 updated: 2022/12/29 10:10:26
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -3234,10 +3238,12 @@ case "$host_os" in
 	cf_save_xopen_cppflags="$CPPFLAGS"
 	CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
 	# Some of these niche implementations use copy/paste, double-check...
-	CF_VERBOSE(checking if _POSIX_C_SOURCE inteferes)
-	AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,,[
-		AC_MSG_WARN(_POSIX_C_SOURCE definition is not usable)
-		CPPFLAGS="$cf_save_xopen_cppflags"])
+	if test "$cf_cv_xopen_source" != no ; then
+		CF_VERBOSE(checking if _POSIX_C_SOURCE inteferes)
+		AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,,[
+			AC_MSG_WARN(_POSIX_C_SOURCE definition is not usable)
+			CPPFLAGS="$cf_save_xopen_cppflags"])
+	fi
 	;;
 esac
 
