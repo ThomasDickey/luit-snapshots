@@ -1,8 +1,8 @@
-dnl $XTermId: configure.in,v 1.51 2023/02/01 23:25:21 tom Exp $
+dnl $XTermId: configure.in,v 1.53 2024/01/02 23:57:36 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 2006-2020,2023 by Thomas E. Dickey
+dnl Copyright 2006-2023,2024 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -73,6 +73,7 @@ select \
 strdup \
 strcasecmp \
 )
+CF_FUNC_SETGROUPS
 
 CF_CHECK_TYPE([nfds_t],[unsigned long],[
 #include <sys/types.h>

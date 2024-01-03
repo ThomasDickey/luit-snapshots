@@ -1,7 +1,7 @@
-/* $XTermId: fontenc.c,v 1.97 2022/10/27 23:52:23 tom Exp $ */
+/* $XTermId: fontenc.c,v 1.98 2024/01/02 22:48:37 tom Exp $ */
 
 /*
-Copyright 2013-2021,2022 by Thomas E. Dickey
+Copyright 2013-2022,2024 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -138,12 +138,16 @@ getFileBuffer(char **bufferp, size_t *lengthp, FILE *fp)
 	if (have) {
 	    size_t need = have + used + 2;
 	    if (*lengthp < need) {
-		*bufferp = realloc(*bufferp, need);
-		if (*bufferp == 0)
-		    return 0;
+		char *next = realloc(*bufferp, need);
+		if (next == NULL) {
+		    free(*bufferp);
+		    *bufferp = NULL;
+		    return NULL;
+		}
+		*bufferp = next;
 		*lengthp = need;
-	    } else if (*bufferp == 0) {
-		return 0;
+	    } else if (*bufferp == NULL) {
+		return NULL;
 	    }
 	    strcpy(*bufferp + used, extra);
 	    used += have;
@@ -153,7 +157,7 @@ getFileBuffer(char **bufferp, size_t *lengthp, FILE *fp)
 	}
     }
 
-    return !finished ? *bufferp : 0;
+    return !finished ? *bufferp : NULL;
 }
 
 #ifndef USE_FONTENC

@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.57 2021/01/13 22:13:03 tom Exp $ */
+/* $XTermId: sys.c,v 1.59 2024/01/02 23:50:11 tom Exp $ */
 
 /*
-Copyright 2010-2018,2021 by Thomas E. Dickey
+Copyright 2010-2021,2024 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,6 +33,10 @@ THE SOFTWARE.
 #include <termios.h>
 #include <signal.h>
 #include <errno.h>
+
+#ifdef HAVE_SETGROUPS
+#include <grp.h>
+#endif
 
 #ifdef HAVE_WORKING_POLL
 #ifdef HAVE_POLL_H
@@ -571,9 +575,12 @@ droppriv(void)
 	errno = ENOSYS;
 	rc = -1;
     } else {
-	rc = setuid(uid);
+#ifdef HAVE_SETGROUPS
+	setgroups(0, NULL);
+#endif
+	rc = setgid(gid);
 	if (rc >= 0)
-	    rc = setgid(gid);
+	    rc = setuid(uid);
     }
 #else
     uid_t uid = getuid();

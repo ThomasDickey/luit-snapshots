@@ -1,6 +1,6 @@
-.\" $XTermId: luit.man,v 1.39 2021/02/20 11:01:07 tom Exp $
+.\" $XTermId: luit.man,v 1.41 2024/01/02 21:29:30 tom Exp $
 .\" ---------------------------------------------------------------------------
-.\" Copyright 2006-2018,2021 by Thomas E. Dickey
+.\" Copyright 2006-2021,2024 by Thomas E. Dickey
 .\" Copyright (c) 2001 by Juliusz Chroboczek
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,19 +22,27 @@
 .\" DEALINGS IN THE SOFTWARE.
 .\" ---------------------------------------------------------------------------
 .\" Escape single quotes in literal strings from groff's Unicode transform.
-.ie \n(.g .ds AQ \(aq
-.el       .ds AQ '
-.ie \n(.g .ds `` \(lq
-.el       .ds `` ``
-.ie \n(.g .ds '' \(rq
-.el       .ds '' ''
+.TH LUIT 1 __vendorversion__
+.ie \n(.g \{\
+.ds `` \(lq
+.ds '' \(rq
+.ds '  \(aq
+.\}
+.el \{\
+.ie t .ds `` ``
+.el   .ds `` ""
+.ie t .ds '' ''
+.el   .ds '' ""
+.ie t .ds '  \(aq
+.el   .ds '  '
+.\}
 .de bP
 .ie n  .IP \(bu 4
 .el    .IP \(bu 2
 ..
-.TH LUIT 1 __vendorversion__
 .SH NAME
-luit \- Locale and ISO\ 2022 support for Unicode terminals
+luit \-
+Locale and ISO\ 2022 support for Unicode terminals
 .SH SYNOPSIS
 .B luit
 [
@@ -347,6 +355,46 @@ as a convention.
 to decide which shell to execute.
 If SHELL is not set, \fBluit\fP executes /bin/sh.
 .\" ***************************************************************************
+.SH FILES
+.TP
+.B __locale_alias__
+The file mapping locales to locale encodings.
+.\" ***************************************************************************
+.SH BUGS
+.SS Limitations
+None of this complexity should be necessary.
+Stateless UTF-8
+throughout the system is the way to go.
+.PP
+Charsets with a non-trivial intermediary byte are not yet supported.
+.PP
+Selecting alternate sets of control characters is not supported and
+will never be.
+.SS Security
+On systems with SVR4 (\*(``Unix-98\*('') ptys (Linux version 2.2 and later,
+SVR4),
+.B luit
+should be run as the invoking user.
+.PP
+On systems without SVR4 (\*(``Unix-98\*('') ptys (notably BSD variants),
+running
+.B luit
+as an ordinary user will leave the tty world-writable; this is a
+security hole, and \fBluit\fP will generate a warning (but still accept to
+run).
+A possible solution is to make
+.B luit
+suid root;
+.B luit
+should drop privileges sufficiently early to make this safe.
+However,
+the startup code has not been exhaustively audited, and the author
+takes no responsibility for any resulting security issues.
+.PP
+.B Luit
+will refuse to run if it is installed setuid and cannot safely drop
+privileges.
+.\" ***************************************************************************
 .SH EXAMPLES
 The most typical use of
 .B luit
@@ -390,47 +438,12 @@ And then, in
 .BR Emacs ,
 .IP
 M\-x set\-terminal\-coding\-system RET iso\-2022\-8bit\-ss2 RET
-.PP
 .\" ***************************************************************************
-.SH FILES
-.TP
-.B __locale_alias__
-The file mapping locales to locale encodings.
-.\" ***************************************************************************
-.SH SECURITY
-On systems with SVR4 (\*(``Unix-98\*('') ptys (Linux version 2.2 and later,
-SVR4),
-.B luit
-should be run as the invoking user.
+.SH AUTHORS
+Luit was written by Juliusz Chroboczek <jch@pps.jussieu.fr> for the
+XFree86 project.
 .PP
-On systems without SVR4 (\*(``Unix-98\*('') ptys (notably BSD variants),
-running
-.B luit
-as an ordinary user will leave the tty world-writable; this is a
-security hole, and \fBluit\fP will generate a warning (but still accept to
-run).
-A possible solution is to make
-.B luit
-suid root;
-.B luit
-should drop privileges sufficiently early to make this safe.
-However,
-the startup code has not been exhaustively audited, and the author
-takes no responsibility for any resulting security issues.
-.PP
-.B Luit
-will refuse to run if it is installed setuid and cannot safely drop
-privileges.
-.\" ***************************************************************************
-.SH BUGS
-None of this complexity should be necessary.
-Stateless UTF-8
-throughout the system is the way to go.
-.PP
-Charsets with a non-trivial intermediary byte are not yet supported.
-.PP
-Selecting alternate sets of control characters is not supported and
-will never be.
+Thomas E. Dickey has maintained \fBluit\fP for use by \fBxterm\fP since 2006.
 .\" ***************************************************************************
 .SH SEE ALSO
 These are portable:
@@ -456,9 +469,3 @@ These are particularly useful:
 .bP
 http://czyborra.com/charsets/
 .fi
-.\" ***************************************************************************
-.SH AUTHOR
-Luit was written by Juliusz Chroboczek <jch@pps.jussieu.fr> for the
-XFree86 project.
-.PP
-Thomas E. Dickey has maintained \fBluit\fP for use by \fBxterm\fP since 2006.

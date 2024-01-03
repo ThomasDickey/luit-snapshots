@@ -1,7 +1,7 @@
-/* $XTermId: luitconv.c,v 1.126 2022/10/27 23:52:42 tom Exp $ */
+/* $XTermId: luitconv.c,v 1.127 2024/01/02 22:01:31 tom Exp $ */
 
 /*
-Copyright 2010-2020,2022 by Thomas E. Dickey
+Copyright 2010-2022,2024 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -223,10 +223,17 @@ try_iconv_open(const char *guess, char **alias)
 {
     int chcase;
     int mkcase;
-    char *encoding_name = malloc(strlen(guess) + 2);
-    char *encoding_temp = malloc(strlen(guess) + 2);
+    char *encoding_name = NULL;
+    char *encoding_temp = NULL;
     char *p;
     iconv_t result;
+
+    if (guess == NULL
+	|| (encoding_name = malloc(strlen(guess) + 2)) == NULL
+	|| (encoding_temp = malloc(strlen(guess) + 2)) == NULL) {
+	free(encoding_name);
+	return NO_ICONV;
+    }
 
     strcpy(encoding_name, guess);
     TRACE(("try_iconv_open(%s)\n", NonNull(encoding_name)));
@@ -1021,6 +1028,7 @@ loadCompositeCharset(iconv_t my_desc, const char *composite_name)
      * This is the first time we have tried for the composite.  Make
      * a list of the parts, first.
      */
+    memset(work, 0, sizeof(work));
     for (g = 0; g < 4; ++g) {
 	const FontencCharsetRec *fc = getCompositePart(composite_name, g);
 	work[g] = 0;

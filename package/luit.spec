@@ -1,16 +1,15 @@
-Summary: luit - Locale and ISO 2022 support for Unicode terminals
+Summary: Locale and ISO 2022 support for Unicode terminals
 %define AppProgram luit
-%define AppVersion 20230201
+%define AppVersion 20240102
 %define UseProgram b%{AppProgram}
-# $XTermId: luit.spec,v 1.70 2023/02/01 23:19:21 tom Exp $
+# $XTermId: luit.spec,v 1.72 2024/01/02 23:24:23 tom Exp $
 Name: %{UseProgram}
 Version: %{AppVersion}
 Release: 1
 License: MIT
 Group: Applications/System
-URL: ftp://invisible-island.net/%{AppProgram}
+URL: https://invisible-island.net/%{name}/
 Source0: %{AppProgram}-%{AppVersion}.tgz
-Packager: Thomas Dickey <dickey@invisible-island.net>
 
 %description
 Luit is a filter that can be run between an arbitrary application and a
@@ -44,28 +43,26 @@ make
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 make install                    DESTDIR=$RPM_BUILD_ROOT
-( cd $RPM_BUILD_ROOT%{_bindir} && ln -s %{UseProgram} xterm-filter )
+( cd $RPM_BUILD_ROOT%{_bindir}      && ln -s %{UseProgram} xterm-filter )
+( cd $RPM_BUILD_ROOT%{_mandir}/man1 && ln -s %{UseProgram}.1 xterm-filter.1 )
 
 strip $RPM_BUILD_ROOT%{_bindir}/%{UseProgram}
-
-%clean
-[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
 %doc %{AppProgram}.log.html
 %{_prefix}/bin/%{UseProgram}
 %{_prefix}/bin/xterm-filter
-%{_mandir}/man1/%{UseProgram}.*
+%{_mandir}/man1/*
 
 %changelog
 # each patch should add its ChangeLog entries here
 
-* Tue Jan 11 2022 Thomas Dickey
+* Tue Jan 11 2022 Thomas Dickey <dickey@his.com>
 - update URL, install package as "bluit"
 
-* Sat Jun 05 2010 Thomas Dickey
+* Sat Jun 05 2010 Thomas Dickey <dickey@his.com>
 - Fixes/improvements for FreeBSD and Solaris
 
-* Mon May 31 2010 Thomas Dickey
+* Mon May 31 2010 Thomas Dickey <dickey@his.com>
 - initial version

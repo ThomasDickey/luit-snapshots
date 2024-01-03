@@ -4,7 +4,7 @@ Upstream-Contact: Thomas Dickey <dickey@invisible-island.net>
 Source: https://invisible-island.net/luit/
 
 Files: *
-Copyright:  2006-2022,2023 by Thomas E. Dickey
+Copyright:  2006-2023,2024 by Thomas E. Dickey
 License: X11
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the "Software"),
