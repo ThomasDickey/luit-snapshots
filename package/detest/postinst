@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: postinst,v 1.4 2010/05/31 21:47:52 tom Exp $
+# $XTermId: postinst,v 1.5 2024/09/10 22:54:57 tom Exp $
 set -e
 
 if [ "$1" = "configure" ] ; then
@@ -7,7 +7,7 @@ if [ "$1" = "configure" ] ; then
 	ALT=xterm-filter
 
 	# add this package, and related packages (which should "own" this)
-	# (cocot needs a wrapper script, too, for compatbility with luit).
+	# (cocot needs a wrapper script, too, for compatibility with luit).
 	for PKG in bluit luit cocot
 	do
 		if test -f /usr/bin/$PKG

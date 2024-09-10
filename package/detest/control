@@ -3,7 +3,7 @@ Section: utils
 Priority: optional
 Standards-Version: 4.6.0.1
 Maintainer: Thomas E. Dickey <dickey@invisible-island.net>
-Homepage: http://invisible-island.net/luit/
+Homepage: https://invisible-island.net/luit/
 Build-Depends: debhelper-compat (= 13),
   libfontenc-dev,
   pkg-config,

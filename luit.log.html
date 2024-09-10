@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        *
  * DEALINGS IN THE SOFTWARE.                                                  *
  ******************************************************************************
-  $XTermId: luit.log.html,v 1.200 2024/01/02 22:49:38 tom Exp $
+  $XTermId: luit.log.html,v 1.204 2024/09/10 22:35:20 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -42,6 +42,16 @@
 
   <p>This file contains a list of the changes that I have made for
   luit.</p>
+
+  <p><a id="t20240910" name="t20240910">2024/09/10</a> -</p>
+
+  <ul>
+    <li>fix a memory-leak in <tt>initialize16bitTable</tt></li>
+
+    <li>updated configure script, to improve pathname checks</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
 
   <p><a id="t20240102" name="t20240102">2024/01/02</a> -</p>
 
@@ -638,9 +648,9 @@
     <li>add Debian package scripts (requires some
     assembly...).</li>
 
-    <li>add rpm spec-file (see <a href=
-    "ftp://ftp.invisible-island.net/RPMS">my ftp area</a> for
-    binaries).</li>
+    <li>add rpm spec-file (see <del>my ftp area</del> for
+    binaries).
+    </li>
 
     <li>add <code>-alias</code> option to allow override of
     <code>locale.alias</code> pathname.</li>

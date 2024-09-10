@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.102 2024/01/03 00:02:01 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.107 2024/09/10 23:20:38 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -370,7 +370,7 @@ done
 ifelse($2,,LIBS,[$2])="$cf_add_libs"
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_OPTIONAL_PATH version: 3 updated: 2015/05/10 19:52:14
+dnl CF_ADD_OPTIONAL_PATH version: 6 updated: 2024/09/10 19:19:44
 dnl --------------------
 dnl Add an optional search-path to the compile/link variables.
 dnl See CF_WITH_PATH
@@ -378,13 +378,12 @@ dnl
 dnl $1 = shell variable containing the result of --with-XXX=[DIR]
 dnl $2 = module to look for.
 AC_DEFUN([CF_ADD_OPTIONAL_PATH],[
-case "$1" in
-(no)
-	;;
-(yes)
+case "x$1" in
+(xno|xyes|x)
 	;;
 (*)
 	CF_ADD_SEARCHPATH([$1], [AC_MSG_ERROR(cannot find $2 under $1)])
+	CF_VERBOSE(setting path value for ifelse([$2],,variable,[$2]) to $1)
 	;;
 esac
 ])dnl
@@ -441,7 +440,7 @@ ifelse([$5],NONE,,[{ test -z "$5" || test "x$5" = xNONE || test "x$4" != "x$5"; 
 }
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ANSI_CC_CHECK version: 13 updated: 2012/10/06 11:17:15
+dnl CF_ANSI_CC_CHECK version: 15 updated: 2024/05/01 15:00:19
 dnl ----------------
 dnl This was originally adapted from the macros 'fp_PROG_CC_STDC' and
 dnl 'fp_C_PROTOTYPES' in the sharutils 4.2 distribution.
@@ -468,6 +467,8 @@ for cf_arg in "-DCC_HAS_PROTOS" \
 	"-Aa -D_HPUX_SOURCE" \
 	-Xc
 do
+	CFLAGS="$cf_save_CFLAGS"
+	CPPFLAGS="$cf_save_CPPFLAGS"
 	CF_ADD_CFLAGS($cf_arg)
 	AC_TRY_COMPILE(
 [
@@ -476,8 +477,8 @@ do
 choke me
 #endif
 #endif
+extern int test (int i, double x);
 ],[
-	int test (int i, double x);
 	struct s1 {int (*f) (int a);};
 	struct s2 {int (*f) (double a);};],
 	[cf_cv_ansi_cc="$cf_arg"; break])
@@ -1648,6 +1649,26 @@ rm -rf ./conftest*
 AC_SUBST(EXTRA_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_GLOB_FULLPATH version: 2 updated: 2024/08/03 12:34:02
+dnl ----------------
+dnl Use this in case-statements to check for pathname syntax, i.e., absolute
+dnl pathnames.  The "x" is assumed since we provide an alternate form for DOS.
+AC_DEFUN([CF_GLOB_FULLPATH],[
+AC_REQUIRE([CF_WITH_SYSTYPE])dnl
+case "$cf_cv_system_name" in
+(cygwin*|msys*|mingw32*|mingw64|os2*)
+	GLOB_FULLPATH_POSIX='/*'
+	GLOB_FULLPATH_OTHER='[[a-zA-Z]]:[[\\/]]*'
+	;;
+(*)
+	GLOB_FULLPATH_POSIX='/*'
+	GLOB_FULLPATH_OTHER=$GLOB_FULLPATH_POSIX
+	;;
+esac
+AC_SUBST(GLOB_FULLPATH_POSIX)
+AC_SUBST(GLOB_FULLPATH_OTHER)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_GNU_SOURCE version: 10 updated: 2018/12/10 20:09:41
 dnl -------------
 dnl Check if we must define _GNU_SOURCE to get a reasonable value for
@@ -2124,35 +2145,35 @@ ifelse([$1],,,[$1=$PATH_SEPARATOR])
 	AC_MSG_RESULT($PATH_SEPARATOR)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_SYNTAX version: 18 updated: 2020/12/31 18:40:20
+dnl CF_PATH_SYNTAX version: 19 updated: 2024/08/03 13:08:58
 dnl --------------
 dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
 dnl begins with one of the prefix/exec_prefix variables, and then again if the
 dnl result begins with 'NONE'.  This is necessary to work around autoconf's
 dnl delayed evaluation of those symbols.
 AC_DEFUN([CF_PATH_SYNTAX],[
+AC_REQUIRE([CF_GLOB_FULLPATH])dnl
+
 if test "x$prefix" != xNONE; then
 	cf_path_syntax="$prefix"
 else
 	cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".[$]$1" in
-(.\[$]\(*\)*|.\'*\'*)
+case "x[$]$1" in
+(x\[$]\(*\)*|x\'*\'*)
 	;;
-(..|./*|.\\*)
+(x.|x$GLOB_FULLPATH_POSIX|x$GLOB_FULLPATH_OTHER)
 	;;
-(.[[a-zA-Z]]:[[\\/]]*) # OS/2 EMX
-	;;
-(.\[$]\{*prefix\}*|.\[$]\{*dir\}*)
+(x\[$]\{*prefix\}*|x\[$]\{*dir\}*)
 	eval $1="[$]$1"
-	case ".[$]$1" in
-	(.NONE/*)
+	case "x[$]$1" in
+	(xNONE/*)
 		$1=`echo "[$]$1" | sed -e s%NONE%$cf_path_syntax%`
 		;;
 	esac
 	;;
-(.no|.NONE/*)
+(xno|xNONE/*)
 	$1=`echo "[$]$1" | sed -e s%NONE%$cf_path_syntax%`
 	;;
 (*)
@@ -2946,12 +2967,12 @@ AC_MSG_RESULT($LOCALE_ALIAS_FILE)
 AC_SUBST(LOCALE_ALIAS_FILE)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 13 updated: 2023/11/23 06:40:35
+dnl CF_WITH_MAN2HTML version: 14 updated: 2024/09/09 17:17:46
 dnl ----------------
 dnl Check for man2html and groff.  Prefer man2html over groff, but use groff
 dnl as a fallback.  See
 dnl
-dnl		http://invisible-island.net/scripts/man2html.html
+dnl		https://invisible-island.net/scripts/man2html.html
 dnl
 dnl Generate a shell script which hides the differences between the two.
 dnl
@@ -3121,6 +3142,26 @@ AC_SUBST(MAN2HTML_PATH)
 AC_SUBST(MAN2HTML_TEMP)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_SYSTYPE version: 1 updated: 2013/01/26 16:26:12
+dnl ---------------
+dnl For testing, override the derived host system-type which is used to decide
+dnl things such as the linker commands used to build shared libraries.  This is
+dnl normally chosen automatically based on the type of system which you are
+dnl building on.  We use it for testing the configure script.
+dnl
+dnl This is different from the --host option: it is used only for testing parts
+dnl of the configure script which would not be reachable with --host since that
+dnl relies on the build environment being real, rather than mocked up.
+AC_DEFUN([CF_WITH_SYSTYPE],[
+CF_CHECK_CACHE([AC_CANONICAL_SYSTEM])
+AC_ARG_WITH(system-type,
+	[  --with-system-type=XXX  test: override derived host system-type],
+[AC_MSG_WARN(overriding system type to $withval)
+	cf_cv_system_name=$withval
+	host_os=$withval
+])
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_WITH_VALGRIND version: 1 updated: 2006/12/14 18:00:21
 dnl ----------------
 AC_DEFUN([CF_WITH_VALGRIND],[
@@ -3129,11 +3170,13 @@ CF_NO_LEAKS_OPTION(valgrind,
 	[USE_VALGRIND])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ZLIB version: 4 updated: 2011/05/28 12:10:58
+dnl CF_WITH_ZLIB version: 6 updated: 2024/09/10 19:19:44
 dnl ------------
 dnl check for libz aka "zlib"
+dnl
+dnl $1 if present is yes/no, e.g., from a --with-zlib option.
 AC_DEFUN([CF_WITH_ZLIB],[
-  CF_ADD_OPTIONAL_PATH($1)
+  ifelse([$1],,,[CF_ADD_OPTIONAL_PATH($1, [zlib])])
 
   CF_FIND_LINKAGE([
 #include <zlib.h>

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.53 2024/01/02 23:57:36 tom Exp $
+dnl $XTermId: configure.in,v 1.55 2024/09/09 21:05:38 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -25,10 +25,13 @@ dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl ---------------------------------------------------------------------------
 
-AC_PREREQ(2.52.20230114)
+AC_PREREQ(2.52.20240618)
 AC_INIT(luit.c)
 AC_CONFIG_HEADER(config.h:config_h.in)
 CF_CHECK_CACHE
+
+CF_WITH_SYSTYPE
+CF_GLOB_FULLPATH
 
 AC_ARG_PROGRAM
 

@@ -1,4 +1,4 @@
-/* $XTermId: luitconv.c,v 1.127 2024/01/02 22:01:31 tom Exp $ */
+/* $XTermId: luitconv.c,v 1.128 2024/09/10 22:33:08 tom Exp $ */
 
 /*
 Copyright 2010-2022,2024 by Thomas E. Dickey
@@ -620,7 +620,8 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 		data = datap[gs];
 	    }
 	    if ((data == 0)
-		|| (my_code >= data->table_size)) {
+		|| (my_code >= data->table_size)
+		|| data->table_utf8[my_code].text != NULL) {
 		TRACE(("skip %d:%#x\n", gs, my_code));
 		continue;
 	    }

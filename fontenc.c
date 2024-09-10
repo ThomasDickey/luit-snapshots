@@ -1,4 +1,4 @@
-/* $XTermId: fontenc.c,v 1.98 2024/01/02 22:48:37 tom Exp $ */
+/* $XTermId: fontenc.c,v 1.99 2024/09/10 23:28:05 tom Exp $ */
 
 /*
 Copyright 2013-2022,2024 by Thomas E. Dickey
@@ -663,11 +663,9 @@ loadFontEncRec(const char *charset, const char *path)
 
     fp = gzopen(path, "r");
     if (fp != 0) {
-	int count = 0;
 	int ignore = 0;
 	while (!done && getGzipBuffer(&buffer, &length, fp)) {
 	    char *later;
-	    ++count;
 	    switch (getLineType(buffer, &later)) {
 	    case ftComment:
 		break;
