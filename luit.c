@@ -1,7 +1,7 @@
-/* $XTermId: luit.c,v 1.75 2022/10/28 18:46:38 tom Exp $ */
+/* $XTermId: luit.c,v 1.77 2025/09/12 08:20:14 tom Exp $ */
 
 /*
-Copyright 2010-2021,2022 by Thomas E. Dickey
+Copyright 2010-2022,2025 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -226,11 +226,11 @@ setLookupOrder(const char *name)
     size_t used = 0;
 
     TRACE(("setLookupOrder(%s)\n", NonNull(name)));
-    while ((token = strtok(tomatch, ",")) != 0) {
+    while ((token = strtok(tomatch, ",")) != NULL) {
 	UM_MODE order = umNONE;
 	size_t length = strlen(token);
 
-	tomatch = 0;
+	tomatch = NULL;
 	for (j = 0; j < SizeOf(table); ++j) {
 	    if (length <= strlen(table[j].name)
 		&& !strncmp(token, table[j].name, length)) {
@@ -501,7 +501,7 @@ static char *
 getShell(void)
 {
     const char *shell;
-    if ((shell = getenv("SHELL")) == 0)
+    if ((shell = getenv("SHELL")) == NULL)
 	shell = "/bin/sh";
     return strmalloc(shell);
 }
@@ -581,7 +581,7 @@ main(int argc, char **argv)
     char *l;
 
 #ifdef HAVE_PUTENV
-    if ((l = strmalloc("NCURSES_NO_UTF8_ACS=1")) != 0)
+    if ((l = strmalloc("NCURSES_NO_UTF8_ACS=1")) != NULL)
 	putenv(l);
 #endif
 
@@ -876,8 +876,8 @@ condom(int argc, char **argv)
     int pty;
     int pid;
     char *line;
-    char *path = 0;
-    char **child_argv = 0;
+    char *path = NULL;
+    char **child_argv = NULL;
     int rc;
     int sfd = STDIN_FILENO;
 

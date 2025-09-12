@@ -1,7 +1,7 @@
-/* $XTermId: luitconv.c,v 1.128 2024/09/10 22:33:08 tom Exp $ */
+/* $XTermId: luitconv.c,v 1.131 2025/09/12 19:08:45 tom Exp $ */
 
 /*
-Copyright 2010-2022,2024 by Thomas E. Dickey
+Copyright 2010-2024,2025 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -101,7 +101,7 @@ ConvToUTF32(unsigned *target, const char *source, size_t limit)
 	}
     }
 
-    if (target != 0) {
+    if (target != NULL) {
 	int shift = 0;
 	*target = 0;
 	for (j = 1; j < rc; j++) {
@@ -144,7 +144,7 @@ ConvToUTF8(UCHAR * target, UINT source, size_t limit)
 	rc = 0;
     }
 
-    if (target != 0) {
+    if (target != NULL) {
 	switch (rc) {
 	case 1:
 	    target[0] = (UCHAR) CH(0);
@@ -203,7 +203,7 @@ static LuitConv *
 newLuitConv(size_t elts)
 {
     LuitConv *result = TypeCalloc(LuitConv);
-    if (result != 0) {
+    if (result != NULL) {
 	TRACE(("newLuitConv(%u)\n", (unsigned) elts));
 	result->table_size = elts;
 	result->table_utf8 = TypeCallocN(MappingData, elts);
@@ -405,7 +405,7 @@ count8bitIconv(iconv_t my_desc)
 #define legalUCode(n) ((n) < 0xd800 || (n) > 0xdfff)
 
 /*
- * Given an encoding name, check to see if it is a single-byte encoding. 
+ * Given an encoding name, check to see if it is a single-byte encoding.
  * Return a suitable table-size, depending.
  *
  * iconv() provides no function for this purpose.  For demonstration purposes
@@ -582,7 +582,7 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
     TRACE(("initialize16bitTable(%s) gmax %d\n", NonNull(charset), gmax));
 
     for (n = 0; n < gmax; ++n) {
-	if (datap[n] != 0) {
+	if (datap[n] != NULL) {
 	    datap[n]->len_index = 0;
 	}
     }
@@ -615,11 +615,11 @@ initialize16bitTable(const char *charset, LuitConv ** datap, unsigned gmax)
 	    }
 	    my_code = dbcsDecode(output, (int) (op - output), euc, &gs);
 	    if (gs >= gmax) {
-		data = (gs == 1) ? datap[0] : 0;
+		data = (gs == 1) ? datap[0] : NULL;
 	    } else {
 		data = datap[gs];
 	    }
-	    if ((data == 0)
+	    if ((data == NULL)
 		|| (my_code >= data->table_size)
 		|| data->table_utf8[my_code].text != NULL) {
 		TRACE(("skip %d:%#x\n", gs, my_code));
@@ -647,7 +647,7 @@ luitReverse(unsigned code, void *client_data GCC_UNUSED)
 
     TRACE(("luitReverse 0x%04X %p\n", code, (void *) data));
 
-    if (data != 0) {
+    if (data != NULL) {
 	static const ReverseData zero_key;
 	ReverseData *p;
 	ReverseData key = zero_key;
@@ -659,7 +659,7 @@ luitReverse(unsigned code, void *client_data GCC_UNUSED)
 				    sizeof(data->rev_index[0]),
 				    cmp_rindex);
 
-	if (p != 0) {
+	if (p != NULL) {
 	    result = p->ch;
 	    TRACE(("...mapped %#x\n", result));
 	}
@@ -707,7 +707,7 @@ findEncodingAlias(const char *encoding_name)
     /* *INDENT-ON* */
 
     size_t n;
-    const char *result = 0;
+    const char *result = NULL;
 
     TRACE(("findEncodingAlias(%s)\n", NonNull(encoding_name)));
     for (n = 0; n < SizeOf(table); ++n) {
@@ -767,9 +767,9 @@ static const BuiltInCharsetRec *
 findBuiltinEncoding(const char *encoding_name)
 {
     size_t n;
-    const BuiltInCharsetRec *result = 0;
+    const BuiltInCharsetRec *result = NULL;
 
-    for (n = 0; builtin_encodings[n].name != 0; ++n) {
+    for (n = 0; builtin_encodings[n].name != NULL; ++n) {
 	if (!lcStrCmp(encoding_name, builtin_encodings[n].name)) {
 	    result = &(builtin_encodings[n]);
 	    break;
@@ -784,8 +784,8 @@ LuitConv *
 luitLookupEncoding(FontMapPtr mapping)
 {
     LuitConv *latest;
-    LuitConv *result = 0;
-    for (latest = all_conversions; latest != 0; latest = latest->next) {
+    LuitConv *result = NULL;
+    for (latest = all_conversions; latest != NULL; latest = latest->next) {
 	if (&(latest->mapping) == mapping) {
 	    result = latest;
 	}
@@ -800,20 +800,20 @@ luitLookupEncoding(FontMapPtr mapping)
 FontEncPtr
 luitGetFontEnc(const char *name, UM_MODE mode)
 {
-    FontEncPtr result = 0;
-    FontMapPtr mp = 0;
-    FontMapPtr mp2 = 0;
-    FontEncSimpleMapPtr mq = 0;
-    UCode *map = 0;
+    FontEncPtr result = NULL;
+    FontMapPtr mp = NULL;
+    FontMapPtr mp2 = NULL;
+    FontEncSimpleMapPtr mq = NULL;
+    UCode *map = NULL;
     LuitConv *lc;
     int n;
 
-    if ((mp = luitLookupMapping(name, mode, usANY)) != 0
-	&& (lc = luitLookupEncoding(mp)) != 0
-	&& (mp2 = TypeCalloc(FontMapRec)) != 0
-	&& (mq = TypeCalloc(FontEncSimpleMapRec)) != 0
-	&& (map = TypeCallocN(UCode, lc->table_size)) != 0
-	&& (result = TypeCalloc(FontEncRec)) != 0) {
+    if ((mp = luitLookupMapping(name, mode, usANY)) != NULL
+	&& (lc = luitLookupEncoding(mp)) != NULL
+	&& (mp2 = TypeCalloc(FontMapRec)) != NULL
+	&& (mq = TypeCalloc(FontEncSimpleMapRec)) != NULL
+	&& (map = TypeCallocN(UCode, lc->table_size)) != NULL
+	&& (result = TypeCalloc(FontEncRec)) != NULL) {
 	int max_chr = (MIN_UCODE - 1);
 	int min_chr = (MAX_UCODE + 1);
 
@@ -823,7 +823,7 @@ luitGetFontEnc(const char *name, UM_MODE mode)
 
 	*mp2 = *mp;
 	mp2->client_data = mq;
-	mp2->next = 0;
+	mp2->next = NULL;
 
 	mq->len = (unsigned) lc->table_size;
 	mq->map = map;
@@ -862,12 +862,12 @@ luitGetFontEnc(const char *name, UM_MODE mode)
 void
 luitFreeFontEnc(FontEncPtr data)
 {
-    if (data != 0) {
+    if (data != NULL) {
 	FontMapPtr mp;
 	FontEncSimpleMapPtr mq;
 
-	if ((mp = data->mappings) != 0) {
-	    if ((mq = mp->client_data) != 0) {
+	if ((mp = data->mappings) != NULL) {
+	    if ((mq = mp->client_data) != NULL) {
 		free(mq->map);
 		free(mq);
 	    }
@@ -897,7 +897,7 @@ initLuitConv(const char *encoding_name,
 	     int enc_file,
 	     US_SIZE size)
 {
-    FontMapPtr result = 0;
+    FontMapPtr result = NULL;
     LuitConv *latest;
     unsigned fast;
     size_t length = MAX8;
@@ -929,10 +929,10 @@ initLuitConv(const char *encoding_name,
     }
 
     TRACE(("initLuitConv(%s) %u\n", NonNull(encoding_name), (unsigned) length));
-    if ((latest = newLuitConv(length)) != 0) {
+    if ((latest = newLuitConv(length)) != NULL) {
 	latest->encoding_name = strmalloc(encoding_name);
 	latest->iconv_desc = my_desc;
-	if (builtIn != 0) {
+	if (builtIn != NULL) {
 	    initializeBuiltInTable(latest, builtIn, enc_file);
 	} else if (length == MAX16) {
 	    initialize16bitTable(latest->encoding_name, &latest, 1);
@@ -943,7 +943,7 @@ initLuitConv(const char *encoding_name,
 	result = &(latest->mapping);
 
 	/* sort the reverse-index, to allow using bsearch */
-	if (result != 0) {
+	if (result != NULL) {
 	    qsort(latest->rev_index,
 		  latest->len_index,
 		  sizeof(latest->rev_index[0]),
@@ -963,20 +963,20 @@ convertFontEnc(FontEncPtr fontenc)
     FontMapPtr mp = fontenc->mappings;
     FontEncSimpleMapPtr mq;
     BuiltInMapping *mapping;
-    FontMapPtr result = 0;
+    FontMapPtr result = NULL;
 
     TRACE(("convertFontEnc: %s\n", NonNull(fontenc->name)));
 
-    while (mp != 0) {
+    while (mp != NULL) {
 	if (mp->type == FONT_ENCODING_UNICODE)
 	    break;
 	mp = mp->next;
     }
 
-    if (mp != 0
-	&& (mq = mp->client_data) != 0
+    if (mp != NULL
+	&& (mq = mp->client_data) != NULL
 	&& mq->len
-	&& (mapping = TypeCallocN(BuiltInMapping, mq->len + 1)) != 0) {
+	&& (mapping = TypeCallocN(BuiltInMapping, mq->len + 1)) != NULL) {
 	unsigned j, k;
 	BuiltInCharsetRec builtIn;
 	US_SIZE size = ((fontenc->size <= 256 && fontenc->row_size == 0)
@@ -1032,8 +1032,8 @@ loadCompositeCharset(iconv_t my_desc, const char *composite_name)
     memset(work, 0, sizeof(work));
     for (g = 0; g < 4; ++g) {
 	const FontencCharsetRec *fc = getCompositePart(composite_name, g);
-	work[g] = 0;
-	if (fc != 0 && !knownCharset(fc)) {
+	work[g] = NULL;
+	if (fc != NULL && !knownCharset(fc)) {
 	    TRACE(("part %d:%s (%s)\n", g, NonNull(fc->name), NonNull(fc->xlfd)));
 
 	    switch (fc->type) {
@@ -1052,7 +1052,7 @@ loadCompositeCharset(iconv_t my_desc, const char *composite_name)
 		break;
 	    }
 
-	    if ((work[g] = newLuitConv((size_t) csize)) == 0)
+	    if ((work[g] = newLuitConv((size_t) csize)) == NULL)
 		break;
 	    work[g]->encoding_name = strmalloc(fc->name);
 	    work[g]->iconv_desc = my_desc;
@@ -1071,7 +1071,7 @@ loadCompositeCharset(iconv_t my_desc, const char *composite_name)
      * will not repeat this process.
      */
     for (g = 0; g < 4; ++g) {
-	if (work[g] != 0) {
+	if (work[g] != NULL) {
 	    work[g]->iconv_desc = NO_ICONV;
 	    finishIconvTable(work[g]);
 	}
@@ -1082,10 +1082,10 @@ loadCompositeCharset(iconv_t my_desc, const char *composite_name)
 static FontMapPtr
 getFontMapByName(const char *encoding_name)
 {
-    FontMapPtr result = 0;
+    FontMapPtr result = NULL;
     LuitConv *latest;
 
-    for (latest = all_conversions; latest != 0; latest = latest->next) {
+    for (latest = all_conversions; latest != NULL; latest = latest->next) {
 	if (!lcStrCmp(encoding_name, latest->encoding_name)) {
 	    result = &(latest->mapping);
 	    break;
@@ -1100,7 +1100,7 @@ static FontMapPtr
 lookupIconv(const char **encoding_name, char **aliased, US_SIZE size)
 {
     LuitConv *latest;
-    FontMapPtr result = 0;
+    FontMapPtr result = NULL;
     iconv_t my_desc;
     iconv_t check;
     const FontencCharsetRec *fc;
@@ -1109,11 +1109,11 @@ lookupIconv(const char **encoding_name, char **aliased, US_SIZE size)
 
     my_desc = try_iconv_open(*encoding_name, aliased);
     if (my_desc == NO_ICONV
-	&& (alias = findEncodingAlias(*encoding_name)) != 0) {
-	if (alias != 0) {
+	&& (alias = findEncodingAlias(*encoding_name)) != NULL) {
+	if (alias != NULL) {
 	    if (*aliased) {
 		free(*aliased);
-		*aliased = 0;
+		*aliased = NULL;
 	    }
 	    *encoding_name = alias;
 	    TRACE(("...retry '%s'\n", NonNull(*encoding_name)));
@@ -1124,14 +1124,14 @@ lookupIconv(const char **encoding_name, char **aliased, US_SIZE size)
 	TRACE(("...iconv_open succeeded\n"));
 	result = initLuitConv(*encoding_name, my_desc, NULL, -1, size);
 	iconv_close(my_desc);
-	if ((latest = luitLookupEncoding(result)) != 0) {
+	if ((latest = luitLookupEncoding(result)) != NULL) {
 	    latest->iconv_desc = NO_ICONV;
 	}
-    } else if ((full = getCompositeCharset(*encoding_name)) != 0
+    } else if ((full = getCompositeCharset(*encoding_name)) != NULL
 	       && (check = try_iconv_open(full, aliased)) != NO_ICONV) {
 	loadCompositeCharset(check, full);
 	iconv_close(check);
-	if ((fc = getFontencByName(*encoding_name)) != 0) {
+	if ((fc = getFontencByName(*encoding_name)) != NULL) {
 	    result = getFontMapByName(fc->name);
 	}
     }
@@ -1141,15 +1141,15 @@ lookupIconv(const char **encoding_name, char **aliased, US_SIZE size)
 FontMapPtr
 luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
 {
-    FontMapPtr result = 0;
+    FontMapPtr result = NULL;
     FontEncPtr fontenc;
     const BuiltInCharsetRec *builtIn;
-    char *aliased = 0;
+    char *aliased = NULL;
 
     TRACE(("luitLookupMapping '%s' mode %u size %u\n",
 	   NonNull(encoding_name), mode, size));
 
-    if ((result = getFontMapByName(encoding_name)) != 0) {
+    if ((result = getFontMapByName(encoding_name)) != NULL) {
 	TRACE(("...found in cache\n"));
     } else {
 	int n;
@@ -1160,20 +1160,20 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
 	    switch (lookup_order[n]) {
 	    case umICONV:
 		result = lookupIconv(&encoding_name, &aliased, size);
-		if (result != 0) {
+		if (result != NULL) {
 		    TRACE(("...lookupIconv succeeded\n"));
 		}
 		break;
 	    case umFONTENC:
-		if ((fontenc = lookupOneFontenc(encoding_name)) != 0) {
+		if ((fontenc = lookupOneFontenc(encoding_name)) != NULL) {
 		    result = convertFontEnc(fontenc);
-		    if (result != 0) {
+		    if (result != NULL) {
 			TRACE(("...convertFontEnc succeeded\n"));
 		    }
 		}
 		break;
 	    case umBUILTIN:
-		if ((builtIn = findBuiltinEncoding(encoding_name)) != 0) {
+		if ((builtIn = findBuiltinEncoding(encoding_name)) != NULL) {
 		    TRACE(("...use built-in charset\n"));
 		    result = initLuitConv(encoding_name,
 					  NO_ICONV,
@@ -1207,7 +1207,7 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
 	    default:
 		break;
 	    }
-	    if (result != 0)
+	    if (result != NULL)
 		break;
 	}
     }
@@ -1222,11 +1222,11 @@ luitLookupMapping(const char *encoding_name, UM_MODE mode, US_SIZE size)
 FontMapReversePtr
 luitLookupReverse(FontMapPtr fontmap_ptr)
 {
-    FontMapReversePtr result = 0;
+    FontMapReversePtr result = NULL;
     LuitConv *search;
 
     TRACE(("luitLookupReverse %p\n", (void *) fontmap_ptr));
-    for (search = all_conversions; search != 0; search = search->next) {
+    for (search = all_conversions; search != NULL; search = search->next) {
 	if (fontmap_ptr == &(search->mapping)) {
 	    TRACE(("...found %s\n", NonNull(search->encoding_name)));
 	    result = &(search->reverse);
@@ -1243,7 +1243,7 @@ luitMapCodeValue(unsigned code, FontMapPtr fontmap_ptr)
     LuitConv *search;
 
     result = code;
-    for (search = all_conversions; search != 0; search = search->next) {
+    for (search = all_conversions; search != NULL; search = search->next) {
 	if (&(search->mapping) == fontmap_ptr) {
 	    if (code < search->table_size) {
 		result = search->table_utf8[code].ucs;
@@ -1296,7 +1296,7 @@ reportBuiltinCharsets(void)
 
     printf("These encodings are used if iconv/fontenc data are missing:\n");
     printf("\n");
-    for (j = 0; builtin_encodings[j].name != 0; ++j) {
+    for (j = 0; builtin_encodings[j].name != NULL; ++j) {
 	const BuiltInCharsetRec *p = &(builtin_encodings[j]);
 	unsigned lo = p->table[0].source;
 	unsigned hi = lo;
@@ -1330,21 +1330,21 @@ reportIconvCharsets(void)
 
     FILE *fp;
     char *old_locale;
-    char **allLs = 0;
+    char **allLs = NULL;
     size_t numLs = 0;
     size_t useLs = 0;
 
     /* save our current locale */
-    if ((old_locale = setlocale(LC_CTYPE, NULL)) != 0)
+    if ((old_locale = setlocale(LC_CTYPE, NULL)) != NULL)
 	old_locale = strmalloc(old_locale);
 
     /*
      * next, obtain the list of locales.  Their order does not matter.
      */
-    if ((fp = popen("locale -a", "r")) != 0) {
+    if ((fp = popen("locale -a", "r")) != NULL) {
 	char buffer[BUFSIZ];
 	char *s;
-	while (fgets(buffer, (int) sizeof(buffer) - 1, fp) != 0) {
+	while (fgets(buffer, (int) sizeof(buffer) - 1, fp) != NULL) {
 	    s = buffer + strlen(buffer);
 	    while (s != buffer) {
 		--s;
@@ -1361,23 +1361,23 @@ reportIconvCharsets(void)
 		}
 	    }
 	    allLs[useLs++] = strmalloc(buffer);
-	    allLs[useLs] = 0;
+	    allLs[useLs] = NULL;
 	}
 	pclose(fp);
     }
 
     /* now, for each locale, set our locale to that and ask for the charset */
-    if (allLs != 0) {
+    if (allLs != NULL) {
 	int j, k, enc, loc;
 	char *resolved;
-	CODESET_LOCALE *allEs = 0;
+	CODESET_LOCALE *allEs = NULL;
 	size_t n, t, col, now;
 	size_t useEs = 0;
 	size_t numEs = 0;
 
-	for (j = 0; allLs[j] != 0; ++j) {
+	for (j = 0; allLs[j] != NULL; ++j) {
 	    setlocale(LC_CTYPE, allLs[j]);
-	    if ((resolved = nl_langinfo(CODESET)) != 0) {
+	    if ((resolved = nl_langinfo(CODESET)) != NULL) {
 		enc = -1;
 		for (k = 0; k < (int) useEs; ++k) {
 		    if (!strcmp(resolved, allEs[k].encoding)) {
@@ -1394,7 +1394,7 @@ reportIconvCharsets(void)
 			}
 		    }
 		    allEs[useEs].encoding = strmalloc(resolved);
-		    allEs[useEs].locales = 0;
+		    allEs[useEs].locales = NULL;
 		    allEs[useEs].actual = 0;
 		    allEs[useEs].length = 0;
 		    enc = (int) useEs;
@@ -1420,7 +1420,7 @@ reportIconvCharsets(void)
 		    allEs[enc].length++;
 		}
 		allEs[enc].locales[loc] = allLs[j];
-		allEs[enc].locales[loc + 1] = 0;
+		allEs[enc].locales[loc + 1] = NULL;
 	    }
 	}
 
@@ -1494,7 +1494,7 @@ luitDestroyReverse(FontMapReversePtr reverse)
     LuitConv *p, *q;
     size_t n;
 
-    for (p = all_conversions, q = 0; p != 0; q = p, p = p->next) {
+    for (p = all_conversions, q = NULL; p != NULL; q = p, p = p->next) {
 	if (&(p->reverse) == reverse) {
 
 	    free(p->encoding_name);
@@ -1508,7 +1508,7 @@ luitDestroyReverse(FontMapReversePtr reverse)
 	    }
 
 	    /* delink and destroy */
-	    if (q != 0)
+	    if (q != NULL)
 		q->next = p->next;
 	    else
 		all_conversions = p->next;
@@ -1524,7 +1524,7 @@ void
 luitconv_leaks(void)
 {
     TRACE(("luitconv_leaks %p\n", (void *) all_conversions));
-    while (all_conversions != 0) {
+    while (all_conversions != NULL) {
 	luitDestroyReverse(&(all_conversions->reverse));
     }
 }

@@ -1,7 +1,7 @@
-/* $XTermId: sys.c,v 1.59 2024/01/02 23:50:11 tom Exp $ */
+/* $XTermId: sys.c,v 1.61 2025/09/12 08:20:14 tom Exp $ */
 
 /*
-Copyright 2010-2021,2024 by Thomas E. Dickey
+Copyright 2010-2024,2025 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -463,7 +463,7 @@ allocatePty(int *pty_return, char **line_return)
     goto bail;
 
   found:
-    if ((line = strmalloc(name)) != 0) {
+    if ((line = strmalloc(name)) != NULL) {
 	line[5] = 't';
 	fix_pty_perms(line);
 	*pty_return = pty;
@@ -616,9 +616,9 @@ my_strcasecmp(const char *a, const char *b)
 char *
 strmalloc(const char *value)
 {
-    char *result = 0;
+    char *result = NULL;
 
-    if (value != 0) {
+    if (value != NULL) {
 #ifdef HAVE_STRDUP
 	result = strdup(value);
 #else

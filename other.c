@@ -1,7 +1,7 @@
-/* $XTermId: other.c,v 1.17 2023/02/01 23:47:05 tom Exp $ */
+/* $XTermId: other.c,v 1.18 2025/09/12 07:52:28 tom Exp $ */
 
 /*
-Copyright 2006-2013,2023 by Thomas E. Dickey
+Copyright 2006-2023,2025 by Thomas E. Dickey
 Copyright (c) 2002 by Tomohiro KUBOTA
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -340,7 +340,7 @@ stack_hkscs(unsigned c, OtherStatePtr s)
  *  The 4Bytes MB char is defined in gb18030.2000-1
  *  Please note that the mapping in 2000-1 is not a 4Bytes seq => 2Bytes value
  *  mapping.
- *  To use the 2000-1 we need to 'linear' the 4Bytes sequence and 'lookup' the 
+ *  To use the 2000-1 we need to 'linear' the 4Bytes sequence and 'lookup' the
  *  unicode value after that.
  *
  *  For more info on GB18030 standard pls check:

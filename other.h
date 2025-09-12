@@ -1,6 +1,7 @@
-/* $XTermId: other.h,v 1.12 2010/11/26 20:28:13 tom Exp $ */
+/* $XTermId: other.h,v 1.13 2025/09/12 07:52:28 tom Exp $ */
 
 /*
+Copyright 2006-2010,2025 by Thomas E. Dickey
 Copyright (c) 2002 by Tomohiro KUBOTA
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

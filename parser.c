@@ -1,7 +1,7 @@
-/* $XTermId: parser.c,v 1.27 2022/10/27 23:53:08 tom Exp $ */
+/* $XTermId: parser.c,v 1.29 2025/09/12 08:20:14 tom Exp $ */
 
 /*
-Copyright 2011-2021,2022 by Thomas E. Dickey
+Copyright 2011-2022,2025 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -181,12 +181,12 @@ has_encoding(const char *locale)
 {
     int result = 0;
 
-    if (locale != 0 && *locale != 0) {
+    if (locale != NULL && *locale != 0) {
 	char *dot = strchr(locale, '.');
-	result = (dot != 0
+	result = (dot != NULL
 		  && dot != locale
 		  && dot[1] != 0
-		  && strchr(dot + 1, '.') == 0);
+		  && strchr(dot + 1, '.') == NULL);
     }
     return result;
 }
@@ -245,14 +245,14 @@ resolveLocale(const char *locale)
 	    && strcmp(locale, "C")
 	    && strcmp(locale, "POSIX")
 	    && strcmp(locale, "US-ASCII")
-	    && (improved = nl_langinfo(CODESET)) != 0) {
+	    && (improved = nl_langinfo(CODESET)) != NULL) {
 	    TRACE(("...nl_langinfo ->%s\n", NonNull(improved)));
 	    free(resolved);
 	    resolved = strmalloc(improved);
 	} else
 #endif
-	if (f == 0) {
-	    if ((f = fopen(locale_alias, "r")) == 0) {
+	if (f == NULL) {
+	    if ((f = fopen(locale_alias, "r")) == NULL) {
 		perror(locale_alias);
 	    } else {
 		fclose(f);

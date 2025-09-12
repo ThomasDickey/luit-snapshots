@@ -1,7 +1,7 @@
-/* $XTermId: fontenc.c,v 1.99 2024/09/10 23:28:05 tom Exp $ */
+/* $XTermId: fontenc.c,v 1.102 2025/09/12 08:24:47 tom Exp $ */
 
 /*
-Copyright 2013-2022,2024 by Thomas E. Dickey
+Copyright 2013-2024,2025 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -87,7 +87,7 @@ FontEncDirectory(void)
  * more than one place (because the file is created as a side-effect of
  * mkfontdir).
  *
- * The "encodings.dir" file has a count of the number of records at the start. 
+ * The "encodings.dir" file has a count of the number of records at the start.
  * Subsequent lines contain an alias and a pathname (for a ".enc" file).  The
  * pathname can be either absolute or relative to the directory containing
  * "encodings.dir".
@@ -117,7 +117,7 @@ getFileBuffer(char **bufferp, size_t *lengthp, FILE *fp)
     char extra[BUFSIZ];
     int finished = 1;
 
-    if (*bufferp != 0)
+    if (*bufferp != NULL)
 	**bufferp = '\0';
 
     while (fgets(extra, (int) sizeof(extra) - 1, fp)) {
@@ -173,7 +173,7 @@ getGzipBuffer(char **bufferp, size_t *lengthp, gzFile fp)
     char extra[BUFSIZ];
     int finished = 1;
 
-    if (*bufferp != 0)
+    if (*bufferp != NULL)
 	**bufferp = '\0';
 
     while (gzgets(fp, extra, (int) sizeof(extra) - 1)) {
@@ -205,7 +205,7 @@ getGzipBuffer(char **bufferp, size_t *lengthp, gzFile fp)
 	}
     }
 
-    return !finished ? *bufferp : 0;
+    return !finished ? *bufferp : NULL;
 }
 #endif /* USE_ZLIB */
 #endif /* !USE_FONTENC */
@@ -221,9 +221,9 @@ absolutePath(char *given, const char *refPath)
 	    given += 2;
 	}
 	result = malloc(strlen(refPath) + strlen(given) + 2);
-	if (result != 0) {
+	if (result != NULL) {
 	    strcpy(result, refPath);
-	    if ((leaf = strrchr(result, '/')) == 0) {
+	    if ((leaf = strrchr(result, '/')) == NULL) {
 		leaf = result + strlen(result);
 		*leaf++ = '/';
 	    }
@@ -248,7 +248,7 @@ compare_aliases(const void *a, const void *b)
 static char *
 skipToWhite(char *value)
 {
-    char *result = 0;
+    char *result = NULL;
     while (*value != '\0') {
 	if (isspace(UChar(*value))) {
 	    result = value;
@@ -262,10 +262,10 @@ skipToWhite(char *value)
 static void
 loadEncodingsDir(void)
 {
-    if (encodings_dir == 0) {
+    if (encodings_dir == NULL) {
 	FILE *fp;
 	const char *path = FontEncDirectory();
-	char *buffer = 0;
+	char *buffer = NULL;
 	size_t entry = 0;
 	size_t length = 0;
 	size_t entries = 0;
@@ -274,27 +274,27 @@ loadEncodingsDir(void)
 	int n, found;
 	int row = 0;
 
-	if (path == 0) {
+	if (path == NULL) {
 	    TRACE(("cannot find encodings.dir\n"));
-	} else if ((fp = fopen(path, "r")) == 0) {
+	} else if ((fp = fopen(path, "r")) == NULL) {
 	    FatalError("cannot open %s\n", path);
 	} else {
-	    while (getFileBuffer(&buffer, &length, fp) != 0) {
+	    while (getFileBuffer(&buffer, &length, fp) != NULL) {
 		++row;
 		if (*buffer == '\0')
 		    continue;
-		if (encodings_dir == 0) {
-		    char *next = 0;
+		if (encodings_dir == NULL) {
+		    char *next = NULL;
 		    long count = strtol(buffer, &next, 10);
 		    if (count <= 0) {
 			FatalError("found no count in %s\n", path);
 		    }
 		    entries = (size_t) count;
 		    encodings_dir = calloc(entries + 1, sizeof(*encodings_dir));
-		    if (encodings_dir == 0) {
+		    if (encodings_dir == NULL) {
 			FatalError("cannot allocate %ld encodings\n", count);
 		    }
-		} else if ((value = skipToWhite(buffer)) != 0) {
+		} else if ((value = skipToWhite(buffer)) != NULL) {
 		    *value++ = '\0';
 		    /* get rid of duplicates - they do occur */
 		    for (n = found = 0; n < used; ++n) {
@@ -330,7 +330,7 @@ loadEncodingsDir(void)
 #ifndef USE_FONTENC
 /*
  * The fontenc library attempts to fill in the one-one mapping in the setCode
- * function, but it is inconsistently applied and the loaded map contains gaps. 
+ * function, but it is inconsistently applied and the loaded map contains gaps.
  * This function sets one-one for any codes which map to NUL.
  */
 static void
@@ -338,7 +338,7 @@ fillCharMap(FontEncSimpleMapPtr mp, int size)
 {
     int n;
 
-    if (mp != 0 && mp->map != 0) {
+    if (mp != NULL && mp->map != NULL) {
 	for (n = 0; n < size; ++n) {
 	    if (mp->map[n] == 0) {
 		mp->map[n] = (UCode) (n + mp->first);
@@ -356,7 +356,7 @@ trimCharMap(FontEncSimpleMapPtr mp, int size)
 {
     int n;
 
-    if (mp != 0 && mp->map != 0) {
+    if (mp != NULL && mp->map != NULL) {
 	for (n = 0; n < size; ++n) {
 	    if (mp->map[n] == (UCode) (n + mp->first)) {
 		mp->map[n] = 0;
@@ -564,7 +564,7 @@ fontencUnmap(FontEncSimpleMapPtr map, int from)
 {
     int result;
 
-    if (map != 0) {
+    if (map != NULL) {
 	if (map->row_size) {
 	    from += map->first;
 	    if (map->row_size == 0) {
@@ -648,21 +648,21 @@ loadFontEncRec(const char *charset, const char *path)
     result = FontEncReallyLoad(charset, path);
 #elif defined(USE_ZLIB)
     gzFile fp;
-    char *buffer = 0;
+    char *buffer = NULL;
     size_t length = 0;
     size_t numAliases = 0;
     size_t result_size = 0;
     int numbers[MAX_NUMBERS];
-    FontMapPtr mapping = 0;
+    FontMapPtr mapping = NULL;
     int done = 0;
 
     (void) charset;
 
-    if ((result = calloc((size_t) 1, sizeof(*result))) == 0)
-	return 0;
+    if ((result = calloc((size_t) 1, sizeof(*result))) == NULL)
+	return NULL;
 
     fp = gzopen(path, "r");
-    if (fp != 0) {
+    if (fp != NULL) {
 	int ignore = 0;
 	while (!done && getGzipBuffer(&buffer, &length, fp)) {
 	    char *later;
@@ -681,7 +681,7 @@ loadFontEncRec(const char *charset, const char *path)
 		result->aliases = realloc(result->aliases,
 					  (numAliases + 2) * sizeof(char *));
 		result->aliases[numAliases++] = allocateToken(later);
-		result->aliases[numAliases] = 0;
+		result->aliases[numAliases] = NULL;
 		break;
 	    case ftSize:
 		/*
@@ -774,13 +774,13 @@ loadFontEncRec(const char *charset, const char *path)
 		    ignore = 0;
 		    result_size = fontencSize(result);
 		    mapping = TypeCalloc(FontMapRec);
-		    if (mapping == 0)
+		    if (mapping == NULL)
 			FatalError("cannot allocate map record\n");
 		    mapping->type = FONT_ENCODING_UNICODE;
 		    mapping->recode = luitRecode;
 
-		    if ((mq = TypeCalloc(FontEncSimpleMapRec)) == 0
-			|| (mq->map = TypeCallocN(UCode, result_size)) == 0) {
+		    if ((mq = TypeCalloc(FontEncSimpleMapRec)) == NULL
+			|| (mq->map = TypeCallocN(UCode, result_size)) == NULL) {
 			FatalError("cannot allocate map for %ld codes\n",
 				   (long) result_size);
 		    }
@@ -818,7 +818,7 @@ loadFontEncRec(const char *charset, const char *path)
 	free(buffer);
     }
 
-    if (result->name == 0)
+    if (result->name == NULL)
 	result->name = strmalloc(charset);
 #else /* !USE_FONTENC && !USE_ZLIB */
     (void) charset;
@@ -835,22 +835,22 @@ FontEncPtr
 lookupOneFontenc(const char *name)
 {
     int n;
-    FontEncPtr result = 0;
+    FontEncPtr result = NULL;
 
 #ifdef USE_FONTENC
     result = FontEncFind(name, NULL);
-    if (result == 0)
+    if (result == NULL)
 #endif
     {
 	loadEncodingsDir();
-	if (encodings_dir != 0) {
-	    for (n = 0; encodings_dir[n].alias != 0; ++n) {
+	if (encodings_dir != NULL) {
+	    for (n = 0; encodings_dir[n].alias != NULL; ++n) {
 		if (!StrCaseCmp(name, encodings_dir[n].alias)) {
-		    if ((result = encodings_dir[n].data) == 0
+		    if ((result = encodings_dir[n].data) == NULL
 			&& encodings_dir[n].used == 0) {
 			result = loadFontEncRec(encodings_dir[n].alias,
 						encodings_dir[n].path);
-			if (result == 0) {
+			if (result == NULL) {
 			    Warning("cannot load data for %s\n",
 				    encodings_dir[n].path);
 			} else {
@@ -894,7 +894,7 @@ fontmapTypename(int type)
 static FontEncSimpleMapPtr
 findUnicodeMapping(FontEncPtr data)
 {
-    FontEncSimpleMapPtr mq = 0;
+    FontEncSimpleMapPtr mq = NULL;
     FontMapPtr mp;
 
     for (mp = data->mappings; mp != NULL; mp = mp->next) {
@@ -915,7 +915,7 @@ static FontEncPtr
 reportOneFontenc(const char *alias, const char *path)
 {
     FontEncPtr data = loadFontEncRec(alias, path);
-    if (data != 0) {
+    if (data != NULL) {
 	int n;
 	int lo_char = -1;
 	int hi_char = -1;
@@ -943,7 +943,7 @@ reportOneFontenc(const char *alias, const char *path)
 	    printf("\tBase: %04X\n", data->first);
 	}
 	mq = findUnicodeMapping(data);
-	if (mq != 0) {
+	if (mq != NULL) {
 	    trim_or_fill(mq, (int) fontencSize(data));
 	    for (n = 0; n < (int) mq->len; ++n) {
 		inx = fontencUnmap(mq, n);
@@ -976,14 +976,14 @@ reportFontencCharsets(void)
 
     printf("Available encodings listed in:\n\t%s\n", FontEncDirectory());
     loadEncodingsDir();
-    if (encodings_dir != 0) {
-	for (n = 0; encodings_dir[n].alias != 0; ++n) {
+    if (encodings_dir != NULL) {
+	for (n = 0; encodings_dir[n].alias != NULL; ++n) {
 	    printf("%s\n\t%s\n",
 		   encodings_dir[n].alias,
 		   encodings_dir[n].path);
 	    encodings_dir[n].data = reportOneFontenc(encodings_dir[n].alias,
 						     encodings_dir[n].path);
-	    if (encodings_dir[n].data != 0) {
+	    if (encodings_dir[n].data != NULL) {
 		rc = EXIT_SUCCESS;
 	    }
 	}
@@ -1003,7 +1003,7 @@ showOneCharset(const char *name, FontEncPtr data)
 {
     int rc = EXIT_FAILURE;
 
-    if (data != 0) {
+    if (data != NULL) {
 	FontMapPtr mp;
 	int n;
 
@@ -1026,15 +1026,15 @@ showOneCharset(const char *name, FontEncPtr data)
 	else if (data->first)
 	    printf("FIRSTINDEX %d\n", data->first);
 
-	for (mp = data->mappings; mp != 0; mp = mp->next) {
+	for (mp = data->mappings; mp != NULL; mp = mp->next) {
 	    printf("STARTMAPPING %s\n", fontmapTypename(mp->type));
 	    if (mp->type == FONT_ENCODING_UNICODE) {
 		int limit = (int) fontencSize(data);
 		unsigned ch;
 
-		if (mp->client_data == 0)
+		if (mp->client_data == NULL)
 		    printf("# no client_data-array\n");
-		if (mp->recode == 0) {
+		if (mp->recode == NULL) {
 		    printf("# no recode-function\n");
 		} else {
 		    trim_or_fill(mp->client_data, (int) fontencSize(data));
@@ -1196,8 +1196,8 @@ freeFontMapRec(FontMapPtr data)
 static void
 freeFontEncRec(FontEncPtr data)
 {
-    if (data != 0) {
-	while (data->mappings != 0) {
+    if (data != NULL) {
+	while (data->mappings != NULL) {
 	    FontMapPtr next = data->mappings->next;
 	    freeFontMapRec(data->mappings);
 	    data->mappings = next;
@@ -1217,9 +1217,9 @@ freeFontEncRec(FontEncPtr data)
 void
 fontenc_leaks(void)
 {
-    if (encodings_dir != 0) {
+    if (encodings_dir != NULL) {
 	int enc;
-	for (enc = 0; encodings_dir[enc].alias != 0; ++enc) {
+	for (enc = 0; encodings_dir[enc].alias != NULL; ++enc) {
 	    freeFontEncRec(encodings_dir[enc].data);
 	    free(encodings_dir[enc].alias);
 	    free(encodings_dir[enc].path);

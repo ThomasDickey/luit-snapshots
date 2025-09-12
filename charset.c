@@ -1,7 +1,7 @@
-/* $XTermId: charset.c,v 1.83 2021/02/18 20:00:36 tom Exp $ */
+/* $XTermId: charset.c,v 1.87 2025/09/12 19:18:35 tom Exp $ */
 
 /*
-Copyright 2010-2018,2021 by Thomas E. Dickey
+Copyright 2010-2021,2025 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -40,16 +40,14 @@ NullReverse(unsigned int n GCC_UNUSED, const CharsetRec * self GCC_UNUSED)
     return -1;
 }
 
-static const CharsetRec Unknown94Charset =
-{"Unknown (94)", T_94, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
-static const CharsetRec Unknown96Charset =
-{"Unknown (96)", T_96, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
-static const CharsetRec Unknown9494Charset =
-{"Unknown (94x94)", T_9494, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
-static const CharsetRec Unknown9696Charset =
-{"Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, 0, 0, 0, 0, 0, 0};
+#define NotKnown(name, code) {name, code, 0, IdentityRecode, NullReverse, NULL, NULL, NULL, NULL, NULL, NULL}
 
-#define EmptyFontenc {0, 0, 0, 0, 0, 0, 0}
+static const CharsetRec Unknown94Charset = NotKnown("Unknown (94)", T_94);
+static const CharsetRec Unknown96Charset = NotKnown("Unknown (96)", T_96);
+static const CharsetRec Unknown9494Charset = NotKnown("Unknown (94x94)", T_9494);
+static const CharsetRec Unknown9696Charset = NotKnown("Unknown (96x96)", T_9696);
+
+#define EmptyFontenc {NULL, 0, 0, NULL, 0, NULL, NULL}
 
 /*
  * The "name" given is useful on the command-line.
@@ -61,62 +59,62 @@ static const CharsetRec Unknown9696Charset =
 /* *INDENT-OFF* */
 static FontencCharsetRec fontencCharsets[] =
 {
-    {"ISO 646 (1973)", T_94,    '@', "iso646.1973-0",    0x00,   0, 0},
-    {"ASCII",          T_94,    'B', "iso8859-1",        0x00,   0, 0},	/* bug */
-    {"JIS X 0201:GL",  T_94,    'J', "jisx0201.1976-0",  0x00,   0, 0},
-    {"JIS X 0201:GR",  T_94,    'I', "jisx0201.1976-0",  0x80,   0, 0},
-    {"DEC Special",    T_94,    '0', "dec-special",      0x00,   0, 0},
-    {"DEC Technical",  T_94,    '>', "dec-technical",    0x00,   0, 0},
+    {"ISO 646 (1973)", T_94,    '@', "iso646.1973-0",    0x00,   NULL, NULL},
+    {"ASCII",          T_94,    'B', "iso8859-1",        0x00,   NULL, NULL},	/* bug */
+    {"JIS X 0201:GL",  T_94,    'J', "jisx0201.1976-0",  0x00,   NULL, NULL},
+    {"JIS X 0201:GR",  T_94,    'I', "jisx0201.1976-0",  0x80,   NULL, NULL},
+    {"DEC Special",    T_94,    '0', "dec-special",      0x00,   NULL, NULL},
+    {"DEC Technical",  T_94,    '>', "dec-technical",    0x00,   NULL, NULL},
 
-    {"ISO 8859-1",     T_96,    'A', "iso8859-1",        0x80,   0, 0},
-    {"ISO 8859-2",     T_96,    'B', "iso8859-2",        0x80,   0, 0},
-    {"ISO 8859-3",     T_96,    'C', "iso8859-3",        0x80,   0, 0},
-    {"ISO 8859-4",     T_96,    'D', "iso8859-4",        0x80,   0, 0},
-    {"ISO 8859-5",     T_96,    'L', "iso8859-5",        0x80,   0, 0},
-    {"ISO 8859-6",     T_96,    'G', "iso8859-6",        0x80,   0, 0},
-    {"ISO 8859-7",     T_96,    'F', "iso8859-7",        0x80,   0, 0},
-    {"ISO 8859-8",     T_96,    'H', "iso8859-8",        0x80,   0, 0},
-    {"ISO 8859-9",     T_96,    'M', "iso8859-9",        0x80,   0, 0},
-    {"ISO 8859-10",    T_96,    'V', "iso8859-10",       0x80,   0, 0},
-    {"ISO 8859-11",    T_96,    'T', "iso8859-11",       0x80,   0, 0},
-    {"TIS 620",        T_96,    'T', "iso8859-11",       0x80,   0, 0},
-    {"ISO 8859-13",    T_96,    'Y', "iso8859-13",       0x80,   0, 0},
-    {"ISO 8859-14",    T_96,    '_', "iso8859-14",       0x80,   0, 0},
-    {"ISO 8859-15",    T_96,    'b', "iso8859-15",       0x80,   0, 0},
-    {"ISO 8859-16",    T_96,    'f', "iso8859-16",       0x80,   0, 0},
-    {"KOI8-E",         T_96,    '@', "koi8-e",           0x80,   0, 0},
-    {"TCVN",           T_96,    'Z', "tcvn-0",           0x80,   0, 0},
+    {"ISO 8859-1",     T_96,    'A', "iso8859-1",        0x80,   NULL, NULL},
+    {"ISO 8859-2",     T_96,    'B', "iso8859-2",        0x80,   NULL, NULL},
+    {"ISO 8859-3",     T_96,    'C', "iso8859-3",        0x80,   NULL, NULL},
+    {"ISO 8859-4",     T_96,    'D', "iso8859-4",        0x80,   NULL, NULL},
+    {"ISO 8859-5",     T_96,    'L', "iso8859-5",        0x80,   NULL, NULL},
+    {"ISO 8859-6",     T_96,    'G', "iso8859-6",        0x80,   NULL, NULL},
+    {"ISO 8859-7",     T_96,    'F', "iso8859-7",        0x80,   NULL, NULL},
+    {"ISO 8859-8",     T_96,    'H', "iso8859-8",        0x80,   NULL, NULL},
+    {"ISO 8859-9",     T_96,    'M', "iso8859-9",        0x80,   NULL, NULL},
+    {"ISO 8859-10",    T_96,    'V', "iso8859-10",       0x80,   NULL, NULL},
+    {"ISO 8859-11",    T_96,    'T', "iso8859-11",       0x80,   NULL, NULL},
+    {"TIS 620",        T_96,    'T', "iso8859-11",       0x80,   NULL, NULL},
+    {"ISO 8859-13",    T_96,    'Y', "iso8859-13",       0x80,   NULL, NULL},
+    {"ISO 8859-14",    T_96,    '_', "iso8859-14",       0x80,   NULL, NULL},
+    {"ISO 8859-15",    T_96,    'b', "iso8859-15",       0x80,   NULL, NULL},
+    {"ISO 8859-16",    T_96,    'f', "iso8859-16",       0x80,   NULL, NULL},
+    {"KOI8-E",         T_96,    '@', "koi8-e",           0x80,   NULL, NULL},
+    {"TCVN",           T_96,    'Z', "tcvn-0",           0x80,   NULL, NULL},
 
-    {"GB 2312",        T_9494,  'A', "gb2312.1980-0",    0x0000, 0, 0},
-    {"JIS X 0208",     T_9494,  'B', "jisx0208.1990-0",  0x0000, 0, 0},
-    {"KSC 5601",       T_9494,  'C', "ksc5601.1987-0",   0x0000, 0, 0},
-    {"JIS X 0212",     T_9494,  'D', "jisx0212.1990-0",  0x0000, 0, 0},
+    {"GB 2312",        T_9494,  'A', "gb2312.1980-0",    0x0000, NULL, NULL},
+    {"JIS X 0208",     T_9494,  'B', "jisx0208.1990-0",  0x0000, NULL, NULL},
+    {"KSC 5601",       T_9494,  'C', "ksc5601.1987-0",   0x0000, NULL, NULL},
+    {"JIS X 0212",     T_9494,  'D', "jisx0212.1990-0",  0x0000, NULL, NULL},
 
-    {"GB 2312",        T_9696,  'A', "gb2312.1980-0",    0x0000, 0, 0},
-    {"JIS X 0208",     T_9696,  'B', "jisx0208.1990-0",  0x0000, 0, 0},
-    {"KSC 5601",       T_9696,  'C', "ksc5601.1987-0",   0x0000, 0, 0},
-    {"JIS X 0212",     T_9696,  'D', "jisx0212.1990-0",  0x0000, 0, 0},
+    {"GB 2312",        T_9696,  'A', "gb2312.1980-0",    0x0000, NULL, NULL},
+    {"JIS X 0208",     T_9696,  'B', "jisx0208.1990-0",  0x0000, NULL, NULL},
+    {"KSC 5601",       T_9696,  'C', "ksc5601.1987-0",   0x0000, NULL, NULL},
+    {"JIS X 0212",     T_9696,  'D', "jisx0212.1990-0",  0x0000, NULL, NULL},
 
-    {"CNS11643-1",     T_9494,  'G', "cns11643-1",       0x0000, 0, 0},
-    {"CNS11643-2",     T_9494,  'H', "cns11643-2",       0x0000, 0, 0},
-    {"CNS11643-3",     T_9494,  'I', "cns11643-3",       0x0000, 0, 0},
+    {"CNS11643-1",     T_9494,  'G', "cns11643-1",       0x0000, NULL, NULL},
+    {"CNS11643-2",     T_9494,  'H', "cns11643-2",       0x0000, NULL, NULL},
+    {"CNS11643-3",     T_9494,  'I', "cns11643-3",       0x0000, NULL, NULL},
 
-    {"APL2",           T_128,   0,   "apl2",             0x80,   0, 0},
-    {"KOI8-R",         T_128,   0,   "koi8-r",           0x80,   0, 0},
-    {"KOI8-U",         T_128,   0,   "koi8-u",           0x80,   0, 0},
-    {"KOI8-RU",        T_128,   0,   "koi8-ru",          0x80,   0, 0},
-    {"CP 1250",        T_128,   0,   "microsoft-cp1250", 0x80,   0, 0},
-    {"CP 1251",        T_128,   0,   "microsoft-cp1251", 0x80,   0, 0},
-    {"CP 1252",        T_128,   0,   "microsoft-cp1252", 0x80,   0, 0},
-    {"CP 1255",        T_128,   0,   "microsoft-cp1255", 0x80,   0, 0},
+    {"APL2",           T_128,   0,   "apl2",             0x80,   NULL, NULL},
+    {"KOI8-R",         T_128,   0,   "koi8-r",           0x80,   NULL, NULL},
+    {"KOI8-U",         T_128,   0,   "koi8-u",           0x80,   NULL, NULL},
+    {"KOI8-RU",        T_128,   0,   "koi8-ru",          0x80,   NULL, NULL},
+    {"CP 1250",        T_128,   0,   "microsoft-cp1250", 0x80,   NULL, NULL},
+    {"CP 1251",        T_128,   0,   "microsoft-cp1251", 0x80,   NULL, NULL},
+    {"CP 1252",        T_128,   0,   "microsoft-cp1252", 0x80,   NULL, NULL},
+    {"CP 1255",        T_128,   0,   "microsoft-cp1255", 0x80,   NULL, NULL},
 
-    {"CP 437",         T_128,   0,   "ibm-cp437",        0x80,   0, 0},
-    {"CP 850",         T_128,   0,   "ibm-cp850",        0x80,   0, 0},
-    {"CP 852",         T_128,   0,   "ibm-cp852",        0x80,   0, 0},
-    {"CP 865",         T_128,   0,   "ibm-cp865",        0x80,   0, 0},
-    {"CP 866",         T_128,   0,   "ibm-cp866",        0x80,   0, 0},
+    {"CP 437",         T_128,   0,   "ibm-cp437",        0x80,   NULL, NULL},
+    {"CP 850",         T_128,   0,   "ibm-cp850",        0x80,   NULL, NULL},
+    {"CP 852",         T_128,   0,   "ibm-cp852",        0x80,   NULL, NULL},
+    {"CP 865",         T_128,   0,   "ibm-cp865",        0x80,   NULL, NULL},
+    {"CP 866",         T_128,   0,   "ibm-cp866",        0x80,   NULL, NULL},
 
-    {"Big 5",          T_94192, 0,   "big5.eten-0",      0x8000, 0, 0},
+    {"Big 5",          T_94192, 0,   "big5.eten-0",      0x8000, NULL, NULL},
 
     /*
      * Several empty slots are reserved, to allow for non-ISO-2022 character
@@ -146,7 +144,7 @@ static const OtherCharsetRec otherCharsets[] =
     {"SJIS",       init_sjis,    mapping_sjis,    reverse_sjis,    stack_sjis},
     {"BIG5-HKSCS", init_hkscs,   mapping_hkscs,   reverse_hkscs,   stack_hkscs},
     {"GB18030",    init_gb18030, mapping_gb18030, reverse_gb18030, stack_gb18030},
-    {0, 0, 0, 0, 0}
+    {NULL,         NULL,         NULL,            NULL,            NULL}
 };
 /* *INDENT-ON* */
 
@@ -359,7 +357,7 @@ getFontencCharset(unsigned final, int type, const char *name)
 
     if (!fc->name) {
 	VERBOSE(2, ("...no match for '%s' in FontEnc charsets\n", NonNull(name)));
-    } else if ((c = TypeCalloc(CharsetRec)) == 0) {
+    } else if ((c = TypeCalloc(CharsetRec)) == NULL) {
 	VERBOSE(2, ("malloc failed\n"));
     } else if ((mapping = LookupMapping(fc->xlfd, cpSize(fc))) == NULL) {
 	VERBOSE(2, ("...lookup mapping %s (%s) failed\n", NonNull(name), fc->xlfd));
@@ -405,7 +403,7 @@ int
 isOtherCharset(const char *name)
 {
     const OtherCharsetRec *fc = findOtherCharset(name);
-    int result = (fc->name != 0);
+    int result = (fc->name != NULL);
     if (!result) {
 	result = (!lcStrCmp(name, "Big5") ||
 		  !lcStrCmp(name, "JOHAB"));
@@ -525,7 +523,7 @@ getCharsetByName(const char *name)
     /*
      * If we did not find the name in a table, look for a ".enc" * file.
      */
-    if ((f = lookupOneFontenc(name)) != 0) {
+    if ((f = lookupOneFontenc(name)) != NULL) {
 	if (addFontencCharset(name, f)) {
 	    c = getFontencCharset(0, 0, name);
 	    if (c)
@@ -586,7 +584,7 @@ static const LocaleCharsetRec localeCharsets[] =
     {"Big5-HKSCS", 0, 1, NULL,    NULL,         NULL,            NULL,         "BIG5-HKSCS"},
     {"gb18030",    0, 1, NULL,    NULL,         NULL,            NULL,         "GB18030"},
 
-    {0,            0, 0, 0,       0,            0,               0,            0}
+    {NULL,         0, 0, NULL,    NULL,         NULL,            NULL,         NULL}
 };
 /* *INDENT-ON* */
 
@@ -654,14 +652,14 @@ static const LocaleCharsetRec *
 findLocaleByCharset(const char *charset)
 {
     const LocaleCharsetRec *lc;
-    const LocaleCharsetRec *result = 0;
+    const LocaleCharsetRec *result = NULL;
 
-    for (lc = localeCharsets; lc->name != 0; ++lc) {
-	if (lc->g1 == 0 && lc->g2 == 0)
+    for (lc = localeCharsets; lc->name != NULL; ++lc) {
+	if (lc->g1 == NULL && lc->g2 == NULL)
 	    continue;
-	if ((lc->g3 != 0 && !lcStrCmp(charset, lc->g3))
-	    || (lc->g2 != 0 && !lcStrCmp(charset, lc->g2))
-	    || (lc->g1 != 0 && !lcStrCmp(charset, lc->g1))) {
+	if ((lc->g3 != NULL && !lcStrCmp(charset, lc->g3))
+	    || (lc->g2 != NULL && !lcStrCmp(charset, lc->g2))
+	    || (lc->g1 != NULL && !lcStrCmp(charset, lc->g1))) {
 	    result = lc;
 	    break;
 	}
@@ -674,11 +672,11 @@ findLocaleByCharset(const char *charset)
 static const LocaleCharsetRec *
 closestLocaleCharset(FontEncPtr enc)
 {
-    const LocaleCharsetRec *result = 0;
+    const LocaleCharsetRec *result = NULL;
 
-    if (enc != 0) {
+    if (enc != NULL) {
 	const FontencCharsetRec *fc = getFontencByName(enc->name);
-	if (fc != 0) {
+	if (fc != NULL) {
 	    result = findLocaleByCharset(fc->name);
 	} else {
 	    result = findLocaleByCharset(enc->name);
@@ -694,7 +692,7 @@ static int
 canFakeLocaleCharset(FontEncPtr enc)
 {
     int result = 0;
-    if (enc != 0
+    if (enc != NULL
 	&& enc->size <= 256
 	&& enc->row_size == 0) {
 	result = 1;
@@ -707,7 +705,7 @@ static const LocaleCharsetRec *
 findLocaleCharset(const char *charset)
 {
     const LocaleCharsetRec *p;
-    const LocaleCharsetRec *result = 0;
+    const LocaleCharsetRec *result = NULL;
 
     for (p = localeCharsets; p->name; p++) {
 	if (lcStrCmp(p->name, charset) == 0) {
@@ -720,12 +718,12 @@ findLocaleCharset(const char *charset)
      * The table is useful, but not complete.
      * If we can find a mapping for an 8-bit encoding, fake a table entry.
      */
-    if (result == 0) {
+    if (result == NULL) {
 	FontEncPtr enc = luitGetFontEnc(charset,
 					(UM_MODE) ((int) umICONV
 						   | (int) umFONTENC
 						   | (int) umBUILTIN));
-	if ((result = closestLocaleCharset(enc)) != 0) {
+	if ((result = closestLocaleCharset(enc)) != NULL) {
 	    TRACE(("...matched a LocaleCharset record for %s\n", NonNull(charset)));
 	} else if (canFakeLocaleCharset(enc)) {
 	    LocaleCharsetRec *temp = &fakeLocaleCharset;
@@ -770,7 +768,7 @@ matchLocaleCharset(const char *charset)
 #undef DATA
     };
 
-    const LocaleCharsetRec *p = 0;
+    const LocaleCharsetRec *p = NULL;
 
     TRACE(("matchLocaleCharset(%s)\n", NonNull(charset)));
     if (!IsEmpty(charset)) {
@@ -778,14 +776,14 @@ matchLocaleCharset(const char *charset)
 	char source[MAX_KEYWORD_LENGTH + 1];
 
 	sprintf(source, "%.*s", MAX_KEYWORD_LENGTH, charset);
-	if ((euro = strrchr(source, '@')) != 0 && !strcmp(euro, "@euro")) {
+	if ((euro = strrchr(source, '@')) != NULL && !strcmp(euro, "@euro")) {
 	    Warning("the euro character may not be supported\n");
 	    *euro = 0;
 	}
 
 	p = findLocaleCharset(source);
 
-	if (p == 0) {
+	if (p == NULL) {
 	    size_t have = strlen(source);
 	    size_t n;
 	    char target[MAX_KEYWORD_LENGTH + 80];
@@ -799,7 +797,7 @@ matchLocaleCharset(const char *charset)
 		    strcpy(target, prefixes[n].target);
 		    strcpy(target + prefixes[n].target_len,
 			   source + prefixes[n].source_len);
-		    if ((p = findLocaleCharset(target)) != 0) {
+		    if ((p = findLocaleCharset(target)) != NULL) {
 			break;
 		    }
 		}
@@ -820,7 +818,7 @@ getLocaleState(const char *locale,
 	       const CharsetRec * *other_return)
 {
     int result = 0;
-    char *resolved = 0;
+    char *resolved = NULL;
     const LocaleCharsetRec *p;
 
     TRACE(("getLocaleState(locale=%s, charset=%s)\n", locale, NonNull(charset)));
@@ -831,7 +829,7 @@ getLocaleState(const char *locale,
 	    resolved = resolveLocale(locale);
 	    if (!resolved)
 		return -1;
-	    if ((charset = strrchr(resolved, '.')) != 0) {
+	    if ((charset = strrchr(resolved, '.')) != NULL) {
 		charset++;
 	    } else {
 		charset = resolved;
@@ -839,7 +837,7 @@ getLocaleState(const char *locale,
 	}
     }
 
-    if ((p = matchLocaleCharset(charset)) != 0) {
+    if ((p = matchLocaleCharset(charset)) != NULL) {
 	*gl_return = p->gl;
 	*gr_return = p->gr;
 	*g0_return = getCharsetByName(p->g0);
@@ -854,7 +852,7 @@ getLocaleState(const char *locale,
 	result = -1;
     }
 
-    if (resolved != 0)
+    if (resolved != NULL)
 	free(resolved);
 
     TRACE(("...getLocaleState ->%d\n", result));
@@ -869,13 +867,13 @@ getLocaleState(const char *locale,
 const FontencCharsetRec *
 getFontencByName(const char *encoding_name)
 {
-    const FontencCharsetRec *result = 0;
+    const FontencCharsetRec *result = NULL;
     const FontencCharsetRec *fc;
     char *gr_special;
 
-    for (fc = fontencCharsets; fc->name != 0; ++fc) {
+    for (fc = fontencCharsets; fc->name != NULL; ++fc) {
 	if (!lcStrCmp(encoding_name, fc->name)
-	    || (strstr(fc->name, ":GL") == 0
+	    || (strstr(fc->name, ":GL") == NULL
 		&& !lcStrCmp(encoding_name, fc->xlfd))) {
 	    result = fc;
 	    break;
@@ -886,9 +884,9 @@ getFontencByName(const char *encoding_name)
      * Luit treats ":GR" specially in its charset tables, essentially to
      * distinguish the case it uses for JIS X 201 from other possibilities.
      */
-    if (result == 0
-	&& strchr(encoding_name, ':') == 0
-	&& (gr_special = malloc(strlen(encoding_name) + 4)) != 0) {
+    if (result == NULL
+	&& strchr(encoding_name, ':') == NULL
+	&& (gr_special = malloc(strlen(encoding_name) + 4)) != NULL) {
 	sprintf(gr_special, "%s:GR", encoding_name);
 	result = getFontencByName(gr_special);
 	free(gr_special);
@@ -906,12 +904,12 @@ getFontencByName(const char *encoding_name)
 const char *
 getCompositeCharset(const char *encoding_name)
 {
-    const char *result = 0;
+    const char *result = NULL;
     const FontencCharsetRec *fc;
     const LocaleCharsetRec *lc;
 
-    if ((fc = getFontencByName(encoding_name)) != 0) {
-	if ((lc = findLocaleByCharset(fc->name)) != 0) {
+    if ((fc = getFontencByName(encoding_name)) != NULL) {
+	if ((lc = findLocaleByCharset(fc->name)) != NULL) {
 	    result = lc->name;
 	    TRACE(("getCompositeCharset(%s) ->%s\n",
 		   NonNull(encoding_name), NonNull(result)));
@@ -923,7 +921,7 @@ getCompositeCharset(const char *encoding_name)
 static const char *
 selectPart(const LocaleCharsetRec * data, unsigned g)
 {
-    const char *result = 0;
+    const char *result = NULL;
     switch (g) {
     case 0:
 	result = data->g0;
@@ -948,15 +946,15 @@ selectPart(const LocaleCharsetRec * data, unsigned g)
 const FontencCharsetRec *
 getCompositePart(const char *composite_name, unsigned g)
 {
-    const FontencCharsetRec *result = 0;
+    const FontencCharsetRec *result = NULL;
     const LocaleCharsetRec *lc;
     const char *part_name;
 
     for (lc = localeCharsets; lc->name; ++lc) {
 	if (!lcStrCmp(composite_name, lc->name)) {
-	    if ((part_name = selectPart(lc, g)) != 0) {
+	    if ((part_name = selectPart(lc, g)) != NULL) {
 		const FontencCharsetRec *fc;
-		for (fc = fontencCharsets; fc->name != 0; ++fc) {
+		for (fc = fontencCharsets; fc->name != NULL; ++fc) {
 		    if (!lcStrCmp(part_name, fc->name)) {
 			result = fc;
 			break;
@@ -988,7 +986,7 @@ destroyFontencCharsetPtr(FontencCharsetPtr p)
 	luitDestroyReverse(p->reverse);
     }
 #else
-    p->mapping = 0;
+    p->mapping = NULL;
 
     /*
      * This should, but does not work -
@@ -1006,7 +1004,7 @@ destroyFontencCharsetPtr(FontencCharsetPtr p)
 	}
 	free(p->reverse->data);
 	free(p->reverse);
-	p->reverse = 0;
+	p->reverse = NULL;
     }
 #endif
 }
@@ -1027,15 +1025,15 @@ destroyCharset(CharsetPtr p)
 void
 charset_leaks(void)
 {
-    while (cachedCharsets != 0) {
+    while (cachedCharsets != NULL) {
 	CharsetPtr next = cachedCharsets->next;
 	destroyCharset(cachedCharsets);
 	cachedCharsets = next;
     }
 #ifdef USE_ICONV
-    if (fakeLocaleCharset.name != 0) {
+    if (fakeLocaleCharset.name != NULL) {
 	free((void *) fakeLocaleCharset.name);
-	fakeLocaleCharset.name = 0;
+	fakeLocaleCharset.name = NULL;
     }
 #endif
 }

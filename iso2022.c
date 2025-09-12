@@ -1,7 +1,7 @@
-/* $XTermId: iso2022.c,v 1.42 2023/02/01 23:54:17 tom Exp $ */
+/* $XTermId: iso2022.c,v 1.44 2025/09/12 08:20:14 tom Exp $ */
 
 /*
-Copyright 2011-2018,2023 by Thomas E. Dickey
+Copyright 2011-2023,2025 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -279,7 +279,7 @@ identifyCharset(Iso2022Ptr i, const CharsetRec * *p)
     }
 }
 
-#define G_name(n) ((i != 0 && i->g[n] != 0) ? NonNull(i->g[n]->name) : "unset")
+#define G_name(n) ((i != NULL && i->g[n] != NULL) ? NonNull(i->g[n]->name) : "unset")
 
 void
 reportIso2022(const char *tag, Iso2022Ptr i)

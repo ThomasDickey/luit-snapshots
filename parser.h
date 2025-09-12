@@ -1,6 +1,7 @@
-/* $XTermId: parser.h,v 1.3 2008/08/21 22:50:14 tom Exp $ */
+/* $XTermId: parser.h,v 1.5 2025/09/12 19:11:26 tom Exp $ */
 
 /*
+Copyright 2006-2008,2025 by Thomas E. Dickey
 Copyright (c) 2001 by Juliusz Chroboczek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,11 +32,14 @@ THE SOFTWARE.
 
 #define MAX_KEYWORD_LENGTH 1024
 
-#define TOK_ERROR (-2)
-#define TOK_EOF (-1)
-#define TOK_EOL 0
-#define TOK_EQUALS 1
-#define TOK_KEYWORD 2
+    /* *INDENT-EQLS* */
+typedef enum {
+    TOK_ERROR    = -2
+    ,TOK_EOF     = -1
+    ,TOK_EOL     = 0
+    ,TOK_EQUALS  = 1
+    ,TOK_KEYWORD = 2
+} TOKEN_CODE;
 
 char *resolveLocale(const char *locale);
 

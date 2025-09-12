@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.7 2019/01/06 20:53:00 tom Exp $ */
+/* $XTermId: trace.c,v 1.8 2025/09/12 08:26:35 tom Exp $ */
 
 /*
-Copyright 2010-2011,2019 by Thomas E. Dickey
+Copyright 2010-2019,2025 by Thomas E. Dickey
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,11 +31,11 @@ void
 Trace(const char *fmt, ...)
 {
     static pid_t first_pid;
-    static FILE *fp = 0;
+    static FILE *fp = NULL;
     va_list ap;
     if (first_pid == 0)
 	first_pid = getpid();
-    if (fp == 0)
+    if (fp == NULL)
 	fp = fopen("Trace.out", "w");
     va_start(ap, fmt);
     if (getpid() != first_pid)
